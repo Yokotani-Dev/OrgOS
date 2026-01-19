@@ -1,0 +1,46 @@
+# OrgOS Export Manifest
+# エクスポート対象ファイルの定義
+
+version_file: ".ai/VERSION.yaml"
+
+# core: 上書きしてOK（OrgOSのコア機能）
+core:
+  - ".ai/VERSION.yaml"
+  - ".ai/CHANGELOG.md"
+  - ".ai/RESOURCES/README.md"
+  - ".ai/RESOURCES/BRIEF_TEMPLATE.md"
+  - ".claude/commands/org-brief.md"
+  - ".claude/commands/org-export.md"
+  - ".claude/commands/org-import.md"
+  - ".claude/commands/org-integrate.md"
+  - ".claude/commands/org-kickoff.md"
+  - ".claude/commands/org-os-retro.md"
+  - ".claude/commands/org-plan.md"
+  - ".claude/commands/org-review.md"
+  - ".claude/commands/org-start.md"
+  - ".claude/commands/org-tick.md"
+  - ".orgos-manifest.yaml"
+  - "CLAUDE.md"
+
+# preserve: 既存があればスキップ（プロジェクト固有データ）
+preserve:
+  - ".ai/PROJECT.md"
+  - ".ai/TASKS.yaml"
+  - ".ai/DECISIONS.md"
+  - ".ai/RISKS.md"
+  - ".ai/DASHBOARD.md"
+  - ".ai/OWNER_INBOX.md"
+  - ".ai/OWNER_COMMENTS.md"
+  - ".ai/CONTROL.yaml"
+  - ".ai/STATUS.yaml"
+  - ".ai/RUN_LOG.md"
+
+# create_dirs: インポート時に作成するディレクトリ
+create_dirs:
+  - ".ai"
+  - ".ai/RESOURCES"
+  - ".ai/RESOURCES/docs"
+  - ".ai/RESOURCES/designs"
+  - ".ai/RESOURCES/references"
+  - ".ai/RESOURCES/code-samples"
+  - ".claude/commands"

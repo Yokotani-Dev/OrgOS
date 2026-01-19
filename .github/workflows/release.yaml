@@ -1,0 +1,53 @@
+name: Release OrgOS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create bundle
+        run: |
+          VERSION=${{ steps.version.outputs.VERSION }}
+
+          # マニフェストの core ファイルをバンドル
+          tar -czf orgos-${VERSION}.tar.gz \
+            .ai/VERSION.yaml \
+            .ai/CHANGELOG.md \
+            .ai/RESOURCES/README.md \
+            .ai/RESOURCES/BRIEF_TEMPLATE.md \
+            .claude/commands/org-*.md \
+            .orgos-manifest.yaml \
+            CLAUDE.md \
+            2>/dev/null || true
+
+          echo "Created orgos-${VERSION}.tar.gz"
+          tar -tzf orgos-${VERSION}.tar.gz
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: orgos-${{ steps.version.outputs.VERSION }}.tar.gz
+          generate_release_notes: true
+          body: |
+            ## OrgOS ${{ steps.version.outputs.VERSION }}
+
+            変更内容は [CHANGELOG.md](https://github.com/Yokotani-Dev/OrgOS-Dev/blob/${{ steps.version.outputs.VERSION }}/.ai/CHANGELOG.md) を参照してください。
+
+            ### インストール方法
+            ```
+            /org-import ${{ steps.version.outputs.VERSION }}
+            ```

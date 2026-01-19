@@ -14,13 +14,15 @@ autopilot: false      # true: 自動進行（stop_gate.py で制御）
 paused: false         # true: 一時停止
 awaiting_owner: false # true: Owner の回答待ち
 
-# Owner承認が必要な危険フラグ（デフォルトfalse、変更には Owner 承認が必要）
-allow_push: false           # git push (main以外)
-allow_push_main: false      # git push to main
-allow_main_mutation: false  # main ブランチでの commit/merge/rebase
-allow_deploy: false         # デプロイ操作
-allow_destructive_ops: false # rm -rf, git clean -f など
-allow_os_mutation: false    # OSファイル(.claude/**, CLAUDE.md, .ai/CONTROL.yaml)の編集
+# Owner承認が必要な危険フラグ
+# デフォルトfalse、Ownerがtrueに変更すると許可される
+# 注意: フラグ行にはインラインコメントを入れないこと（パーサーが読めなくなる）
+allow_push: true
+allow_push_main: true
+allow_main_mutation: false
+allow_deploy: false
+allow_destructive_ops: false
+allow_os_mutation: false
 
 # 保護対象ブランチ
 main_branch: "main"
