@@ -27,6 +27,9 @@ allow_os_mutation: false
 # 保護対象ブランチ
 main_branch: "main"
 
+# OrgOS-Dev 開発モード（trueならOrgOS-Dev接続警告をスキップ）
+is_orgos_dev: true
+
 # ゲート状態（Managerが更新、Owner Reviewが必要なものは awaiting_owner で止める）
 gates:
   kickoff_complete: false
