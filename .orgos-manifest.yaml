@@ -19,6 +19,7 @@ core:
   - ".claude/commands/org-review.md"
   - ".claude/commands/org-start.md"
   - ".claude/commands/org-tick.md"
+  - ".claude/commands/org-codex.md"
   - ".orgos-manifest.yaml"
   - "CLAUDE.md"
 
