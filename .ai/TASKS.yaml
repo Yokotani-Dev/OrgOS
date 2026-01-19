@@ -1,0 +1,57 @@
+# Task DAG (SSOT)
+# status: queued | running | blocked | review | done
+#
+# owner_role の選択肢:
+#   - org-planner      : 要件整理（Claude subagent）
+#   - org-architect    : 設計・Contract定義（Claude subagent）
+#   - codex-implementer: 実装（Codex worker）★推奨
+#   - codex-reviewer   : レビュー（Codex worker）★推奨
+#   - org-integrator   : 統合・マージ（Claude subagent）
+#   - org-scribe       : 台帳整理（Claude subagent）
+#
+# ※ org-implementer / org-reviewer は非推奨（Codex に移行済み）
+
+tasks:
+  - id: T-001
+    title: "Kickoff: collect requirements"
+    status: queued
+    deps: []
+    owner_role: "org-planner"
+    allowed_paths: [".ai/"]
+    acceptance:
+      - "PROJECT.md populated"
+      - "DECISIONS.md has pending list"
+    notes: ""
+
+  - id: T-002
+    title: "Design: define contracts (API/schema)"
+    status: queued
+    deps: ["T-001"]
+    owner_role: "org-architect"
+    allowed_paths: ["docs/", "src/"]
+    acceptance:
+      - "contracts documented"
+    notes: ""
+
+  # 以下はCodex workerを使う実装タスクの例
+  # - id: T-003
+  #   title: "Implement: user authentication module"
+  #   status: queued
+  #   deps: ["T-002"]
+  #   owner_role: "codex-implementer"  # ← Codex worker
+  #   allowed_paths: ["src/auth/", "tests/auth/"]
+  #   acceptance:
+  #     - "login/logout implemented"
+  #     - "tests pass"
+  #   notes: ""
+  #
+  # - id: T-003-review
+  #   title: "Review: user authentication module"
+  #   status: queued
+  #   deps: ["T-003"]
+  #   owner_role: "codex-reviewer"  # ← Codex worker
+  #   allowed_paths: ["src/auth/", "tests/auth/"]
+  #   acceptance:
+  #     - "security check passed"
+  #     - "code quality approved"
+  #   notes: "Review Packet: .ai/REVIEW/PACKETS/T-003.md"

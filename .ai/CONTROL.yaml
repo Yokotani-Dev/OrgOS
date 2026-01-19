@@ -1,0 +1,58 @@
+# OrgOS Control Plane (SSOT)
+# /org-start 実行時にこのファイルは初期化される
+# Managerはこのファイルを読み、必要に応じて更新する（Owner承認が必要な項目は勝手に変えない）
+
+# プロジェクト名（/org-start で BRIEF.md から設定）
+project_name: "<SET_ME>"
+
+# ステージ
+# KICKOFF -> REQUIREMENTS -> DESIGN -> IMPLEMENTATION -> INTEGRATION -> RELEASE
+stage: KICKOFF
+
+# 制御フラグ
+autopilot: false      # true: 自動進行（stop_gate.py で制御）
+paused: false         # true: 一時停止
+awaiting_owner: false # true: Owner の回答待ち
+
+# Owner承認が必要な危険フラグ（デフォルトfalse、変更には Owner 承認が必要）
+allow_push: false           # git push (main以外)
+allow_push_main: false      # git push to main
+allow_main_mutation: false  # main ブランチでの commit/merge/rebase
+allow_deploy: false         # デプロイ操作
+allow_destructive_ops: false # rm -rf, git clean -f など
+allow_os_mutation: false    # OSファイル(.claude/**, CLAUDE.md, .ai/CONTROL.yaml)の編集
+
+# 保護対象ブランチ
+main_branch: "main"
+
+# ゲート状態（Managerが更新、Owner Reviewが必要なものは awaiting_owner で止める）
+gates:
+  kickoff_complete: false
+  requirements_approved: false
+  design_approved: false
+  integration_approved: false
+  release_approved: false
+
+# Owner Review ポリシー
+owner_review_policy:
+  on_stage_transition: true       # ステージ遷移時にレビュー
+  every_n_tasks: 3                # N タスクごとにレビュー
+  always_before_merge_to_main: true
+  always_before_release: true
+
+# Codex worker 設定
+codex:
+  # true: Manager が codex exec を自動実行（要 --approval-mode full-auto）
+  # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
+  auto_exec: false
+
+  # Codex実行時のデフォルトオプション
+  # full-auto: 全自動（危険、テスト環境のみ）
+  # suggest: 提案のみ（安全）
+  # auto-edit: 編集は自動、実行は確認（バランス）
+  approval_mode: "suggest"
+
+# ランタイム設定
+runtime:
+  max_parallel_tasks: 6  # 同時実行タスク数上限
+  tick_count: 0          # Tick カウンタ
