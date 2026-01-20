@@ -36,7 +36,12 @@
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
     "excludedCommands": ["git"],
-    "allowUnsandboxedCommands": true
+    "allowUnsandboxedCommands": true,
+    "permissions": {
+      "disk": {
+        "write": [".git"]
+      }
+    }
   },
   "hooks": {
     "SessionStart": [
