@@ -45,17 +45,24 @@ owner_review_policy:
   always_before_merge_to_main: true
   always_before_release: true
 
-# Codex worker 設定
+# Codex worker 設定 (OpenAI Codex CLI)
 codex:
-  # true: Manager が codex exec を自動実行（要 --approval-mode full-auto）
+  # true: Manager が codex exec を自動実行
   # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
   auto_exec: false
 
-  # Codex実行時のデフォルトオプション
-  # full-auto: 全自動（危険、テスト環境のみ）
-  # suggest: 提案のみ（安全）
-  # auto-edit: 編集は自動、実行は確認（バランス）
-  approval_mode: "suggest"
+  # sandbox ポリシー (-s, --sandbox)
+  # read-only: 読み取りのみ（最も安全）
+  # workspace-write: ワークスペース書き込み許可（推奨）
+  # danger-full-access: フルアクセス（危険）
+  sandbox: "workspace-write"
+
+  # 承認ポリシー (-a, --ask-for-approval)
+  # untrusted: 毎回確認（最も安全）
+  # on-failure: 失敗時のみ確認
+  # on-request: 要求時のみ確認（推奨）
+  # never: 確認なし（CI環境のみ）
+  approval: "on-request"
 
 # ランタイム設定
 runtime:

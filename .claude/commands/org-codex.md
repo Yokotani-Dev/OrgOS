@@ -1,7 +1,19 @@
 # /org-codex - Codex タスク実行コマンド
 
-Codex worker に委任されたタスクを実行する。
+OpenAI Codex CLI を使って、Codex worker に委任されたタスクを実行する。
 `/org-tick` で Codex タスクが検出された場合、このコマンドの実行を案内する。
+
+---
+
+## 前提条件
+
+- OpenAI Codex CLI がインストールされていること
+  ```bash
+  npm i -g @openai/codex
+  # または
+  brew install --cask codex
+  ```
+- `codex login` で認証済みであること
 
 ---
 
@@ -38,23 +50,46 @@ Codex worker に委任されたタスクを実行する。
 
 タスクごとに以下を実行：
 
-1. **CONTROL.yaml の `codex.approval_mode` を確認**
-   - `suggest`: 提案のみ（デフォルト、安全）
-   - `auto-edit`: 編集は自動、実行は確認
-   - `full-auto`: 全自動（危険）
+1. **CONTROL.yaml の `codex.sandbox` と `codex.approval` を確認**
+
+   **sandbox オプション** (`-s, --sandbox`):
+   - `read-only`: 読み取りのみ（最も安全、デフォルト）
+   - `workspace-write`: ワークスペース内の書き込み許可
+   - `danger-full-access`: フルアクセス（危険）
+
+   **approval オプション** (`-a, --ask-for-approval`):
+   - `untrusted`: 毎回確認（最も安全）
+   - `on-failure`: 失敗時のみ確認
+   - `on-request`: 要求時のみ確認
+   - `never`: 確認なし（危険）
+
+   **ショートカット**:
+   - `--full-auto`: `--ask-for-approval on-request --sandbox workspace-write` と同等
 
 2. **Codex コマンドを生成**:
+
+   **標準モード（推奨）**:
    ```bash
-   codex exec --approval-mode <MODE> "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ"
+   codex exec "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ"
+   ```
+
+   **自動編集モード**:
+   ```bash
+   codex exec --full-auto "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ"
+   ```
+
+   **完全自動モード（CI環境のみ）**:
+   ```bash
+   codex exec --ask-for-approval never --sandbox workspace-write "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ"
    ```
 
 3. **実行方法を Owner に提示**:
-   - approval_mode が `full-auto` の場合のみ自動実行可能
+   - `auto_exec: true` かつ適切な approval 設定の場合のみ自動実行可能
    - それ以外は Owner に実行を促す（対話的な承認が必要なため）
 
-### Step 4: 実行（full-auto モードの場合）
+### Step 4: 実行（auto_exec: true の場合）
 
-`codex.auto_exec: true` かつ `approval_mode: full-auto` の場合：
+`codex.auto_exec: true` の場合：
 
 1. Bash で `codex exec` を実行
 2. 結果を待機（タイムアウト: 10分）
@@ -62,7 +97,7 @@ Codex worker に委任されたタスクを実行する。
 4. 成功時: TASKS.yaml のステータスを `review` に更新
 5. 失敗時: ステータスを `blocked` に更新、エラー内容を記録
 
-### Step 5: 手動実行の案内（suggest/auto-edit モードの場合）
+### Step 5: 手動実行の案内（auto_exec: false の場合）
 
 Owner に以下を表示：
 
@@ -74,7 +109,13 @@ Owner に以下を表示：
 ### T-XXX (<タスクタイトル>)
 
 ```bash
-codex exec --approval-mode suggest "AGENTS.md を読み、.ai/CODEX/ORDERS/T-XXX.md の指示に従って実行せよ"
+codex exec "AGENTS.md を読み、.ai/CODEX/ORDERS/T-XXX.md の指示に従って実行せよ"
+```
+
+または、自動編集を許可する場合：
+
+```bash
+codex exec --full-auto "AGENTS.md を読み、.ai/CODEX/ORDERS/T-XXX.md の指示に従って実行せよ"
 ```
 
 実行後、結果が `.ai/CODEX/RESULTS/T-XXX.md` に出力されたら `/org-tick` で次のステップへ進みます。
@@ -98,18 +139,18 @@ codex exec --approval-mode suggest "AGENTS.md を読み、.ai/CODEX/ORDERS/T-XXX
 
 ### 実行方法
 
-approval_mode: `suggest` のため、手動実行が必要です。
+`auto_exec: false` のため、手動実行が必要です。
 
 以下のコマンドをターミナルで実行してください：
 
 **T-010:**
 ```bash
-codex exec --approval-mode suggest "AGENTS.md を読み、.ai/CODEX/ORDERS/T-010.md の指示に従って実行せよ"
+codex exec "AGENTS.md を読み、.ai/CODEX/ORDERS/T-010.md の指示に従って実行せよ"
 ```
 
 **T-020:**
 ```bash
-codex exec --approval-mode suggest "AGENTS.md を読み、.ai/CODEX/ORDERS/T-020.md の指示に従って実行せよ"
+codex exec "AGENTS.md を読み、.ai/CODEX/ORDERS/T-020.md の指示に従って実行せよ"
 ```
 
 実行完了後、`/org-tick` で結果を確認してください。
@@ -155,9 +196,35 @@ tasks:
 
 ---
 
+## CONTROL.yaml の codex 設定
+
+```yaml
+codex:
+  # true: Manager が codex exec を自動実行
+  # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
+  auto_exec: false
+
+  # sandbox ポリシー
+  # read-only: 読み取りのみ（最も安全）
+  # workspace-write: ワークスペース書き込み許可（推奨）
+  # danger-full-access: フルアクセス（危険）
+  sandbox: "workspace-write"
+
+  # 承認ポリシー
+  # untrusted: 毎回確認（最も安全）
+  # on-failure: 失敗時のみ確認
+  # on-request: 要求時のみ確認（推奨）
+  # never: 確認なし（CI環境のみ）
+  approval: "on-request"
+```
+
+---
+
 ## 注意事項
 
-- Codex がインストールされていない場合は先にインストールが必要
-- `approval_mode: full-auto` は危険。テスト環境以外では `suggest` 推奨
+- Codex CLI がインストールされていない場合: `npm i -g @openai/codex` または `brew install --cask codex`
+- 認証が必要: `codex login` を実行
+- `--ask-for-approval never` は危険。CI環境以外では使用しない
 - 結果は `.ai/CODEX/RESULTS/<TASK_ID>.md` に出力される
 - レビュータスクは Review Packet (`.ai/REVIEW/PACKETS/<TASK_ID>.md`) も参照する
+- 詳細: https://developers.openai.com/codex/cli/
