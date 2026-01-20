@@ -3,7 +3,49 @@
 
 version_file: ".ai/VERSION.yaml"
 
-# core: 上書きしてOK（OrgOSのコア機能）
+# publish: 公開リポジトリに同期するファイル
+publish:
+  # コア設定
+  - ".ai/VERSION.yaml"
+  - ".ai/CHANGELOG.md"
+  - ".orgos-manifest.yaml"
+  - "CLAUDE.md"
+  - "AGENTS.md"
+  - "ORGOS_QUICKSTART.md"
+  # リソーステンプレート
+  - ".ai/RESOURCES/README.md"
+  - ".ai/RESOURCES/BRIEF_TEMPLATE.md"
+  # コマンド
+  - ".claude/commands/org-brief.md"
+  - ".claude/commands/org-export.md"
+  - ".claude/commands/org-import.md"
+  - ".claude/commands/org-integrate.md"
+  - ".claude/commands/org-kickoff.md"
+  - ".claude/commands/org-os-retro.md"
+  - ".claude/commands/org-plan.md"
+  - ".claude/commands/org-review.md"
+  - ".claude/commands/org-start.md"
+  - ".claude/commands/org-tick.md"
+  - ".claude/commands/org-codex.md"
+  - ".claude/commands/org-admin.md"
+  - ".claude/commands/org-release.md"
+  - ".claude/commands/org-publish.md"
+  # エージェント
+  - ".claude/agents/org-planner.md"
+  - ".claude/agents/org-architect.md"
+  - ".claude/agents/org-integrator.md"
+  - ".claude/agents/org-scribe.md"
+  - ".claude/agents/org-os-maintainer.md"
+  - ".claude/agents/org-implementer.md"
+  - ".claude/agents/org-reviewer.md"
+  # 設定
+  - ".claude/settings.json"
+  # Git hooks
+  - ".githooks/pre-push"
+  # GitHub Actions
+  - ".github/workflows/release.yml"
+
+# core: 上書きしてOK（OrgOSのコア機能）- /org-import用
 core:
   - ".ai/VERSION.yaml"
   - ".ai/CHANGELOG.md"
