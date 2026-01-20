@@ -75,7 +75,12 @@ def main():
     if re.search(r"\b(sudo|mkfs|dd\s+if=|shutdown|reboot)\b", cmd):
         block("OrgOS blocked: dangerous system command.")
 
-    if re.search(r"\brm\s+-rf\b", cmd) or re.search(r"\bgit\s+clean\s+-f", cmd):
+    # Destructive rm/git clean - only match at command start, not in strings/messages
+    if re.match(r"^\s*rm\s+-rf\b", cmd) or re.match(r"^\s*git\s+clean\s+-f", cmd):
+        # Allow rm -rf for temp directories
+        if re.search(r"\brm\s+-rf\s+(/tmp/|/var/folders/|/private/tmp/)", cmd):
+            allow_json("rm -rf allowed for temp directory")
+            return
         if not allow_destructive_ops:
             block("OrgOS blocked: destructive ops disabled (allow_destructive_ops=false).")
         allow_json("destructive ops allowed by Owner flag")
