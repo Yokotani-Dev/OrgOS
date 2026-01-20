@@ -71,6 +71,45 @@ Claude Code で以下を実行：
 
 ---
 
+## 並列開発について
+
+OrgOSは `/org-tick` 実行時に自動的に並列実行を判断します。
+
+### 仕組み
+
+1. `/org-tick` が依存解消済みのタスクを検出
+2. Codexタスクは **自動的に並列実行** を準備
+3. 各タスクは独立した **git worktree** で実行
+4. 結果は次の `/org-tick` で自動回収
+
+### Codex実行（auto_exec: false の場合）
+
+`/org-tick` が以下のようなコマンドを提示します：
+
+```bash
+# 並列実行
+./.claude/scripts/run-parallel.sh T-003 T-004
+
+# 状態確認
+./.claude/scripts/run-parallel.sh --status
+```
+
+実行後、再度 `/org-tick` で結果を回収します。
+
+### 設定
+
+`.ai/CONTROL.yaml` で並列実行を制御：
+
+```yaml
+runtime:
+  max_parallel_tasks: 6  # 同時実行数の上限
+
+codex:
+  auto_exec: false       # true にすると自動実行
+```
+
+---
+
 ## ファイル構成（参考）
 
 ```
