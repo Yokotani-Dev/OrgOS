@@ -1,0 +1,155 @@
+name: OrgOS Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Validate manifest structure
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+
+          with open('.orgos-manifest.yaml', 'r') as f:
+              manifest = yaml.safe_load(f)
+
+          required_sections = ['version_file', 'publish', 'core', 'preserve', 'create_dirs']
+          missing = [s for s in required_sections if s not in manifest]
+
+          if missing:
+              print(f"ERROR: Missing sections in manifest: {missing}")
+              sys.exit(1)
+
+          print("Manifest structure: OK")
+          EOF
+
+      - name: Check publish files exist
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import os
+          import sys
+
+          with open('.orgos-manifest.yaml', 'r') as f:
+              manifest = yaml.safe_load(f)
+
+          missing = []
+          for file_path in manifest.get('publish', []):
+              if not os.path.exists(file_path):
+                  missing.append(file_path)
+
+          if missing:
+              print("ERROR: Missing files listed in publish section:")
+              for f in missing:
+                  print(f"  - {f}")
+              sys.exit(1)
+
+          print(f"All {len(manifest.get('publish', []))} publish files exist: OK")
+          EOF
+
+      - name: Check core files exist
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import os
+          import sys
+
+          with open('.orgos-manifest.yaml', 'r') as f:
+              manifest = yaml.safe_load(f)
+
+          missing = []
+          for file_path in manifest.get('core', []):
+              if not os.path.exists(file_path):
+                  missing.append(file_path)
+
+          if missing:
+              print("ERROR: Missing files listed in core section:")
+              for f in missing:
+                  print(f"  - {f}")
+              sys.exit(1)
+
+          print(f"All {len(manifest.get('core', []))} core files exist: OK")
+          EOF
+
+      - name: Validate VERSION.yaml
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+          import re
+
+          with open('.ai/VERSION.yaml', 'r') as f:
+              version = yaml.safe_load(f)
+
+          if 'current' not in version:
+              print("ERROR: VERSION.yaml missing 'current' field")
+              sys.exit(1)
+
+          if not re.match(r'^\d+\.\d+\.\d+$', version['current']):
+              print(f"ERROR: Invalid version format: {version['current']}")
+              sys.exit(1)
+
+          if 'history' not in version or not isinstance(version['history'], list):
+              print("ERROR: VERSION.yaml missing or invalid 'history' field")
+              sys.exit(1)
+
+          print(f"VERSION.yaml valid: v{version['current']}")
+          EOF
+
+      - name: Validate command files syntax
+        run: |
+          errors=0
+          for file in .claude/commands/org-*.md; do
+            if [ -f "$file" ]; then
+              # Check for required header
+              if ! head -1 "$file" | grep -q "^# /org-"; then
+                echo "WARNING: $file may be missing proper header"
+              fi
+            fi
+          done
+          echo "Command files syntax check: OK"
+
+      - name: Check for common issues
+        run: |
+          echo "Checking for potential issues..."
+
+          # Check for TODO/FIXME in commands
+          if grep -r "TODO\|FIXME" .claude/commands/org-*.md 2>/dev/null; then
+            echo "WARNING: Found TODO/FIXME comments in command files"
+          fi
+
+          # Check for placeholder text
+          if grep -r "TBD\|TODO\|PLACEHOLDER" .ai/VERSION.yaml .ai/CHANGELOG.md 2>/dev/null; then
+            echo "WARNING: Found placeholder text in version files"
+          fi
+
+          echo "Issue check completed"
+
+      - name: Summary
+        run: |
+          echo "========================================"
+          echo "OrgOS Validation Summary"
+          echo "========================================"
+          echo "Version: $(grep 'current:' .ai/VERSION.yaml | cut -d'"' -f2)"
+          echo "Publish files: $(grep -c '  - "' .orgos-manifest.yaml | head -1) items"
+          echo "Commands: $(ls -1 .claude/commands/org-*.md 2>/dev/null | wc -l | tr -d ' ') files"
+          echo "Agents: $(ls -1 .claude/agents/org-*.md 2>/dev/null | wc -l | tr -d ' ') files"
+          echo "========================================"
+          echo "All validations passed!"
