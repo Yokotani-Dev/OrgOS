@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.5.0"
-released_at: "2026-01-20"
+current: "0.6.0"
+released_at: "2026-01-21"
 
 history:
+  - version: "0.6.0"
+    date: "2026-01-21"
+    description: "Add README, templates, improve /org-import to use Public repo"
   - version: "0.5.0"
     date: "2026-01-20"
     description: "Add /org-publish, CI validation, degre prevention"

@@ -1,0 +1,70 @@
+# OrgOS Control Plane (SSOT)
+# /org-start 実行時にこのファイルは初期化される
+# Managerはこのファイルを読み、必要に応じて更新する（Owner承認が必要な項目は勝手に変えない）
+
+# プロジェクト名（/org-start で BRIEF.md から設定）
+project_name: "<SET_ME>"
+
+# ステージ
+# KICKOFF -> REQUIREMENTS -> DESIGN -> IMPLEMENTATION -> INTEGRATION -> RELEASE
+stage: KICKOFF
+
+# 制御フラグ
+autopilot: false      # true: 自動進行（stop_gate.py で制御）
+paused: false         # true: 一時停止
+awaiting_owner: false # true: Owner の回答待ち
+
+# Owner承認が必要な危険フラグ
+# デフォルトfalse、Ownerがtrueに変更すると許可される
+# 注意: フラグ行にはインラインコメントを入れないこと（パーサーが読めなくなる）
+allow_push: false
+allow_push_main: false
+allow_main_mutation: false
+allow_deploy: false
+allow_destructive_ops: false
+allow_os_mutation: false
+
+# 保護対象ブランチ
+main_branch: "main"
+
+# OrgOS-Dev 開発モード（trueならOrgOS-Dev接続警告をスキップ）
+is_orgos_dev: false
+
+# ゲート状態（Managerが更新、Owner Reviewが必要なものは awaiting_owner で止める）
+gates:
+  kickoff_complete: false
+  requirements_approved: false
+  design_approved: false
+  integration_approved: false
+  release_approved: false
+
+# Owner Review ポリシー
+owner_review_policy:
+  on_stage_transition: true       # ステージ遷移時にレビュー
+  every_n_tasks: 3                # N タスクごとにレビュー
+  always_before_merge_to_main: true
+  always_before_release: true
+
+# Codex worker 設定 (OpenAI Codex CLI)
+codex:
+  # true: Manager が codex exec を自動実行
+  # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
+  auto_exec: false
+
+  # sandbox ポリシー (-s, --sandbox)
+  # read-only: 読み取りのみ（最も安全）
+  # workspace-write: ワークスペース書き込み許可（推奨）
+  # danger-full-access: フルアクセス（危険）
+  sandbox: "workspace-write"
+
+  # 承認ポリシー (-a, --ask-for-approval)
+  # untrusted: 毎回確認（最も安全）
+  # on-failure: 失敗時のみ確認
+  # on-request: 要求時のみ確認（推奨）
+  # never: 確認なし（CI環境のみ）
+  approval: "on-request"
+
+# ランタイム設定
+runtime:
+  max_parallel_tasks: 6  # 同時実行タスク数上限
+  tick_count: 0          # Tick カウンタ
