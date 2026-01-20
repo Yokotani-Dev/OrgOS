@@ -4,6 +4,25 @@
 
 ---
 
+## v0.4.0 (2026-01-20)
+
+### 追加
+- **`/org-codex`**: OpenAI Codex CLIを使ったタスク実行コマンド
+- **`/org-admin`**: OrgOS開発者用の管理モード（`/org-init`から分離）
+- **`.ai/ARTIFACTS/`**: 成果物格納ディレクトリ（入力と出力を明確に分離）
+- **`.claude/scripts/run-parallel.sh`**: Codex並列実行スクリプト
+
+### 改善
+- **`/org-start`**: `/org-init`の機能を統合（リポジトリ切断→新リポ接続を一元化）
+- **`/org-tick`**: 自動並列実行判断とworktree管理を追加
+- **`/org-integrate`**: 統合手順の詳細化（worktreeクリーンアップ手順追加）
+- **`CLAUDE.md`**: 日本語を読みやすく改善、「次に何が起きるか」を具体的に明示するルール追加
+
+### 削除
+- **`/org-init`**: 機能は`/org-start`と`/org-admin`に移行
+
+---
+
 ## v0.3.0 (2025-01-19)
 
 ### 追加
