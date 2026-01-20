@@ -4,6 +4,22 @@
 
 ---
 
+## v0.6.0 (2026-01-21)
+
+### 追加
+- **README.md**: 公開リポジトリ用のREADME（インストール手順含む）
+- **`.ai/TEMPLATES/`**: 初期セットアップ用テンプレートファイル（BRIEF.md, CONTROL.yaml, DASHBOARD.md, OWNER_INBOX.md, OWNER_COMMENTS.md）
+
+### 改善
+- **`/org-import`**: tarballからPublicリポジトリ直接クローンに変更
+- **`/org-import`**: テンプレート自動展開機能追加（初回のみ）
+- **`.orgos-manifest.yaml`**: `templates`セクション追加（source→destマッピング）
+
+### 修正
+- Publicリポジトリに初期ファイルがなく、ユーザーがそのまま使えない問題を修正
+
+---
+
 ## v0.5.0 (2026-01-20)
 
 ### 追加

@@ -1,75 +1,125 @@
 # /org-import
 
-GitHub ReleasesからOrgOSをダウンロードして、現在のプロジェクトにインポートする。
+公開リポジトリ (OrgOS) からOrgOSをダウンロードして、現在のプロジェクトにインポートする。
 
 ## 引数
-- `$ARGUMENTS`: バージョン（例: `v0.1.0`）または `latest`
+- `$ARGUMENTS`: バージョン（例: `v0.1.0`）または `latest`（省略時は latest）
+
+## 概要
+
+```
+Yokotani-Dev/OrgOS (public)  ──→  Your Project
+       │                               │
+       └─ core files                   └─ /org-import
+          templates                       (インポート)
+```
 
 ## 実行手順
 
-1. **バージョン解決**
-   - `latest` の場合: 最新リリースを取得
-   - `v0.x.x` の場合: 指定バージョンを使用
+### 1. バージョン解決
 
-2. **ダウンロード**
-   ```bash
-   # 最新版の場合
-   curl -sL https://api.github.com/repos/Yokotani-Dev/OrgOS-Dev/releases/latest \
-     | grep "browser_download_url.*tar.gz" \
-     | cut -d'"' -f4 \
-     | xargs curl -sL -o orgos-latest.tar.gz
+```bash
+# 最新タグを取得
+LATEST_TAG=$(git ls-remote --tags https://github.com/Yokotani-Dev/OrgOS.git \
+  | grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' | sort -V | tail -1)
 
-   # 特定バージョンの場合
-   curl -sL -o orgos-v0.1.0.tar.gz \
-     https://github.com/Yokotani-Dev/OrgOS-Dev/releases/download/v0.1.0/orgos-v0.1.0.tar.gz
-   ```
+# latest の場合は最新タグを使用
+# 指定バージョンの場合はそのまま使用
+VERSION=${ARGUMENTS:-$LATEST_TAG}
+```
 
-3. **既存バージョン確認**
-   - `.ai/VERSION.yaml` が存在するかチェック
-   - 存在する場合、現在のバージョンと比較して表示
+### 2. 既存バージョン確認
 
-4. **ディレクトリ作成**
-   ```bash
-   mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
-     .ai/RESOURCES/designs .ai/RESOURCES/references \
-     .ai/RESOURCES/code-samples .claude/commands
-   ```
+```bash
+# 既存の .ai/VERSION.yaml を確認
+if [ -f ".ai/VERSION.yaml" ]; then
+  CURRENT=$(grep "current:" .ai/VERSION.yaml | cut -d'"' -f2)
+  echo "現在のバージョン: $CURRENT"
+  echo "インポートするバージョン: $VERSION"
+fi
+```
 
-5. **展開**
-   ```bash
-   tar -xzf orgos-v0.1.0.tar.gz
-   rm orgos-v0.1.0.tar.gz
-   ```
+### 3. 一時ディレクトリでクローン
 
-6. **preserveファイルの確認**
-   - 以下のファイルは既存なら上書きしない:
-     - `.ai/PROJECT.md`
-     - `.ai/TASKS.yaml`
-     - `.ai/DECISIONS.md`
-     - `.ai/DASHBOARD.md`
-     - その他プロジェクト固有データ
-   - 存在しない場合は `/org-start` で初期化を案内
+```bash
+WORK_DIR=$(mktemp -d)
+cd $WORK_DIR
+git clone --depth 1 --branch $VERSION https://github.com/Yokotani-Dev/OrgOS.git
+```
 
-7. **結果報告**
-   ```
-   OrgOS v0.1.0 をインポートしました。
+### 4. ディレクトリ作成
 
-   ソース: https://github.com/Yokotani-Dev/OrgOS-Dev/releases/tag/v0.1.0
+```bash
+# プロジェクトディレクトリに戻り、必要なディレクトリを作成
+mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
+  .ai/RESOURCES/designs .ai/RESOURCES/references \
+  .ai/RESOURCES/code-samples .claude/commands .claude/agents
+```
 
-   更新されたファイル:
-   - .ai/VERSION.yaml
-   - .ai/CHANGELOG.md
-   - .claude/commands/org-*.md (10ファイル)
-   - CLAUDE.md
+### 5. ファイルコピー
 
-   保持されたファイル（既存のため上書きなし）:
-   - .ai/PROJECT.md
-   - .ai/TASKS.yaml
+`.orgos-manifest.yaml` の `core` セクションに定義されたファイルをコピー。
 
-   次のステップ:
-   - 初めての導入の場合: `/org-start` でプロジェクト初期化
-   - 変更内容: `.ai/CHANGELOG.md` を参照
-   ```
+**上書きするファイル（core）:**
+- `.ai/VERSION.yaml`
+- `.ai/CHANGELOG.md`
+- `.ai/RESOURCES/README.md`
+- `.claude/commands/org-*.md`
+- `.orgos-manifest.yaml`
+- `CLAUDE.md`
+
+**保持するファイル（preserve）:**
+- `.ai/PROJECT.md`
+- `.ai/TASKS.yaml`
+- `.ai/DECISIONS.md`
+- `.ai/RISKS.md`
+- `.ai/DASHBOARD.md`
+- `.ai/OWNER_INBOX.md`
+- `.ai/OWNER_COMMENTS.md`
+- `.ai/CONTROL.yaml`
+- `.ai/STATUS.yaml`
+- `.ai/RUN_LOG.md`
+
+**初回のみコピー（templates）:**
+存在しない場合のみ、テンプレートからコピー:
+- `.ai/TEMPLATES/BRIEF.md` → `.ai/BRIEF.md`
+- `.ai/TEMPLATES/CONTROL.yaml` → `.ai/CONTROL.yaml`
+- `.ai/TEMPLATES/DASHBOARD.md` → `.ai/DASHBOARD.md`
+- `.ai/TEMPLATES/OWNER_INBOX.md` → `.ai/OWNER_INBOX.md`
+- `.ai/TEMPLATES/OWNER_COMMENTS.md` → `.ai/OWNER_COMMENTS.md`
+
+### 6. クリーンアップ
+
+```bash
+rm -rf $WORK_DIR
+```
+
+### 7. 結果報告
+
+```
+OrgOS $VERSION をインポートしました。
+
+ソース: https://github.com/Yokotani-Dev/OrgOS/releases/tag/$VERSION
+
+更新されたファイル:
+- .ai/VERSION.yaml
+- .ai/CHANGELOG.md
+- .claude/commands/org-*.md (14ファイル)
+- CLAUDE.md
+
+保持されたファイル（既存のため上書きなし）:
+- .ai/PROJECT.md
+- .ai/TASKS.yaml
+
+初期化されたファイル（新規作成）:
+- .ai/BRIEF.md
+- .ai/CONTROL.yaml
+- .ai/DASHBOARD.md
+
+次のステップ:
+- 初めての導入の場合: `/org-start` でプロジェクト初期化
+- 変更内容: `.ai/CHANGELOG.md` を参照
+```
 
 ## 使用例
 
@@ -78,13 +128,19 @@ GitHub ReleasesからOrgOSをダウンロードして、現在のプロジェク
 /org-import latest
 
 # 特定バージョンをインポート
-/org-import v0.1.0
+/org-import v0.5.0
+
+# バージョン省略（= latest）
+/org-import
 ```
 
 ## 注意事項
+
 - **CLAUDE.md は上書きされる**: プロジェクト固有の設定がある場合は事前にバックアップ推奨
 - **ネットワーク必須**: GitHub にアクセスできる環境で実行
 - **preserve ファイルは安全**: プロジェクト固有データは上書きされない
+- **初回のみテンプレート展開**: BRIEF.md等は既存があれば上書きしない
 
 ## リリース一覧
-https://github.com/Yokotani-Dev/OrgOS-Dev/releases
+
+https://github.com/Yokotani-Dev/OrgOS/releases

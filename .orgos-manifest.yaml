@@ -12,8 +12,15 @@ publish:
   - "CLAUDE.md"
   - "AGENTS.md"
   - "ORGOS_QUICKSTART.md"
+  - "README.md"
   # リソーステンプレート
   - ".ai/RESOURCES/README.md"
+  # 初期テンプレート（/org-import で初回のみ展開）
+  - ".ai/TEMPLATES/BRIEF.md"
+  - ".ai/TEMPLATES/CONTROL.yaml"
+  - ".ai/TEMPLATES/DASHBOARD.md"
+  - ".ai/TEMPLATES/OWNER_INBOX.md"
+  - ".ai/TEMPLATES/OWNER_COMMENTS.md"
   # コマンド
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-export.md"
@@ -77,6 +84,19 @@ preserve:
   - ".ai/STATUS.yaml"
   - ".ai/RUN_LOG.md"
 
+# templates: 初回のみ展開（既存があればスキップ）- /org-import用
+templates:
+  - source: ".ai/TEMPLATES/BRIEF.md"
+    dest: ".ai/BRIEF.md"
+  - source: ".ai/TEMPLATES/CONTROL.yaml"
+    dest: ".ai/CONTROL.yaml"
+  - source: ".ai/TEMPLATES/DASHBOARD.md"
+    dest: ".ai/DASHBOARD.md"
+  - source: ".ai/TEMPLATES/OWNER_INBOX.md"
+    dest: ".ai/OWNER_INBOX.md"
+  - source: ".ai/TEMPLATES/OWNER_COMMENTS.md"
+    dest: ".ai/OWNER_COMMENTS.md"
+
 # create_dirs: インポート時に作成するディレクトリ
 create_dirs:
   - ".ai"
@@ -85,4 +105,6 @@ create_dirs:
   - ".ai/RESOURCES/designs"
   - ".ai/RESOURCES/references"
   - ".ai/RESOURCES/code-samples"
+  - ".ai/TEMPLATES"
   - ".claude/commands"
+  - ".claude/agents"
