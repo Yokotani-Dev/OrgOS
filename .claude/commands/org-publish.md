@@ -136,16 +136,41 @@ cd OrgOS
 - `AGENTS.md`
 - `ORGOS_QUICKSTART.md`
 
-### 5. コミット & タグ & プッシュ
+### 5. origin を削除（ユーザーが即座に使える状態にする）
+
+公開リポジトリでは origin を削除し、ユーザーが `/org-start` 時に切断確認を聞かれないようにする。
 
 ```bash
+git remote remove origin
+```
+
+**理由:**
+- ユーザーがクローンした時点で OrgOS-Dev への接続がない状態にする
+- `/org-start` 実行時に「切断しますか？」と聞かれるのを防ぐ
+- ユーザーは自分のリポジトリを追加するだけでOK
+
+### 6. コミット & タグ & プッシュ
+
+```bash
+# origin を戻す（プッシュ用）
+git remote add origin https://github.com/Yokotani-Dev/OrgOS.git
+
 git add -A
 git commit -m "Release v${VERSION}"
 git tag v${VERSION}
 git push origin main --tags
+
+# プッシュ後に再度 origin を削除してコミット
+git remote remove origin
+git add -A
+git commit --amend -m "Release v${VERSION}"
+git remote add origin https://github.com/Yokotani-Dev/OrgOS.git
+git push origin main --force --tags
 ```
 
-### 6. クリーンアップ
+**注意:** 最終的な公開リポジトリの状態では `.git/config` に origin が存在しない。
+
+### 7. クリーンアップ
 
 ```bash
 rm -rf $WORK_DIR
