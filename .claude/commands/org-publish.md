@@ -27,6 +27,69 @@ OrgOS-Dev (private)  ──→  OrgOS (public)
 
 ## 実行手順
 
+### 0. 公開前バリデーション（デグレ防止）
+
+公開前に以下のチェックを実行する。
+
+#### a. 前回公開バージョンとの差分を取得
+
+```bash
+# 公開リポジトリの最新タグを取得
+PUBLIC_TAG=$(git ls-remote --tags public 2>/dev/null | grep -o 'v[0-9]*\.[0-9]*\.[0-9]*' | sort -V | tail -1)
+
+# ローカルの最新タグ
+LOCAL_TAG=$(git describe --tags --abbrev=0)
+
+echo "公開リポジトリ: $PUBLIC_TAG"
+echo "ローカル: $LOCAL_TAG"
+```
+
+#### b. 公開予定ファイルの差分レビュー
+
+以下の情報を表示して確認を求める:
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 OrgOS 公開前レビュー
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+バージョン: v0.4.0 → v0.5.0
+
+📝 変更ファイル:
+  M .ai/CHANGELOG.md
+  M .ai/VERSION.yaml
+  A .claude/commands/org-publish.md
+  M .orgos-manifest.yaml
+
+🗑️ 削除ファイル:
+  (なし)
+
+⚠️ 注意が必要な変更:
+  - 新しいコマンド org-publish が追加されます
+  - manifest構造が変更されています
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+この内容で公開しますか？ [y/N]
+```
+
+#### c. チェック項目
+
+| チェック | 説明 | 失敗時 |
+|----------|------|--------|
+| タグ存在確認 | ローカルにタグが存在するか | ❌ 中止 |
+| ファイル整合性 | manifestのpublishファイルがすべて存在するか | ❌ 中止 |
+| 削除ファイル検出 | 前バージョンにあって今回ないファイル | ⚠️ 警告 |
+| 機密情報スキャン | .env, secrets, API keyなどの混入 | ❌ 中止 |
+
+**AskUserQuestion** で確認:
+- 差分を確認しましたか？
+- 削除ファイルは意図的ですか？（該当時）
+- 公開してよいですか？
+
+すべてOKの場合のみ、以下に進む。
+
+---
+
 ### 1. 環境確認
 
 ```bash
@@ -121,6 +184,54 @@ rm -rf $WORK_DIR
 Yokotani-Dev/OrgOS-Dev  (private)  ← 開発用
 Yokotani-Dev/OrgOS      (public)   ← 公開用
 ```
+
+## ロールバック手順
+
+公開後に問題が見つかった場合のロールバック方法。
+
+### 方法1: 前バージョンに戻す（推奨）
+
+```bash
+# 公開リポジトリをクローン
+git clone https://github.com/Yokotani-Dev/OrgOS.git
+cd OrgOS
+
+# 前バージョンのタグに戻す
+git checkout v0.4.0  # 戻したいバージョン
+
+# main を強制更新
+git branch -D main
+git checkout -b main
+git push origin main --force
+
+# 問題のタグを削除
+git push origin :refs/tags/v0.5.0
+```
+
+### 方法2: revert コミット
+
+```bash
+# 公開リポジトリをクローン
+git clone https://github.com/Yokotani-Dev/OrgOS.git
+cd OrgOS
+
+# 最新コミットをrevert
+git revert HEAD --no-edit
+git push origin main
+
+# タグは残したまま（履歴を残す）
+```
+
+### 方法3: 修正版をすぐにリリース
+
+1. 開発リポジトリで問題を修正
+2. `/org-release` で patch バージョンをリリース（例: v0.5.1）
+3. `/org-publish` で公開
+
+**注意:**
+- force push は利用者に影響を与える可能性がある
+- 可能であれば方法3（修正版リリース）を推奨
+- ロールバック後は `.ai/CHANGELOG.md` に記録を残す
 
 ## 関連コマンド
 

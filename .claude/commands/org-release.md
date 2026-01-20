@@ -7,6 +7,66 @@ OrgOSの新バージョンをリリースする。変更を自動検出し、VER
 
 ## 実行手順
 
+### 0. **リリース前バリデーション（デグレ防止）**
+
+以下のチェックを実行し、すべてパスしないとリリースを中止する。
+
+```python
+import yaml
+import os
+import sys
+import re
+
+def validate_release():
+    errors = []
+    warnings = []
+
+    # 1. manifest構造チェック
+    with open('.orgos-manifest.yaml', 'r') as f:
+        manifest = yaml.safe_load(f)
+
+    required_sections = ['version_file', 'publish', 'core']
+    for section in required_sections:
+        if section not in manifest:
+            errors.append(f"manifest missing: {section}")
+
+    # 2. publishファイル存在チェック
+    for file_path in manifest.get('publish', []):
+        if not os.path.exists(file_path):
+            errors.append(f"publish file missing: {file_path}")
+
+    # 3. coreファイル存在チェック
+    for file_path in manifest.get('core', []):
+        if not os.path.exists(file_path):
+            errors.append(f"core file missing: {file_path}")
+
+    # 4. VERSION.yaml形式チェック
+    with open('.ai/VERSION.yaml', 'r') as f:
+        version = yaml.safe_load(f)
+
+    if not re.match(r'^\d+\.\d+\.\d+$', version.get('current', '')):
+        errors.append(f"invalid version format: {version.get('current')}")
+
+    # 5. 前バージョンから削除されたファイルの検出
+    # git diff で削除ファイルを検出
+    # 警告として表示
+
+    return errors, warnings
+```
+
+**チェック項目:**
+| チェック | 失敗時 |
+|----------|--------|
+| manifest構造 | ❌ リリース中止 |
+| publishファイル存在 | ❌ リリース中止 |
+| coreファイル存在 | ❌ リリース中止 |
+| VERSION.yaml形式 | ❌ リリース中止 |
+| 削除ファイル検出 | ⚠️ 警告表示 |
+
+すべてのチェックがパスした場合のみ、以下に進む。
+
+---
+
 1. **前回リリースからの変更を検出**
    ```bash
    # 最新タグを取得
