@@ -4,7 +4,28 @@
 
 ---
 
-## Step 1: BRIEF を書く
+## Step 1: /org-start を実行
+
+Claude Code で以下を実行：
+
+```
+/org-start
+```
+
+これにより自動で：
+1. **リポジトリ確認**（OrgOS-Dev接続時は警告→切断確認）
+2. 既存の台帳データを退避（`.ai/_archive/` へ）
+3. 台帳を初期化
+4. BRIEF.md を確認（未記入なら記入を促して停止）
+5. キックオフ質問を生成
+6. `.ai/OWNER_INBOX.md` に質問を記載
+7. `.ai/DASHBOARD.md` を更新
+
+> **Note**: OrgOS自体を開発する場合は `/org-admin` を使用してください。
+
+---
+
+## Step 2: BRIEF を書く（未記入の場合）
 
 `.ai/BRIEF.md` を開いて、以下を記入してください：
 
@@ -19,23 +40,7 @@
 
 **ポイント**: 完璧でなくてOK。分からない項目は「TBD」と書いてください。
 
----
-
-## Step 2: /org-start を実行
-
-Claude Code で以下を実行：
-
-```
-/org-start
-```
-
-これにより自動で：
-1. 既存の台帳データを退避（`.ai/_archive/` へ）
-2. 台帳を初期化
-3. BRIEF.md を読み取り
-4. キックオフ質問を生成
-5. `.ai/OWNER_INBOX.md` に質問を記載
-6. `.ai/DASHBOARD.md` を更新
+記入後、再度 `/org-start` を実行するとキックオフ質問が生成されます。
 
 ---
 

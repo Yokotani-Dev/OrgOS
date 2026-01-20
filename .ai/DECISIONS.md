@@ -35,7 +35,12 @@
 
 ## Decided
 
-(履歴なし)
+- ID: D-001
+  Title: 成果物格納ディレクトリの標準化
+  Decision: `.ai/ARTIFACTS/` を新設し、サブディレクトリで分類
+  Decided by: Owner
+  Date: 2026-01-20
+  Rationale: 入力(RESOURCES)と出力(ARTIFACTS)を明確に分離し、成果物の配置場所を標準化
 
 <!--
 決定済みの例：
