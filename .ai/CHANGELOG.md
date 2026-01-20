@@ -4,6 +4,26 @@
 
 ---
 
+## v0.5.0 (2026-01-20)
+
+### 追加
+- **`/org-publish`**: 開発リポジトリ（OrgOS-Dev）から公開リポジトリ（OrgOS）への同期機能
+- **CI自動テスト**: `.github/workflows/test.yaml`（push/PR時にmanifest・ファイル整合性を自動検証）
+- **公開リポジトリ**: `Yokotani-Dev/OrgOS`（public）を新設
+
+### 改善
+- **`/org-release`**: リリース前バリデーション追加（manifest構造、ファイル存在、VERSION形式のチェック）
+- **`/org-publish`**: 公開前レビュー（差分表示、削除ファイル検出、機密情報スキャン）
+- **`/org-publish`**: ロールバック手順をドキュメント化（3パターン）
+- **`.orgos-manifest.yaml`**: `publish`セクション追加（公開対象ファイルを明示的に定義）
+
+### リポジトリ運用
+- **開発用（private）**: `Yokotani-Dev/OrgOS-Dev`
+- **公開用（public）**: `Yokotani-Dev/OrgOS`
+- リリースフロー: `/org-release` → `/org-publish`
+
+---
+
 ## v0.4.0 (2026-01-20)
 
 ### 追加

@@ -14,7 +14,6 @@ publish:
   - "ORGOS_QUICKSTART.md"
   # リソーステンプレート
   - ".ai/RESOURCES/README.md"
-  - ".ai/RESOURCES/BRIEF_TEMPLATE.md"
   # コマンド
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-export.md"
@@ -43,14 +42,14 @@ publish:
   # Git hooks
   - ".githooks/pre-push"
   # GitHub Actions
-  - ".github/workflows/release.yml"
+  - ".github/workflows/release.yaml"
+  - ".github/workflows/test.yaml"
 
 # core: 上書きしてOK（OrgOSのコア機能）- /org-import用
 core:
   - ".ai/VERSION.yaml"
   - ".ai/CHANGELOG.md"
   - ".ai/RESOURCES/README.md"
-  - ".ai/RESOURCES/BRIEF_TEMPLATE.md"
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-export.md"
   - ".claude/commands/org-import.md"
