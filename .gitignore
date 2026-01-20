@@ -1,0 +1,4 @@
+# OrgOS
+.worktrees/
+.claude/settings.local.json
+.ai/_archive/

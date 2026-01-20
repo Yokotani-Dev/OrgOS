@@ -1,0 +1,26 @@
+# OrgOS Version (内部管理用)
+# 人間向けの変更履歴は CHANGELOG.md を参照
+
+current: "0.4.0"
+released_at: "2026-01-20"
+
+history:
+  - version: "0.4.0"
+    date: "2026-01-20"
+    description: "Add /org-codex, /org-admin, parallel execution support"
+  - version: "0.3.0"
+    date: "2025-01-19"
+    description: "Add /org-init command and OrgOS-Dev connection warning"
+  - version: "0.2.0"
+    date: "2025-01-19"
+    description: "Add /org-release command"
+  - version: "0.1.0"
+    date: "2025-01-19"
+    description: "Initial release with export/import support"
+    files_changed:
+      - ".ai/VERSION.yaml"
+      - ".ai/CHANGELOG.md"
+      - ".orgos-manifest.yaml"
+      - ".claude/commands/org-export.md"
+      - ".claude/commands/org-import.md"
+      - ".claude/commands/org-*.md"
