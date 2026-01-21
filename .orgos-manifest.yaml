@@ -54,6 +54,8 @@ publish:
   - ".claude/rules/testing.md"
   - ".claude/rules/review-criteria.md"
   - ".claude/rules/patterns.md"
+  - ".claude/rules/agent-coordination.md"
+  - ".claude/rules/performance.md"
   # 設定
   - ".claude/settings.json"
   # Git hooks
