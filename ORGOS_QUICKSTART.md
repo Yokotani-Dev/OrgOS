@@ -178,9 +178,61 @@ A: `.ai/CONTROL.yaml` で `allow_push: true` に変更してください（Owner
 
 ---
 
+## 技術ガイダンス（Skills / Rules）
+
+OrgOS には実装品質の基準となる技術ドキュメントが含まれています。
+
+### Skills（技術知識ベース）
+
+| ファイル | 内容 |
+|----------|------|
+| [.claude/skills/coding-standards.md](.claude/skills/coding-standards.md) | コーディング規約（TypeScript/React/API設計） |
+| [.claude/skills/backend-patterns.md](.claude/skills/backend-patterns.md) | バックエンドパターン（リポジトリ、サービス層） |
+| [.claude/skills/frontend-patterns.md](.claude/skills/frontend-patterns.md) | フロントエンドパターン（カスタムフック、状態管理） |
+| [.claude/skills/tdd-workflow.md](.claude/skills/tdd-workflow.md) | TDD ワークフロー（Red-Green-Refactor） |
+
+### Rules（品質基準）
+
+| ファイル | 内容 |
+|----------|------|
+| [.claude/rules/security.md](.claude/rules/security.md) | セキュリティルール（OWASP Top 10） |
+| [.claude/rules/testing.md](.claude/rules/testing.md) | テストルール（80% カバレッジ目標） |
+| [.claude/rules/review-criteria.md](.claude/rules/review-criteria.md) | レビュー基準（CRITICAL/HIGH/MEDIUM） |
+| [.claude/rules/patterns.md](.claude/rules/patterns.md) | 共通パターン（API 応答形式など） |
+
+---
+
+## 学習の蓄積
+
+セッション中に解決した問題から、将来役立つ知見を抽出して蓄積できます。
+
+```
+/org-learn
+```
+
+抽出されたパターンは `.ai/LEARNINGS/` に保存されます。
+
+---
+
+## Claude と Codex の使い分け
+
+OrgOS では、タスクの特性に応じて Claude と OpenAI Codex を使い分けます。
+
+| 担当 | エンジン | 理由 |
+|------|----------|------|
+| Manager / Planner / Architect | Claude | 全体構造の理解、設計判断 |
+| Implementer | Codex | 堅牢な実装、エラーハンドリング |
+| Reviewer（コード品質） | Codex | セキュリティ、堅牢性チェック |
+| Reviewer（設計妥当性） | Claude | プロジェクト全体の文脈理解 |
+
+詳細は [AGENTS.md](AGENTS.md) を参照してください。
+
+---
+
 ## 詳細ドキュメント
 
 - [CLAUDE.md](CLAUDE.md) - OrgOS Manager の振る舞い定義
-- [AGENTS.md](AGENTS.md) - Codex worker のルール
+- [AGENTS.md](AGENTS.md) - Worker（Claude/Codex）のルール
 - [.ai/GIT_WORKFLOW.md](.ai/GIT_WORKFLOW.md) - Git 運用ルール
 - [requirements.md](requirements.md) - OrgOS 仕様書
+- [.ai/LEARNINGS/README.md](.ai/LEARNINGS/README.md) - 学習記録の説明

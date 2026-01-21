@@ -56,6 +56,28 @@
 
 ---
 
+## 技術ガイダンス
+
+実装品質の基準として、以下のドキュメントを参照します。
+
+### Skills（技術知識ベース）
+
+- `.claude/skills/coding-standards.md` - コーディング規約
+- `.claude/skills/backend-patterns.md` - バックエンドパターン
+- `.claude/skills/frontend-patterns.md` - フロントエンドパターン
+- `.claude/skills/tdd-workflow.md` - TDD ワークフロー
+
+### Rules（品質基準）
+
+- `.claude/rules/security.md` - セキュリティルール
+- `.claude/rules/testing.md` - テストルール
+- `.claude/rules/review-criteria.md` - レビュー基準
+- `.claude/rules/patterns.md` - 共通パターン
+
+Work Order 生成時に関連する Skills/Rules を参照として記載します。
+
+---
+
 ## 次のステップ案内
 
 **全ての応答の末尾に「次はこちら」を案内します。迷わず進められるようにナビゲートします。**

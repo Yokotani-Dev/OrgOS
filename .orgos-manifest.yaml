@@ -36,6 +36,7 @@ publish:
   - ".claude/commands/org-admin.md"
   - ".claude/commands/org-release.md"
   - ".claude/commands/org-publish.md"
+  - ".claude/commands/org-learn.md"
   # エージェント
   - ".claude/agents/org-planner.md"
   - ".claude/agents/org-architect.md"
@@ -44,6 +45,17 @@ publish:
   - ".claude/agents/org-os-maintainer.md"
   - ".claude/agents/org-implementer.md"
   - ".claude/agents/org-reviewer.md"
+  - ".claude/agents/org-security-reviewer.md"
+  # Skills（技術知識ベース）
+  - ".claude/skills/coding-standards.md"
+  - ".claude/skills/backend-patterns.md"
+  - ".claude/skills/frontend-patterns.md"
+  - ".claude/skills/tdd-workflow.md"
+  # Rules（品質基準）
+  - ".claude/rules/security.md"
+  - ".claude/rules/testing.md"
+  - ".claude/rules/review-criteria.md"
+  - ".claude/rules/patterns.md"
   # 設定
   - ".claude/settings.json"
   # Git hooks

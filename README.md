@@ -54,17 +54,36 @@ claude
    - `.ai/OWNER_COMMENTS.md` に回答を記入
    - `/org-tick` で進行
 
-## 主なコマンド
+## コマンド一覧
 
-| コマンド | 説明 |
-|----------|------|
-| `/org-start` | プロジェクト初期化 |
-| `/org-brief` | 対話形式でBRIEF.mdを作成 |
-| `/org-kickoff` | キックオフ質問を生成 |
-| `/org-plan` | 要件→設計→タスクDAGを作成 |
-| `/org-tick` | 1Tick進行（台帳更新→タスク分配→レビュー→次の手） |
-| `/org-review` | Review Packet + diff を用いたレビュー |
-| `/org-integrate` | マージ順制御してmainへ統合 |
+```
+基本フロー
+  /org-start     プロジェクト起動（初期化 or 再開）
+  /org-brief     BRIEF.md を対話形式で整形
+  /org-kickoff   キックオフ質問を生成
+  /org-tick      進行を1Tick進める（最もよく使う）
+
+計画・設計
+  /org-plan      要件/設計/Contract/タスクDAG を作成
+
+実装・レビュー
+  /org-codex     Codex タスクを実行
+  /org-review    Review Packet + diff でレビュー
+
+統合・リリース
+  /org-integrate main へ統合
+  /org-release   リリース実行
+
+学習・振り返り
+  /org-learn     セッションから学習を抽出
+  /org-os-retro  OrgOS 自体の振り返り・改善提案
+
+管理（開発者向け）
+  /org-admin     管理者モード有効化
+  /org-export    リリースフロー案内
+  /org-import    OrgOS をインポート
+  /org-publish   公開リポジトリへ同期
+```
 
 ## ファイル構成
 
