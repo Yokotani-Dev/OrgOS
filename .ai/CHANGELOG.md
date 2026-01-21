@@ -4,6 +4,33 @@
 
 ---
 
+## v0.8.0 (2026-01-21)
+
+### 追加
+- **Skills（技術知識ベース）**: 実装品質の基準となる4ファイル
+  - `coding-standards.md` - コーディング規約（TypeScript/React/API設計）
+  - `backend-patterns.md` - バックエンドパターン（リポジトリ、サービス層）
+  - `frontend-patterns.md` - フロントエンドパターン（カスタムフック、状態管理）
+  - `tdd-workflow.md` - TDDワークフロー（Red-Green-Refactor）
+- **Rules（品質基準）**: レビュー・実装時の判断基準4ファイル
+  - `security.md` - セキュリティルール（OWASP Top 10）
+  - `testing.md` - テストルール（80%カバレッジ目標）
+  - `review-criteria.md` - レビュー基準（CRITICAL/HIGH/MEDIUM）
+  - `patterns.md` - 共通パターン（API応答形式など）
+- **`/org-learn`**: セッションから学習を抽出し `.ai/LEARNINGS/` に保存
+- **`org-security-reviewer`**: セキュリティ専門レビューエージェント（OWASP、脆弱性検出）
+- **`org-reviewer`**: 設計妥当性レビューエージェント（復活・役割変更）
+
+### 改善
+- **AGENTS.md**: Claude/Codex使い分けを明確化
+  - Claude: 全体制御、設計整理、設計妥当性レビュー
+  - Codex: 実装（堅牢性重視）、コード品質レビュー
+- **README.md**: コマンド一覧（15コマンド）をコードブロックで追加
+- **サンドボックス**: デフォルトで無効化（npm/GitHub等のエラー解消）
+- **ORGOS_ARCHITECTURE.md**: 内部ドキュメント化（`.ai/RESOURCES/`に移動）
+
+---
+
 ## v0.7.0 (2026-01-21)
 
 ### 追加
