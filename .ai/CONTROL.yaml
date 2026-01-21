@@ -19,7 +19,7 @@ awaiting_owner: false # true: Owner の回答待ち
 # 注意: フラグ行にはインラインコメントを入れないこと（パーサーが読めなくなる）
 allow_push: true
 allow_push_main: true
-allow_main_mutation: false
+allow_main_mutation: true
 allow_deploy: false
 allow_destructive_ops: false
 allow_os_mutation: false

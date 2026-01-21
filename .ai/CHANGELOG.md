@@ -4,6 +4,36 @@
 
 ---
 
+## v0.9.0 (2026-01-21)
+
+### 追加
+- **新規エージェント（5つ）**: ECD (everything-claude-code) からインスパイアされた専門エージェント
+  - `org-build-fixer` - TypeScript/ビルドエラーを最小diffで修正
+  - `org-refactor-cleaner` - 死コード削除、重複排除、依存整理
+  - `org-tdd-coach` - TDDワークフローガイド、カバレッジ監視
+  - `org-e2e-runner` - Playwright E2Eテスト実行
+  - `org-doc-updater` - コードマップ生成、ドキュメント自動更新
+- **エージェント自動選択機構**: `/org-tick` が状況を診断し、必要なエージェントを自動選択・実行
+
+### 改善
+- **既存エージェント強化（4つ）**:
+  - `org-planner` - 計画テンプレート、レッドフラグ検出、不確実性分類（B1/B2）を追加
+  - `org-architect` - 5設計原則、パターン集、アンチパターン警告、Contract定義を追加
+  - `org-reviewer` - 詳細なレビュー手順、判定基準を追加
+  - `org-scribe` - 台帳管理ルール、ブラックボックス検出、乖離検出を追加
+
+### 削除
+- **コマンド簡素化（15→7コマンド）**: `/org-tick` に統合
+  - 削除: `/org-plan`, `/org-review`, `/org-integrate`, `/org-codex`, `/org-learn`, `/org-export`, `/org-kickoff`, `/org-os-retro`
+  - 残存（通常利用）: `/org-start`, `/org-tick`, `/org-brief`, `/org-import`
+  - 残存（Dev環境）: `/org-release`, `/org-publish`, `/org-admin`
+
+### 設計変更
+- **ユーザーは基本的に `/org-tick` だけ実行すればOK** - エージェント選択・並列実行はOrgOSが自動判断
+- 状況診断ベースのエージェント起動（P0緊急対応→P1計画→P2実装→P3メンテナンス→P4統合）
+
+---
+
 ## v0.8.0 (2026-01-21)
 
 ### 追加
