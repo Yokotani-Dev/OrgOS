@@ -88,13 +88,69 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
 - `.ai/TEMPLATES/OWNER_INBOX.md` → `.ai/OWNER_INBOX.md`
 - `.ai/TEMPLATES/OWNER_COMMENTS.md` → `.ai/OWNER_COMMENTS.md`
 
-### 6. クリーンアップ
+### 6. 設定のマイグレーション（既存プロジェクト向け）
+
+保持された `.ai/CONTROL.yaml` に、新バージョンで追加された設定項目を追加する。
+
+#### 6.1 マイグレーション対象
+
+| 設定項目 | 追加バージョン | デフォルト値 |
+|----------|---------------|-------------|
+| `owner_review_policy.mode` | v0.6.0 | 既存の `every_n_tasks` から推測 |
+| `owner_review_policy.tasks_since_last_review` | v0.6.0 | `0` |
+| `owner_literacy_level` | v0.5.0 | `"intermediate"` |
+
+#### 6.2 マイグレーションロジック
+
+```python
+# 疑似コード
+def migrate_control_yaml(control):
+    migrated = []
+
+    # owner_review_policy.mode のマイグレーション
+    if 'owner_review_policy' in control:
+        if 'mode' not in control['owner_review_policy']:
+            # 既存の every_n_tasks があれば every_n_tasks モード
+            if control['owner_review_policy'].get('every_n_tasks'):
+                control['owner_review_policy']['mode'] = "every_n_tasks"
+            else:
+                control['owner_review_policy']['mode'] = "every_tick"
+            migrated.append("owner_review_policy.mode")
+
+        if 'tasks_since_last_review' not in control['owner_review_policy']:
+            control['owner_review_policy']['tasks_since_last_review'] = 0
+            migrated.append("owner_review_policy.tasks_since_last_review")
+    else:
+        # セクション全体を追加（テンプレートから）
+        control['owner_review_policy'] = {
+            'mode': "every_n_tasks",
+            'every_n_tasks': 3,
+            'on_stage_transition': True,
+            'always_before_merge_to_main': True,
+            'always_before_release': True,
+            'tasks_since_last_review': 0
+        }
+        migrated.append("owner_review_policy（全体）")
+
+    # owner_literacy_level のマイグレーション
+    if 'owner_literacy_level' not in control:
+        control['owner_literacy_level'] = "intermediate"
+        migrated.append("owner_literacy_level")
+
+    return migrated
+```
+
+#### 6.3 マイグレーション結果の記録
+
+マイグレーションが発生した場合、結果報告に含める。
+
+### 7. クリーンアップ
 
 ```bash
 rm -rf $WORK_DIR
 ```
 
-### 7. 結果報告
+### 8. 結果報告
 
 ```
 OrgOS $VERSION をインポートしました。
@@ -104,7 +160,7 @@ OrgOS $VERSION をインポートしました。
 更新されたファイル:
 - .ai/VERSION.yaml
 - .ai/CHANGELOG.md
-- .claude/commands/org-*.md (14ファイル)
+- .claude/commands/org-*.md (15ファイル)
 - CLAUDE.md
 
 保持されたファイル（既存のため上書きなし）:
@@ -116,8 +172,14 @@ OrgOS $VERSION をインポートしました。
 - .ai/CONTROL.yaml
 - .ai/DASHBOARD.md
 
+マイグレーションした設定（既存CONTROLに追加）:
+- owner_review_policy.mode: "every_n_tasks"（既存値から推測）
+- owner_review_policy.tasks_since_last_review: 0
+- owner_literacy_level: "intermediate"
+
 次のステップ:
 - 初めての導入の場合: `/org-start` でプロジェクト初期化
+- 設定を変更したい場合: `/org-settings` で調整
 - 変更内容: `.ai/CHANGELOG.md` を参照
 ```
 
