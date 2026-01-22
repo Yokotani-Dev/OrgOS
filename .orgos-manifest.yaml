@@ -62,7 +62,6 @@ publish:
   - ".githooks/pre-push"
   # GitHub Actions
   - ".github/workflows/release.yaml"
-  - ".github/workflows/test.yaml"
 
 # core: 上書きしてOK（OrgOSのコア機能）- /org-import用
 core:
