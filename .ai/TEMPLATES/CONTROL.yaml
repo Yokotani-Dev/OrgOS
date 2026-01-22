@@ -39,11 +39,25 @@ gates:
   release_approved: false
 
 # Owner Review ポリシー
+# /org-start または /org-settings で設定
 owner_review_policy:
-  on_stage_transition: true       # ステージ遷移時にレビュー
-  every_n_tasks: 3                # N タスクごとにレビュー
+  # レビューモード
+  # every_tick: タスク完了ごとにレビュー
+  # every_n_tasks: Nタスクごとにレビュー（バランス型、デフォルト）
+  # batch: 全タスク完了後にまとめてレビュー
+  # manual: Ownerが明示的に依頼するまでレビューしない
+  mode: "every_n_tasks"
+  every_n_tasks: 3                # mode=every_n_tasks の場合のタスク数
+  on_stage_transition: true       # ステージ遷移時は常にレビュー
   always_before_merge_to_main: true
   always_before_release: true
+  tasks_since_last_review: 0      # カウンター（ランタイム）
+
+# Owner の IT リテラシーレベル（/org-start または /org-settings で設定）
+# beginner: IT初心者向け（専門用語を避け、平易な日本語で説明）
+# intermediate: 一般ユーザー向け（基本的なIT用語はOK）
+# advanced: 開発者向け（専門用語をそのまま使用）
+owner_literacy_level: "intermediate"
 
 # Codex worker 設定 (OpenAI Codex CLI)
 codex:

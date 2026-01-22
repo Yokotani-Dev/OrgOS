@@ -14,18 +14,14 @@ Claude Code で大規模開発を安全に進めるためのフレームワー�
 ### 方法1: git clone（推奨）
 
 ```bash
-# リポジトリをクローン
+# リポジトリをクローン（最後の引数でフォルダ名を指定）
 git clone https://github.com/Yokotani-Dev/OrgOS.git my-project
 cd my-project
-
-# OrgOS-Devからリポジトリを切断し、自分のリポジトリに接続
-git remote remove origin
-git remote add origin <YOUR_REPO_URL>
 
 # Claude Code を起動
 claude
 
-# OrgOSを初期化
+# OrgOSを初期化（対話形式でプロジェクト概要をヒアリング）
 /org-start
 ```
 
@@ -41,15 +37,12 @@ claude
 
 ## 初期セットアップ
 
-1. **BRIEF.md を記入**
-   - `.ai/BRIEF.md` にプロジェクト概要を記入
-   - 作りたいもの、マスト要件、NG事項を書く
-   - 分からない項目は「TBD」でOK
+1. **`/org-start` を実行**
+   - 対話形式でプロジェクト概要をヒアリング
+   - `.ai/BRIEF.md` が自動生成される
+   - キックオフ質問が生成される
 
-2. **`/org-start` を実行**
-   - プロジェクト初期化とキックオフ質問が生成される
-
-3. **質問に回答**
+2. **質問に回答**
    - `.ai/OWNER_INBOX.md` の質問を確認
    - `.ai/OWNER_COMMENTS.md` に回答を記入
    - `/org-tick` で進行
