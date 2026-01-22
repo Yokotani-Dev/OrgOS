@@ -179,10 +179,88 @@ cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-0
 実行後、再度 `/org-tick` で結果を回収します。
 ```
 
-### 7. レビュー処理
-- Implementer完了タスクは review へ移動
+### 7. レビュー処理（ポリシーベース）
+
+`CONTROL.yaml` の `owner_review_policy` に従ってレビューを実行する。
+
+#### 7.1 レビュートリガー判定
+
+```python
+# 疑似コード
+def should_trigger_review(control, completed_task):
+    policy = control.owner_review_policy
+
+    # オーバーライド条件（常にトリガー）
+    if policy.on_stage_transition and stage_changed:
+        return True, "stage_transition"
+    if policy.always_before_merge_to_main and is_merge_to_main:
+        return True, "merge_to_main"
+    if policy.always_before_release and is_release:
+        return True, "release"
+
+    # OWNER_COMMENTS.md に「レビューして」等の要求があればトリガー
+    if owner_requested_review():
+        return True, "owner_request"
+
+    # モードによる判定（デフォルトは every_n_tasks）
+    mode = policy.get("mode", "every_n_tasks")
+
+    if mode == "every_tick":
+        return True, "every_tick"
+
+    elif mode == "every_n_tasks":
+        tasks_done = policy.tasks_since_last_review + 1
+        if tasks_done >= policy.every_n_tasks:
+            # カウンターリセット
+            update_counter(0)
+            return True, "every_n_tasks"
+        else:
+            # カウンター更新、レビュースキップ
+            update_counter(tasks_done)
+            return False, None
+
+    elif mode == "batch":
+        # 全タスク完了時のみレビュー
+        if all_tasks_completed():
+            return True, "batch_complete"
+        return False, None
+
+    elif mode == "manual":
+        # 手動要求がないのでスキップ
+        return False, None
+
+    return True, "default"  # フォールバック
+```
+
+#### 7.2 レビュー実行（トリガー時）
+
+レビューをトリガーする場合：
+- 完了タスクを `review` ステータスに移動
 - Review Packet が `.ai/REVIEW/PACKETS/<TASK_ID>.md` にあることを確認
-- org-reviewer + org-security-reviewer を並列で起動
+- `org-reviewer` + `org-security-reviewer` を並列で起動
+- `tasks_since_last_review` カウンターをリセット
+
+#### 7.3 レビュースキップ（非トリガー時）
+
+レビューをスキップする場合：
+- 完了タスクを `pending_review` ステータスに保持（batch/manual モード）
+- または直接 `done` に移動（信頼度が高い場合）
+- RUN_LOG に記録: `"レビュースキップ (mode: <mode>, counter: <n>/<total>)"`
+- `tasks_since_last_review` カウンターを +1
+
+#### 7.4 手動レビュー要求
+
+OWNER_COMMENTS.md に以下のようなキーワードがあれば、モードに関係なくレビューをトリガー：
+- 「レビューして」「レビュー依頼」「確認して」「review」
+
+トリガー後はカウンターをリセット。
+
+#### 7.5 バッチレビュー（mode=batch の場合）
+
+全タスク完了時にまとめてレビュー：
+- `pending_review` ステータスのタスクを全て `review` に移動
+- 各タスクの Review Packet を確認
+- `org-reviewer` + `org-security-reviewer` を実行
 
 ### 8. 統合処理
 レビュー承認済みタスクがあれば：
