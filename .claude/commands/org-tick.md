@@ -23,11 +23,103 @@ awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
 - `changes_requested` → running へ戻し、修正タスクとして再委任
 - 完了したタスクの worktree をクリーンアップ対象としてマーク
 
-### 5. 状況診断とエージェント自動選択
+### 5. 計画整合性チェック（Plan Sync）
+
+実態と計画の乖離を検出し、必要に応じて計画を更新する。
+
+#### 5.1 チェック項目
+
+| チェック | 検出内容 | 対応 |
+|----------|----------|------|
+| **スコープ変更** | 新しい要件、取り下げられた要件 | PROJECT.md + TASKS.yaml を更新 |
+| **タスク追加** | 実装中に判明した追加作業 | TASKS.yaml に新タスク追加 |
+| **依存関係変更** | 前提が変わった、順序変更が必要 | TASKS.yaml の deps を修正 |
+| **見積もり乖離** | 想定より大きい/小さいタスク | タスク分割 or 統合 |
+| **リスク顕在化** | RISKS.md のリスクが発生 | 対応タスクを追加 |
+| **ブロッカー発生** | 外部依存、Owner 作業待ち | status: blocked に変更 |
+
+#### 5.2 計画更新のトリガー
+
+以下の条件で計画を更新する：
+
+```python
+# 疑似コード
+def check_plan_sync():
+    updates_needed = []
+
+    # 新しい課題が発生した
+    if new_issues_detected():
+        for issue in new_issues:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_fix_task(issue)
+            })
+
+    # 完了タスクから追加作業が判明
+    for task in completed_tasks:
+        if task.discovered_work:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_followup_task(task.discovered_work)
+            })
+
+    # リスクが顕在化
+    for risk in active_risks:
+        if risk.materialized:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_mitigation_task(risk)
+            })
+            updates_needed.append({
+                "type": "update_risk",
+                "risk": risk,
+                "status": "materialized"
+            })
+
+    # スコープ変更（OWNER_COMMENTS から検出）
+    if scope_changes_requested():
+        updates_needed.append({
+            "type": "update_project",
+            "changes": parse_scope_changes()
+        })
+
+    return updates_needed
+```
+
+#### 5.3 計画更新の実行
+
+更新が必要な場合：
+
+1. **TASKS.yaml を更新**
+   - 新タスク追加（適切な deps を設定）
+   - 既存タスクの status/blocker を更新
+   - 不要になったタスクを削除または archived に
+
+2. **PROJECT.md を更新**（スコープ変更時）
+   - ゴール/成果物の変更を反映
+   - 変更理由を DECISIONS.md に記録
+
+3. **DASHBOARD.md に反映**
+   - 計画変更を Owner に通知
+   - 影響範囲を説明
+
+#### 5.4 計画更新の記録
+
+```markdown
+## DECISIONS.md に追記
+- **PLAN-UPDATE-001**: TASKS.yaml を更新
+  - 追加: T-FIX-001 (Client Secret 更新)
+  - 変更: T-004 の deps に T-FIX-001 を追加
+  - 理由: ISSUE-005 対応のため
+```
+
+---
+
+### 6. 状況診断とエージェント自動選択
 
 状況を分析し、必要なエージェントを自動的に選択・実行する。
 
-#### 5.1 診断チェック
+#### 6.1 診断チェック
 
 以下の順序で状況をチェックし、該当するエージェントを起動:
 
@@ -45,7 +137,7 @@ awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
 | **P4** | レビュー承認済みタスクあり | `org-integrator` | main統合 |
 | **常時** | Tick終了時 | `org-scribe` | 台帳記録 |
 
-#### 5.2 診断の実行方法
+#### 6.2 診断の実行方法
 
 ```python
 # 疑似コード
@@ -92,7 +184,7 @@ def diagnose_and_select_agents():
     return agents_to_run
 ```
 
-#### 5.3 ビルドエラー検出
+#### 6.3 ビルドエラー検出
 
 ```bash
 # TypeScript プロジェクト
@@ -104,7 +196,7 @@ npm run build 2>&1 | head -20
 # エラーがあれば org-build-fixer を起動
 ```
 
-#### 5.4 カバレッジ検出
+#### 6.4 カバレッジ検出
 
 ```bash
 # カバレッジレポートを確認
@@ -113,11 +205,11 @@ npm test -- --coverage --coverageReporters=json-summary 2>/dev/null
 # 80% 未満なら org-tdd-coach を起動
 ```
 
-### 6. タスク委任
+### 7. タスク委任
 
 依存が解けた queued タスクを検出し、`runtime.max_parallel_tasks` 件まで自動的に委任する。
 
-#### 6.1 実行可能タスクの検出
+#### 7.1 実行可能タスクの検出
 
 ```python
 # 疑似コード
@@ -132,7 +224,7 @@ slots = max_parallel_tasks - count(running_tasks)
 to_run = executable[:slots]
 ```
 
-#### 6.2 owner_role による自動分岐
+#### 7.2 owner_role による自動分岐
 
 **Codex タスク（`codex-implementer` / `codex-reviewer`）：**
 
@@ -153,7 +245,7 @@ to_run = executable[:slots]
 - Task ツールで該当エージェントを起動
 - 診断結果に基づいて自動選択（5.1 参照）
 
-#### 6.3 Codex 実行の案内（auto_exec: false の場合）
+#### 7.3 Codex 実行の案内（auto_exec: false の場合）
 
 Ownerに以下を表示：
 
@@ -179,11 +271,11 @@ cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-0
 実行後、再度 `/org-tick` で結果を回収します。
 ```
 
-### 7. レビュー処理（ポリシーベース）
+### 8. レビュー処理（ポリシーベース）
 
 `CONTROL.yaml` の `owner_review_policy` に従ってレビューを実行する。
 
-#### 7.1 レビュートリガー判定
+#### 8.1 レビュートリガー判定
 
 ```python
 # 疑似コード
@@ -232,7 +324,7 @@ def should_trigger_review(control, completed_task):
     return True, "default"  # フォールバック
 ```
 
-#### 7.2 レビュー実行（トリガー時）
+#### 8.2 レビュー実行（トリガー時）
 
 レビューをトリガーする場合：
 - 完了タスクを `review` ステータスに移動
@@ -240,7 +332,7 @@ def should_trigger_review(control, completed_task):
 - `org-reviewer` + `org-security-reviewer` を並列で起動
 - `tasks_since_last_review` カウンターをリセット
 
-#### 7.3 レビュースキップ（非トリガー時）
+#### 8.3 レビュースキップ（非トリガー時）
 
 レビューをスキップする場合：
 - 完了タスクを `pending_review` ステータスに保持（batch/manual モード）
@@ -248,34 +340,34 @@ def should_trigger_review(control, completed_task):
 - RUN_LOG に記録: `"レビュースキップ (mode: <mode>, counter: <n>/<total>)"`
 - `tasks_since_last_review` カウンターを +1
 
-#### 7.4 手動レビュー要求
+#### 8.4 手動レビュー要求
 
 OWNER_COMMENTS.md に以下のようなキーワードがあれば、モードに関係なくレビューをトリガー：
 - 「レビューして」「レビュー依頼」「確認して」「review」
 
 トリガー後はカウンターをリセット。
 
-#### 7.5 バッチレビュー（mode=batch の場合）
+#### 8.5 バッチレビュー（mode=batch の場合）
 
 全タスク完了時にまとめてレビュー：
 - `pending_review` ステータスのタスクを全て `review` に移動
 - 各タスクの Review Packet を確認
 - `org-reviewer` + `org-security-reviewer` を実行
 
-### 8. 統合処理
+### 9. 統合処理
 レビュー承認済みタスクがあれば：
 - org-integrator に統合を委任
 - main反映は Owner Reviewポリシーに従う
 - 統合完了後、worktree を削除
 
-### 9. Worktree クリーンアップ
+### 10. Worktree クリーンアップ
 `done` になったタスクの worktree を削除：
 ```bash
 git worktree remove .worktrees/<TASK_ID> --force
 git branch -d task/<TASK_ID>-<slug>
 ```
 
-### 10. 台帳更新（org-scribe）
+### 11. 台帳更新（org-scribe）
 - `DASHBOARD.md` と `RUN_LOG.md` と `STATUS.md` を更新
 - CONTROL.yaml の runtime.tick_count を+1
 - 学習抽出の提案（セッション終了時）
