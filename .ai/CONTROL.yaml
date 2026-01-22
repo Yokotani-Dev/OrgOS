@@ -30,6 +30,12 @@ main_branch: "main"
 # OrgOS-Dev 開発モード（trueならOrgOS-Dev接続警告をスキップ）
 is_orgos_dev: true
 
+# Owner の IT リテラシーレベル（/org-start 時に設定）
+# beginner: IT初心者向け（専門用語を避け、平易な日本語で説明）
+# intermediate: 一般ユーザー向け（基本的なIT用語はOK）
+# advanced: 開発者向け（専門用語をそのまま使用）
+owner_literacy_level: "intermediate"
+
 # ゲート状態（Managerが更新、Owner Reviewが必要なものは awaiting_owner で止める）
 gates:
   kickoff_complete: false
