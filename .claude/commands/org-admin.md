@@ -22,25 +22,67 @@ OrgOS-Devリポジトリで作業する開発者向け。
 
 ## 実行手順
 
-### Step 1: リポジトリ確認
+### Step 1: 確認プロンプト
 
-```bash
-git remote -v
+ユーザーに以下を確認：
+
+```
+⚠️ 管理者モードに入ろうとしています
+
+管理者モードでは OrgOS 自体のファイルを編集できます。
+通常のプロジェクト開発では使用しません。
+
+本当に管理者モードに入りますか？ [y/N]
 ```
 
-OrgOS-Dev（または類似のOrgOS開発用リポジトリ）に接続されていることを確認。
+- `y` または `yes` → Step 2 へ
+- それ以外 → 中止
 
 ### Step 2: 管理者モード有効化
 
-`.ai/CONTROL.yaml` に以下を設定：
+`.ai/CONTROL.yaml` の以下を変更：
 
 ```yaml
-is_orgos_dev: true
+# 変更前
+allow_os_mutation: false
+
+# 変更後
+allow_os_mutation: true
 ```
 
 ### Step 3: 完了メッセージ
 
-「OrgOS管理者モードを有効にしました。OrgOSの編集が可能です。」と表示。
+```
+✅ 管理者モードを有効にしました
+
+OrgOS ファイルの編集が可能です：
+- CLAUDE.md
+- AGENTS.md
+- .claude/**
+- requirements.md
+
+📌 管理者モードを終了する: /org-admin exit
+   または CONTROL.yaml の allow_os_mutation を false に戻す
+```
+
+---
+
+## 管理者モード終了
+
+`/org-admin exit` または以下の操作で終了：
+
+```yaml
+# CONTROL.yaml
+allow_os_mutation: false
+```
+
+終了メッセージ：
+
+```
+✅ 管理者モードを終了しました
+
+OrgOS ファイルは保護されています。
+```
 
 ---
 

@@ -50,10 +50,19 @@ def main():
     dashboard = ROOT / ".ai" / "DASHBOARD.md"
     inbox = ROOT / ".ai" / "OWNER_INBOX.md"
     control = ROOT / ".ai" / "CONTROL.yaml"
+    tasks = ROOT / ".ai" / "TASKS.yaml"
+
     msg.append("OrgOS SessionStart:")
     msg.append(f"- Read: {dashboard}")
     msg.append(f"- Owner questions: {inbox}")
     msg.append(f"- Control plane: {control}")
+    msg.append("")
+    msg.append("⚠️ 重要: 依頼を受けたら必ず OrgOS フローで処理すること")
+    msg.append(f"- まず {tasks} を確認して既存タスクとの関連を判断")
+    msg.append("- EnterPlanMode は使用禁止 → 代わりに TASKS.yaml で管理")
+    msg.append("- 小タスク: 即実行 + RUN_LOG記録")
+    msg.append("- 中〜大タスク: TASKS.yaml に追加 → /org-tick で実行")
+    msg.append("")
     msg.append("Ownerが介入する場合は .ai/OWNER_COMMENTS.md に追記。Managerは次Tickで反映する。")
     print("\n".join(msg))
 
