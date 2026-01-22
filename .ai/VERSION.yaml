@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.9.1"
-released_at: "2026-01-21"
+current: "0.10.0"
+released_at: "2026-01-22"
 
 history:
+  - version: "0.10.0"
+    date: "2026-01-22"
+    description: "Add /org-settings, literacy adaptation, owner task minimization"
   - version: "0.9.1"
     date: "2026-01-21"
     description: "Add agent-coordination and performance rules"

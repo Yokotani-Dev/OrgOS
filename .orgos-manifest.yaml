@@ -21,11 +21,12 @@ publish:
   - ".ai/TEMPLATES/DASHBOARD.md"
   - ".ai/TEMPLATES/OWNER_INBOX.md"
   - ".ai/TEMPLATES/OWNER_COMMENTS.md"
-  # コマンド（通常利用: 4コマンド）
+  # コマンド（通常利用: 5コマンド）
   - ".claude/commands/org-start.md"
   - ".claude/commands/org-tick.md"
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-import.md"
+  - ".claude/commands/org-settings.md"
   # コマンド（Dev環境: +3コマンド）
   - ".claude/commands/org-release.md"
   - ".claude/commands/org-publish.md"
@@ -56,6 +57,8 @@ publish:
   - ".claude/rules/patterns.md"
   - ".claude/rules/agent-coordination.md"
   - ".claude/rules/performance.md"
+  - ".claude/rules/literacy-adaptation.md"
+  - ".claude/rules/owner-task-minimization.md"
   # 設定
   - ".claude/settings.json"
   # Git hooks
