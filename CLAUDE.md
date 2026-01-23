@@ -140,6 +140,7 @@
 - `.claude/rules/patterns.md` - 共通パターン
 - `.claude/rules/literacy-adaptation.md` - リテラシー適応ルール
 - `.claude/rules/owner-task-minimization.md` - Owner タスク最小化ルール
+- `.claude/rules/ai-driven-development.md` - AI ドリブン開発ルール
 - `.claude/rules/eval-loop.md` - 評価ループ（Verification Loops）
 
 Work Order 生成時に関連する Skills/Rules を参照として記載します。
