@@ -59,6 +59,8 @@ publish:
   - ".claude/rules/performance.md"
   - ".claude/rules/literacy-adaptation.md"
   - ".claude/rules/owner-task-minimization.md"
+  - ".claude/rules/ai-driven-development.md"
+  - ".claude/rules/eval-loop.md"
   # 設定
   - ".claude/settings.json"
   # Git hooks

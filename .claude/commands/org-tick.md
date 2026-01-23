@@ -23,11 +23,266 @@ awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
 - `changes_requested` → running へ戻し、修正タスクとして再委任
 - 完了したタスクの worktree をクリーンアップ対象としてマーク
 
-### 5. 状況診断とエージェント自動選択
+### 5. セッション管理チェック
+
+コンテキスト使用率と作業の論理的区切りをチェックし、セッション終了を提案すべきか判断する。
+
+#### 5.1 セッション終了提案の判定
+
+```python
+# 疑似コード
+def should_suggest_session_end(context):
+    """
+    セッション終了を提案すべきか判定
+
+    Returns:
+        {
+            "suggest": bool,
+            "priority": "P0" | "P1" | "P2",
+            "reason": str,
+            "force": bool  # True なら選択肢を出さず強制終了
+        }
+    """
+
+    # P0: 必ず提案（論理的な区切り）
+    if context.stage_transitioned:
+        return {
+            "suggest": True,
+            "priority": "P0",
+            "reason": f"ゲート通過（{context.prev_stage} → {context.current_stage}）",
+            "force": False
+        }
+
+    if context.feature_completed and context.review_passed:
+        return {
+            "suggest": True,
+            "priority": "P0",
+            "reason": "機能実装・レビュー完了",
+            "force": False
+        }
+
+    if context.integration_completed:
+        return {
+            "suggest": True,
+            "priority": "P0",
+            "reason": "統合完了（ブランチマージ済み）",
+            "force": False
+        }
+
+    # P1: 推奨（タスクグループ完了）
+    if context.task_group_completed:
+        return {
+            "suggest": True,
+            "priority": "P1",
+            "reason": f"{context.completed_task_count} 個のタスクグループが完了",
+            "force": False
+        }
+
+    if context.major_decision_made:
+        return {
+            "suggest": True,
+            "priority": "P1",
+            "reason": "大きな設計判断が完了",
+            "force": False
+        }
+
+    if context.awaiting_owner:
+        return {
+            "suggest": True,
+            "priority": "P1",
+            "reason": "Owner の判断待ち",
+            "force": False
+        }
+
+    # P2: コンテキスト依存
+    usage = context.context_usage_percent
+
+    if usage >= 95:
+        return {
+            "suggest": True,
+            "priority": "P2",
+            "reason": f"コンテキスト使用率 {usage}% - 自動圧縮を回避",
+            "force": True  # 強制終了
+        }
+
+    if usage >= 90 and context.has_logical_breakpoint:
+        return {
+            "suggest": True,
+            "priority": "P2",
+            "reason": f"コンテキスト使用率 {usage}% - 区切りが良いタイミング",
+            "force": False
+        }
+
+    if usage >= 80:
+        # 警告のみ、提案はしない
+        context.log_warning(f"🟡 コンテキスト使用率 {usage}% - 次の区切りで終了推奨")
+        # 台帳更新を強化
+        context.prioritize_ledger_updates = True
+        return {"suggest": False}
+
+    return {"suggest": False}
+```
+
+#### 5.2 セッション終了の提案方法
+
+**論理的区切りの場合（P0, P1）:**
+
+```markdown
+✅ [完了した作業] が完了しました
+
+📊 セッション状態:
+   - コンテキスト使用率: XX%
+   - 完了タスク数: N 個
+   - 現在のステージ: [STAGE]
+
+📌 次のセッション推奨
+
+**理由**: [ゲート通過した / 機能実装が完了した / など]
+
+このセッションを終了して、次の作業を新しいセッションで開始することを推奨します。
+
+**メリット**:
+- ✅ コンテキストが fresh になり、判断精度が上がる
+- ✅ 台帳が整理され、全体像が明確になる
+- ✅ 次の作業に集中できる
+
+**次のセッションでやること**:
+- [具体的な次のタスク]
+
+---
+
+**[A] 新しいセッションを開始（推奨）**
+   → 台帳を更新して終了します
+   → 次のチャットで `/org-tick` を実行してください
+
+**[B] このセッションを継続**
+   → このまま次のタスクに進みます
+
+どちらにしますか？
+```
+
+**コンテキスト95%超の場合（P2, 強制終了）:**
+
+```markdown
+⚠️ コンテキスト使用率: 95%
+
+自動圧縮を回避するため、このセッションを終了します。
+
+実行中:
+1. ✅ DECISIONS.md に今セッションの判断を記録
+2. ✅ TASKS.yaml を最新状態に更新
+3. ✅ DASHBOARD.md に次のアクションを記載
+
+📌 次のセッションを開始してください
+
+新しいチャットで以下を入力:
+→ /org-tick
+
+**次のセッションでやること**:
+- [具体的な次のタスク]
+
+台帳から自動的に継続します。
+```
+
+---
+
+### 6. 計画整合性チェック（Plan Sync）
+
+実態と計画の乖離を検出し、必要に応じて計画を更新する。
+
+#### 6.1 チェック項目
+
+| チェック | 検出内容 | 対応 |
+|----------|----------|------|
+| **スコープ変更** | 新しい要件、取り下げられた要件 | PROJECT.md + TASKS.yaml を更新 |
+| **タスク追加** | 実装中に判明した追加作業 | TASKS.yaml に新タスク追加 |
+| **依存関係変更** | 前提が変わった、順序変更が必要 | TASKS.yaml の deps を修正 |
+| **見積もり乖離** | 想定より大きい/小さいタスク | タスク分割 or 統合 |
+| **リスク顕在化** | RISKS.md のリスクが発生 | 対応タスクを追加 |
+| **ブロッカー発生** | 外部依存、Owner 作業待ち | status: blocked に変更 |
+
+#### 6.2 計画更新のトリガー
+
+以下の条件で計画を更新する：
+
+```python
+# 疑似コード
+def check_plan_sync():
+    updates_needed = []
+
+    # 新しい課題が発生した
+    if new_issues_detected():
+        for issue in new_issues:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_fix_task(issue)
+            })
+
+    # 完了タスクから追加作業が判明
+    for task in completed_tasks:
+        if task.discovered_work:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_followup_task(task.discovered_work)
+            })
+
+    # リスクが顕在化
+    for risk in active_risks:
+        if risk.materialized:
+            updates_needed.append({
+                "type": "add_task",
+                "task": create_mitigation_task(risk)
+            })
+            updates_needed.append({
+                "type": "update_risk",
+                "risk": risk,
+                "status": "materialized"
+            })
+
+    # スコープ変更（OWNER_COMMENTS から検出）
+    if scope_changes_requested():
+        updates_needed.append({
+            "type": "update_project",
+            "changes": parse_scope_changes()
+        })
+
+    return updates_needed
+```
+
+#### 6.3 計画更新の実行
+
+更新が必要な場合：
+
+1. **TASKS.yaml を更新**
+   - 新タスク追加（適切な deps を設定）
+   - 既存タスクの status/blocker を更新
+   - 不要になったタスクを削除または archived に
+
+2. **PROJECT.md を更新**（スコープ変更時）
+   - ゴール/成果物の変更を反映
+   - 変更理由を DECISIONS.md に記録
+
+3. **DASHBOARD.md に反映**
+   - 計画変更を Owner に通知
+   - 影響範囲を説明
+
+#### 6.4 計画更新の記録
+
+```markdown
+## DECISIONS.md に追記
+- **PLAN-UPDATE-001**: TASKS.yaml を更新
+  - 追加: T-FIX-001 (Client Secret 更新)
+  - 変更: T-004 の deps に T-FIX-001 を追加
+  - 理由: ISSUE-005 対応のため
+```
+
+---
+
+### 7. 状況診断とエージェント自動選択
 
 状況を分析し、必要なエージェントを自動的に選択・実行する。
 
-#### 5.1 診断チェック
+#### 7.1 診断チェック
 
 以下の順序で状況をチェックし、該当するエージェントを起動:
 
@@ -45,7 +300,7 @@ awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
 | **P4** | レビュー承認済みタスクあり | `org-integrator` | main統合 |
 | **常時** | Tick終了時 | `org-scribe` | 台帳記録 |
 
-#### 5.2 診断の実行方法
+#### 7.2 診断の実行方法
 
 ```python
 # 疑似コード
@@ -92,7 +347,7 @@ def diagnose_and_select_agents():
     return agents_to_run
 ```
 
-#### 5.3 ビルドエラー検出
+#### 7.3 ビルドエラー検出
 
 ```bash
 # TypeScript プロジェクト
@@ -104,7 +359,7 @@ npm run build 2>&1 | head -20
 # エラーがあれば org-build-fixer を起動
 ```
 
-#### 5.4 カバレッジ検出
+#### 7.4 カバレッジ検出
 
 ```bash
 # カバレッジレポートを確認
@@ -113,11 +368,11 @@ npm test -- --coverage --coverageReporters=json-summary 2>/dev/null
 # 80% 未満なら org-tdd-coach を起動
 ```
 
-### 6. タスク委任
+### 8. タスク委任
 
 依存が解けた queued タスクを検出し、`runtime.max_parallel_tasks` 件まで自動的に委任する。
 
-#### 6.1 実行可能タスクの検出
+#### 8.1 実行可能タスクの検出
 
 ```python
 # 疑似コード
@@ -132,7 +387,7 @@ slots = max_parallel_tasks - count(running_tasks)
 to_run = executable[:slots]
 ```
 
-#### 6.2 owner_role による自動分岐
+#### 8.2 owner_role による自動分岐
 
 **Codex タスク（`codex-implementer` / `codex-reviewer`）：**
 
@@ -153,7 +408,7 @@ to_run = executable[:slots]
 - Task ツールで該当エージェントを起動
 - 診断結果に基づいて自動選択（5.1 参照）
 
-#### 6.3 Codex 実行の案内（auto_exec: false の場合）
+#### 8.3 Codex 実行の案内（auto_exec: false の場合）
 
 Ownerに以下を表示：
 
@@ -179,11 +434,11 @@ cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-0
 実行後、再度 `/org-tick` で結果を回収します。
 ```
 
-### 7. レビュー処理（ポリシーベース）
+### 9. レビュー処理（ポリシーベース）
 
 `CONTROL.yaml` の `owner_review_policy` に従ってレビューを実行する。
 
-#### 7.1 レビュートリガー判定
+#### 9.1 レビュートリガー判定
 
 ```python
 # 疑似コード
@@ -232,7 +487,7 @@ def should_trigger_review(control, completed_task):
     return True, "default"  # フォールバック
 ```
 
-#### 7.2 レビュー実行（トリガー時）
+#### 9.2 レビュー実行（トリガー時）
 
 レビューをトリガーする場合：
 - 完了タスクを `review` ステータスに移動
@@ -240,7 +495,7 @@ def should_trigger_review(control, completed_task):
 - `org-reviewer` + `org-security-reviewer` を並列で起動
 - `tasks_since_last_review` カウンターをリセット
 
-#### 7.3 レビュースキップ（非トリガー時）
+#### 9.3 レビュースキップ（非トリガー時）
 
 レビューをスキップする場合：
 - 完了タスクを `pending_review` ステータスに保持（batch/manual モード）
@@ -248,34 +503,34 @@ def should_trigger_review(control, completed_task):
 - RUN_LOG に記録: `"レビュースキップ (mode: <mode>, counter: <n>/<total>)"`
 - `tasks_since_last_review` カウンターを +1
 
-#### 7.4 手動レビュー要求
+#### 9.4 手動レビュー要求
 
 OWNER_COMMENTS.md に以下のようなキーワードがあれば、モードに関係なくレビューをトリガー：
 - 「レビューして」「レビュー依頼」「確認して」「review」
 
 トリガー後はカウンターをリセット。
 
-#### 7.5 バッチレビュー（mode=batch の場合）
+#### 9.5 バッチレビュー（mode=batch の場合）
 
 全タスク完了時にまとめてレビュー：
 - `pending_review` ステータスのタスクを全て `review` に移動
 - 各タスクの Review Packet を確認
 - `org-reviewer` + `org-security-reviewer` を実行
 
-### 8. 統合処理
+### 10. 統合処理
 レビュー承認済みタスクがあれば：
 - org-integrator に統合を委任
 - main反映は Owner Reviewポリシーに従う
 - 統合完了後、worktree を削除
 
-### 9. Worktree クリーンアップ
+### 11. Worktree クリーンアップ
 `done` になったタスクの worktree を削除：
 ```bash
 git worktree remove .worktrees/<TASK_ID> --force
 git branch -d task/<TASK_ID>-<slug>
 ```
 
-### 10. 台帳更新（org-scribe）
+### 12. 台帳更新（org-scribe）
 - `DASHBOARD.md` と `RUN_LOG.md` と `STATUS.md` を更新
 - CONTROL.yaml の runtime.tick_count を+1
 - 学習抽出の提案（セッション終了時）
