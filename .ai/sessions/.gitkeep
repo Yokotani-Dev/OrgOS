@@ -1,0 +1,3 @@
+# Session logs are stored here
+# Each session creates: YYYY-MM-DD-topic.md
+# Pruned automatically after 30 days (configurable)

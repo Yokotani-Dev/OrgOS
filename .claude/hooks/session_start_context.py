@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from datetime import datetime, timedelta
 from pathlib import Path
 import os
 import re
@@ -6,6 +7,8 @@ import subprocess
 
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path.cwd()))
 CONTROL = ROOT / ".ai" / "CONTROL.yaml"
+SESSIONS_DIR = ROOT / ".ai" / "sessions"
+RUN_LOG_DAYS = 7
 
 def read_flag(key: str, default: bool = False) -> bool:
     """CONTROL.yaml からフラグを読む"""
@@ -31,6 +34,50 @@ def check_orgos_dev_origin():
     except Exception:
         pass
     return None
+
+
+def get_recent_sessions(days: int = RUN_LOG_DAYS) -> list:
+    """直近N日間のセッションファイルを取得"""
+    if not SESSIONS_DIR.exists():
+        return []
+
+    cutoff = datetime.now() - timedelta(days=days)
+    sessions = []
+
+    for f in SESSIONS_DIR.glob("*.md"):
+        if f.name.startswith("."):
+            continue
+        try:
+            date_str = f.stem[:10]
+            file_date = datetime.strptime(date_str, "%Y-%m-%d")
+            if file_date >= cutoff:
+                sessions.append(f)
+        except ValueError:
+            continue
+
+    return sorted(sessions, reverse=True)
+
+
+def load_session_learnings() -> list:
+    """直近セッションから学びを抽出"""
+    recent = get_recent_sessions()
+    if not recent:
+        return []
+
+    learnings = []
+    for session in recent[:3]:
+        content = session.read_text(encoding="utf-8", errors="ignore")
+        if "## Key Learnings" in content:
+            start = content.find("## Key Learnings")
+            end = content.find("\n## ", start + 1)
+            if end == -1:
+                end = len(content)
+            section = content[start:end]
+            lines = [l.strip() for l in section.split("\n") if l.strip().startswith("-")]
+            for line in lines:
+                if line and line not in learnings and "(発見した" not in line:
+                    learnings.append(line)
+    return learnings[:5]  # 最大5件
 
 def main():
     # SessionStart: stdoutはコンテキストに入る（軽く）
@@ -64,6 +111,15 @@ def main():
     msg.append("- 中〜大タスク: TASKS.yaml に追加 → /org-tick で実行")
     msg.append("")
     msg.append("Ownerが介入する場合は .ai/OWNER_COMMENTS.md に追記。Managerは次Tickで反映する。")
+
+    # セッション間メモリ: 直近の学びをロード
+    learnings = load_session_learnings()
+    if learnings:
+        msg.append("")
+        msg.append("💡 Recent learnings from past sessions:")
+        for learning in learnings:
+            msg.append(f"  {learning}")
+
     print("\n".join(msg))
 
 if __name__ == "__main__":

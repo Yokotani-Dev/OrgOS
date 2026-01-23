@@ -78,6 +78,43 @@ codex:
   # never: 確認なし（CI環境のみ）
   approval: "on-request"
 
+# 評価ポリシー（Verification Loops）
+# 参照: 記事「Verification Loops and Evals」
+eval_policy:
+  # 評価モード
+  # checkpoint: ステージ遷移時にチェックポイント評価
+  # continuous: Nタスクごとに継続的評価
+  # disabled: 評価なし
+  mode: "checkpoint"
+
+  # checkpoint モード設定
+  checkpoint_stages:
+    - design         # 設計完了時
+    - implementation # 実装完了時
+    - integration    # 統合完了時
+
+  # continuous モード設定
+  continuous_interval_tasks: 5  # Nタスクごとに評価
+
+  # 評価基準
+  criteria:
+    # pass@k: k回中1回でも成功すればOK（探索的タスク向け）
+    # pass^k: k回全て成功が必要（一貫性重視タスク向け）
+    default_metric: "pass@1"
+
+    # チェック項目
+    checks:
+      - "tests_pass"        # テストが通る
+      - "build_success"     # ビルドが通る
+      - "no_regressions"    # 既存機能が壊れていない
+
+  # 評価結果の記録先
+  record_to: "DECISIONS.md"
+
+  # 最後の評価タイムスタンプ（ランタイム）
+  last_eval_at: null
+  tasks_since_last_eval: 0
+
 # ランタイム設定
 runtime:
   max_parallel_tasks: 6  # 同時実行タスク数上限

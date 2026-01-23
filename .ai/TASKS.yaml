@@ -33,7 +33,45 @@ tasks:
       - "contracts documented"
     notes: ""
 
-  # 以下はCodex workerを使う実装タスクの例
+  # === OrgOS 改善タスク ===
+
+  - id: T-OS-001
+    title: "セッション間メモリ永続化（Stop フック + sessions フォルダ）"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".claude/hooks/", ".ai/sessions/", ".ai/LEARNED/"]
+    acceptance:
+      - "Stop フックがセッション学習を抽出・保存"
+      - ".ai/sessions/ に日次ログが生成される"
+      - "SessionStart で前回の学びをロード"
+    notes: "記事参照: PreCompact + Stop + SessionStart パターン"
+
+  - id: T-OS-002
+    title: "継続学習スキル（/org-learn コマンド）"
+    status: done
+    deps: ["T-OS-001"]
+    owner_role: "org-implementer"
+    allowed_paths: [".claude/commands/", ".claude/skills/learned/"]
+    acceptance:
+      - "/org-learn コマンドが動作する"
+      - "パターンが .claude/skills/learned/ に保存される"
+      - "次回セッションで自動参照される"
+    notes: "記事参照: Continuous Learning Skill"
+
+  - id: T-OS-003
+    title: "評価ループ（CONTROL.yaml 拡張 + 評価ポリシー）"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".ai/CONTROL.yaml", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "CONTROL.yaml に eval_policy セクション追加"
+      - "チェックポイント評価が /org-tick で動作"
+      - "評価結果が DECISIONS.md に記録される"
+    notes: "記事参照: Verification Loops and Evals"
+
+  # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"
   #   status: queued
@@ -44,14 +82,3 @@ tasks:
   #     - "login/logout implemented"
   #     - "tests pass"
   #   notes: ""
-  #
-  # - id: T-003-review
-  #   title: "Review: user authentication module"
-  #   status: queued
-  #   deps: ["T-003"]
-  #   owner_role: "codex-reviewer"  # ← Codex worker
-  #   allowed_paths: ["src/auth/", "tests/auth/"]
-  #   acceptance:
-  #     - "security check passed"
-  #     - "code quality approved"
-  #   notes: "Review Packet: .ai/REVIEW/PACKETS/T-003.md"
