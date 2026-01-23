@@ -356,6 +356,7 @@ git push -u origin main
   OWNER_INBOX.md    # 空テンプレ
   OWNER_COMMENTS.md # 空テンプレ
   PROJECT.md        # 空テンプレ
+  GOALS.yaml        # 空テンプレ（Step 4-9 で初期化）
   CODEX/
     ORDERS/         # 空
     RESULTS/        # 空
@@ -683,7 +684,133 @@ AskUserQuestion で確認：
 - 再度確認を促す
 
 **「このまま進める」の場合：**
-- Step 5 に進む
+- Step 4-9 に進む
+
+---
+
+#### Step 4-9: GOALS.yaml の初期化
+
+BRIEF.md の内容から Vision を抽出し、`.ai/GOALS.yaml` を初期化する。
+
+**Vision の抽出ロジック:**
+1. BRIEF.md の「作りたいもの」セクションを読む
+2. 最も大きなゴール（何を達成したいか）を Vision として抽出
+3. 具体的な成果物（ECサイト、APIなど）は Project として記録
+
+**例:**
+- BRIEF.md: 「ジビエのECサイトを作る」
+  - Vision: 「ジビエをオンラインで販売できるようにする」
+  - Project: 「ジビエECサイト構築」
+
+- BRIEF.md: 「社内の勤怠管理ツールを作る」
+  - Vision: 「勤怠管理を効率化する」
+  - Project: 「社内勤怠管理ツール開発」
+
+**GOALS.yaml の初期内容:**
+```yaml
+vision:
+  id: V-001
+  title: "<抽出した Vision>"
+  status: active
+  created_at: "<TIMESTAMP>"
+  updated_at: "<TIMESTAMP>"
+
+milestones:
+  - id: M-001
+    title: "<BRIEF.md のタイトルまたは抽出した中間ゴール>"
+    status: active
+    vision_id: V-001
+    created_at: "<TIMESTAMP>"
+    deps: []
+
+projects:
+  - id: P-001
+    title: "<BRIEF.md のタイトル>"
+    milestone_id: M-001
+    status: active
+    created_at: "<TIMESTAMP>"
+
+history:
+  - date: "<TIMESTAMP>"
+    type: "vision_created"
+    description: "初期ビジョン設定"
+    reason: "/org-start による初期化"
+```
+
+---
+
+#### Step 4-10: スーパーバイザーレビュー設定
+
+**作業者と上司レビュー要否を質問します。**
+
+質問内容:
+
+```
+📋 作業者とレビュー設定
+
+このプロジェクトを進めるのは誰ですか？
+
+[A] 自分（デフォルト）
+    → 自分で判断し、進めます
+
+[B] 部下
+    → 部下が作業し、上司（あなた）がレビューします
+
+どちらですか？
+```
+
+**[A] 自分 を選択した場合:**
+
+続けて質問:
+
+```
+上司レビューが必要ですか？
+
+[A] 必要なし（デフォルト）
+    → 自分で全て判断します
+
+[B] 重要な判断時のみリマインド
+    → 重要な判断時に「上司に確認してください」と通知
+    → ただし、上司の承認なしでも進められます
+
+どちらですか？
+```
+
+- [A] → `supervisor_review.enabled: false`, `mode: "self_only"`
+- [B] → `supervisor_review.enabled: true`, `mode: "self_with_reminder"`, `worker: "self"`
+
+**[B] 部下 を選択した場合:**
+
+上司（スーパーバイザー）情報を質問:
+
+```
+上司の情報を入力してください（任意）:
+
+- 名前:
+- 役職:
+- 連絡先（メール/Slackなど）:
+```
+
+設定:
+- `supervisor_review.enabled: true`
+- `mode: "subordinate_with_supervisor"`
+- `worker: "subordinate"`
+- `supervisor.name/role/contact` を設定
+
+**CONTROL.yaml への反映:**
+
+```yaml
+supervisor_review:
+  enabled: true | false
+  mode: "self_only" | "self_with_reminder" | "subordinate_with_supervisor"
+  worker: "self" | "subordinate"
+  supervisor:
+    name: "<入力された名前>"
+    role: "<入力された役職>"
+    contact: "<入力された連絡先>"
+```
+
+---
 
 ### Step 5: キックオフ質問の生成
 

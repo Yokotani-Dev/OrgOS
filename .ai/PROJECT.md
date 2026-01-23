@@ -5,6 +5,24 @@
 
 ---
 
+## Vision
+
+<!-- GOALS.yaml の vision.title から転記 -->
+**Vision**: (未設定 - /org-start で初期化されます)
+
+---
+
+## Milestones
+
+<!-- GOALS.yaml の milestones から転記 -->
+現在の Milestone: (未設定)
+
+全体の進捗:
+- [ ] M-001: (未設定)
+- [ ] M-002: (未設定)
+
+---
+
 ## Goal
 <!-- BRIEF.md の「作りたいもの」を具体化 -->
 

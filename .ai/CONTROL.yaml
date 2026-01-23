@@ -49,6 +49,78 @@ gates:
   integration_approved: false
   release_approved: false
 
+# Supervisor Review（上司レビューモード）
+# /org-start で設定
+supervisor_review:
+  # 有効/無効
+  enabled: false
+
+  # モード
+  # self_with_reminder: 自分 + レビューあり（重要な判断で上司レビューをリマインド）
+  # self_only: 自分のみ（上司レビューなし）
+  # subordinate_with_supervisor: 部下 + スーパーバイザー（部下が作業、上司レビュー必須）
+  mode: "self_only"
+
+  # 作業者（誰がこのプロジェクトを進めているか）
+  # self: 自分
+  # subordinate: 部下
+  worker: "self"
+
+  # スーパーバイザー情報
+  supervisor:
+    name: ""          # 上司の名前
+    role: ""          # 役職
+    contact: ""       # 連絡先
+
+  # レビュー対象（どのタイミングでレビューを要求するか）
+  review_triggers:
+    - "major_decision"        # 大きな設計判断
+    - "scope_change"          # スコープ変更
+    - "architecture_change"   # アーキテクチャ変更
+    - "before_release"        # リリース前
+
+  # 計画乖離検知
+  plan_drift_detection:
+    enabled: true
+    check_interval: 5       # Nタスクごとにチェック
+    threshold: 0.3          # 30%以上乖離で警告
+
+  # レビュードキュメント保存先
+  review_docs_dir: ".ai/SUPERVISOR_REVIEW/"
+
+  # 最後のレビュー日時（ランタイム）
+  last_review_at: null
+
+# Project Handoff（プロジェクト引き継ぎ）
+# 上司 → 部下、部下 → 上司などの引き継ぎ情報を記録
+handoff:
+  # 有効/無効
+  enabled: false
+
+  # 引き継ぎ元（誰から引き継ぐか）
+  from:
+    name: ""          # 引き継ぎ元の名前
+    role: ""          # 役職（supervisor / subordinate / peer）
+    completed_at: ""  # 引き継ぎ元が完了した日時
+
+  # 引き継ぎ先（誰に引き継ぐか）
+  to:
+    name: ""          # 引き継ぎ先の名前
+    role: ""          # 役職
+    started_at: ""    # 引き継ぎ先が開始した日時
+
+  # 引き継ぎ内容
+  handoff_stage: ""   # どのステージで引き継いだか（KICKOFF / REQUIREMENTS / DESIGN / IMPLEMENTATION / INTEGRATION）
+  completed_tasks: [] # 完了済みタスクのリスト
+  pending_decisions: [] # 未決事項のリスト
+  notes: ""           # 引き継ぎ時の注意事項・メッセージ
+
+  # 引き継ぎドキュメント
+  handoff_doc: ".ai/HANDOFF.md"
+
+  # 最後の引き継ぎ日時（ランタイム）
+  last_handoff_at: null
+
 # Owner Review ポリシー
 # /org-start または /org-settings で設定
 owner_review_policy:
@@ -123,4 +195,4 @@ eval_policy:
 # ランタイム設定
 runtime:
   max_parallel_tasks: 6  # 同時実行タスク数上限
-  tick_count: 0          # Tick カウンタ
+  tick_count: 4          # Tick カウンタ

@@ -303,6 +303,252 @@ def check_plan_sync():
 
 ---
 
+### 6A. ゴール達成確認・見直し提案
+
+`.ai/GOALS.yaml` を確認し、Milestone 達成時や定期的なタイミングでゴールの見直しを提案する。
+
+#### 6A.1 Milestone 達成確認
+
+Milestone の全タスクが完了したか確認：
+
+```python
+# 疑似コード
+def check_milestone_completion():
+    """
+    Milestone 達成確認
+
+    Returns:
+        {
+            "milestone_id": str | None,
+            "milestone_title": str | None,
+            "completed": bool,
+            "next_milestone": dict | None
+        }
+    """
+    goals = read_goals_yaml()
+
+    for milestone in goals.milestones:
+        if milestone.status != "active":
+            continue
+
+        # この Milestone に紐づく Project をすべて取得
+        projects = [p for p in goals.projects if p.milestone_id == milestone.id]
+
+        # 各 Project に紐づく Task をすべて取得
+        all_tasks = []
+        for project in projects:
+            tasks = [t for t in TASKS if t.project_id == project.id]
+            all_tasks.extend(tasks)
+
+        # すべて完了しているか確認
+        if all_tasks and all(t.status == "done" for t in all_tasks):
+            return {
+                "milestone_id": milestone.id,
+                "milestone_title": milestone.title,
+                "completed": True,
+                "next_milestone": get_next_milestone(milestone)
+            }
+
+    return {"completed": False}
+```
+
+#### 6A.2 Milestone 達成時の対応
+
+Milestone が完了していたら、Owner に確認：
+
+```markdown
+✅ マイルストーン達成: <Milestone Title>
+
+📊 全体の進捗:
+   Vision: <Vision Title>
+   [1] ✅ M-001: <Milestone 1> → 達成（<完了日>）
+   [2] 🔄 M-002: <Milestone 2> → 進行中
+   [3] ⏳ M-003: <Milestone 3> → 未着手
+
+📌 次のステップ:
+
+[A] このまま次のマイルストーン「<Next Milestone>」に進む（推奨）
+    → すでにタスクがあるので続行
+
+[B] 全体計画を見直す
+    → Vision や Milestone を再設定します
+
+どちらにしますか？
+```
+
+**[A] を選択した場合：**
+- GOALS.yaml を更新（完了した Milestone を completed に、次の Milestone を active に）
+- DECISIONS.md に記録
+- そのまま Tick を続行
+
+**[B] を選択した場合：**
+- `/org-goals review` を実行
+- 見直し後、Tick を再開
+
+#### 6A.3 定期的な見直し提案
+
+以下の条件で「ゴール見直し」を提案：
+
+```python
+# 疑似コード
+def should_suggest_goal_review():
+    """
+    ゴール見直しを提案すべきか判定
+
+    Returns:
+        {
+            "suggest": bool,
+            "reason": str,
+            "trigger": str
+        }
+    """
+
+    # トリガー1: 20タスク完了ごと
+    completed_tasks_count = len([t for t in TASKS if t.status == "done"])
+    if completed_tasks_count > 0 and completed_tasks_count % 20 == 0:
+        last_review = read_last_goal_review_date()
+        if not recently_reviewed(last_review, days=7):  # 直近7日以内に見直していない
+            return {
+                "suggest": True,
+                "reason": f"{completed_tasks_count} タスク完了",
+                "trigger": "20_tasks_completed"
+            }
+
+    # トリガー2: 新規依頼が既存ゴールと乖離
+    # （これは新規依頼を受けた時点で判断するので、ここでは検出不要）
+
+    # トリガー3: Owner の明示的依頼
+    if owner_requested_goal_review():
+        return {
+            "suggest": True,
+            "reason": "Owner からの依頼",
+            "trigger": "owner_request"
+        }
+
+    return {"suggest": False}
+```
+
+#### 6A.4 見直し提案の表示
+
+```markdown
+📊 定期チェック: 全体計画の見直し
+
+<completed_tasks_count> 個のタスクが完了しました。
+現在のゴール構造が適切か確認しませんか？
+
+現在の Vision: <Vision Title>
+現在の Milestone: <Active Milestone Title>
+
+[A] このまま続ける（推奨）
+    → 計画は現状のまま進めます
+
+[B] 全体計画を見直す
+    → Vision や Milestone を再設定します
+
+どちらにしますか？
+```
+
+**[A] を選択した場合：**
+- 見直し日時を記録
+- そのまま Tick を続行
+
+**[B] を選択した場合：**
+- `/org-goals review` を実行
+- 見直し後、Tick を再開
+
+#### 6A.5 新規依頼の位置づけ判断
+
+（新規依頼を受けたときに実行）
+
+OWNER_COMMENTS.md に新しい依頼があった場合、既存ゴールとの関連を判断：
+
+```python
+# 疑似コード
+def categorize_new_request(request):
+    """
+    新しい依頼を既存ゴール構造に位置づける
+
+    Returns:
+        {
+            "category": "task" | "project" | "milestone" | "vision",
+            "parent_id": str | None,
+            "needs_confirmation": bool,
+            "suggestion": str
+        }
+    """
+    goals = read_goals_yaml()
+
+    # AI で依頼内容を分析
+    analysis = analyze_request(request)
+
+    # Vision に関連するか？
+    if analysis.related_to_vision(goals.vision):
+        # Milestone に関連するか？
+        for milestone in goals.milestones:
+            if analysis.related_to_milestone(milestone):
+                # Project に関連するか？
+                for project in goals.projects:
+                    if analysis.related_to_project(project):
+                        return {
+                            "category": "task",
+                            "parent_id": project.id,
+                            "needs_confirmation": False,
+                            "suggestion": f"Project {project.title} のタスクとして追加"
+                        }
+
+                # 新しい Project
+                return {
+                    "category": "project",
+                    "parent_id": milestone.id,
+                    "needs_confirmation": False,
+                    "suggestion": f"Milestone {milestone.title} の新しい Project として追加"
+                }
+
+        # 新しい Milestone の可能性
+        return {
+            "category": "milestone",
+            "parent_id": goals.vision.id,
+            "needs_confirmation": True,  # Owner に確認
+            "suggestion": "新しい Milestone として追加しますか？"
+        }
+
+    # Vision 拡大の可能性
+    return {
+        "category": "vision",
+        "parent_id": None,
+        "needs_confirmation": True,  # Owner に確認
+        "suggestion": "Vision を拡大しますか？"
+    }
+```
+
+**needs_confirmation=True の場合:**
+
+```markdown
+📌 新しい依頼の位置づけを確認させてください
+
+依頼内容: 「<request>」
+
+判断:
+- 既存の Vision「<Vision Title>」に関連しますが、
+  既存の Milestone「<Active Milestone>」とは異なる方向性です。
+
+提案:
+[A] 新しい Milestone として追加（推奨）
+    → M-00X「<推定タイトル>」
+    → Vision は変更なし
+
+[B] Vision を拡大する
+    → 「<Old Vision>」→「<New Vision>」
+    → 既存 Milestone と新 Milestone を並列に配置
+
+[C] 別プロジェクトとして独立させる
+    → 現在の Vision とは別のプロジェクトとして管理
+
+どれにしますか？
+```
+
+---
+
 ### 7. 状況診断とエージェント自動選択
 
 状況を分析し、必要なエージェントを自動的に選択・実行する。

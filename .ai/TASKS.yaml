@@ -73,7 +73,7 @@ tasks:
 
   - id: T-OS-004
     title: "上司レビューモード（スーパーバイザーレビュー機能）"
-    status: queued
+    status: done
     deps: []
     owner_role: "codex-implementer"
     allowed_paths: [".ai/", ".claude/commands/", ".claude/rules/", "CLAUDE.md"]
@@ -91,7 +91,7 @@ tasks:
 
   - id: T-OS-005
     title: "プロジェクト引き継ぎ機能"
-    status: queued
+    status: done
     deps: ["T-OS-004"]
     owner_role: "codex-implementer"
     allowed_paths: [".ai/", ".claude/commands/", ".claude/hooks/", "CLAUDE.md"]
@@ -105,6 +105,52 @@ tasks:
       - 上司が BRIEF → 要件定義 → git push
       - 部下が git pull → /org-tick で続きから作業
       - 引き継ぎ情報（誰から誰へ、どこまで完了、注意事項）を記録
+
+  - id: T-OS-006
+    title: "ゴール階層管理・動的計画再構築機能"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - ".ai/GOALS.yaml 新規作成（Vision/Milestone/Project 階層管理）"
+      - "/org-start で GOALS.yaml 自動生成（BRIEF.md から Vision 抽出）"
+      - "/org-tick で Milestone 達成確認・見直し提案"
+      - "/org-goals コマンド作成（ゴール可視化・編集）"
+      - "DASHBOARD.md に Vision/Milestone 表示"
+      - "新規依頼の位置づけ自動判断（Vision/Milestone/Project/Task）"
+      - "GOALS.yaml history にゴール変更履歴を記録"
+    notes: |
+      OIP-006 参照。
+      ユーザーの依頼に応じてゴールを再構造化し、全体整合のある計画を維持。
+      Vision → Milestone → Project → Task の4階層で管理。
+      Milestone 達成時・新規依頼が乖離時・20タスク完了ごとに見直し提案。
+
+  - id: T-OS-007
+    title: "成果物管理機能（outputs/ フォルダ構造 + 資料複製ルール）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["outputs/", ".gitignore", "CLAUDE.md", ".claude/agents/AGENTS.md", ".claude/rules/"]
+    acceptance:
+      - "outputs/ フォルダ構造の設計・実装（日付別 + タスクID別）"
+      - ".gitignore に outputs/ の扱いを追加"
+      - "CLAUDE.md に成果物管理ルールを追加"
+      - "AGENTS.md（Codex worker）に資料複製→outputs/ 配置のフローを追加"
+      - "outputs/README.md 作成（フォルダ説明）"
+    notes: |
+      Owner依頼: 成果物を資料（samplecode など）から分離して outputs/ に格納。
+      資料は直接編集せず、複製して outputs/ に配置。
+
+      構造例:
+      outputs/
+      ├── 2026-01-23/       # 日付別
+      │   ├── sample1.ts
+      │   └── README.md
+      └── T-OS-004/         # タスクID別
+          └── implementation.ts
+
+      .gitignore: outputs/ を管理対象にするか Owner に確認（デフォルト: 管理する）
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
