@@ -150,37 +150,121 @@ def migrate_control_yaml(control):
 rm -rf $WORK_DIR
 ```
 
-### 8. 結果報告
+### 8. ユーザー影響の変更を抽出
+
+CHANGELOG.md を解析し、**ユーザー体験に影響する変更**を抽出する。
+
+#### 8.1 抽出対象
+
+| カテゴリ | 例 |
+|----------|-----|
+| **新コマンド** | `/org-settings` が追加 |
+| **コマンド削除** | `/org-plan` が `/org-tick` に統合 |
+| **操作方法の変更** | 「基本的に `/org-tick` だけ実行すればOK」 |
+| **設定項目の追加** | `owner_literacy_level` が追加 |
+| **重要な改善** | 「対話形式でBRIEF.md自動生成」 |
+
+#### 8.2 抽出ロジック
+
+```python
+# 疑似コード
+def extract_user_facing_changes(changelog, from_version, to_version):
+    changes = []
+    keywords = [
+        "新コマンド", "コマンド追加", "追加",
+        "削除", "廃止", "統合",
+        "操作方法", "使い方",
+        "設定", "CONTROL.yaml",
+    ]
+
+    for version in get_versions_between(from_version, to_version):
+        section = changelog.get_section(version)
+
+        # 「追加」セクションから新コマンドを抽出
+        if has_new_commands(section):
+            changes.append(extract_commands(section))
+
+        # 「削除」セクションから廃止コマンドを抽出
+        if has_deleted_commands(section):
+            changes.append(extract_deletions(section))
+
+        # 「設計変更」から操作方法の変更を抽出
+        if has_design_changes(section):
+            changes.append(extract_design_changes(section))
+
+    return changes
+```
+
+### 9. 結果報告
+
+**アップグレードの場合（既存バージョンから更新）:**
 
 ```
-OrgOS $VERSION をインポートしました。
+✅ OrgOS $CURRENT → $VERSION にアップグレードしました。
 
-ソース: https://github.com/Yokotani-Dev/OrgOS/releases/tag/$VERSION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🆕 ユーザー体験に影響する変更
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+【新しいコマンド】
+• `/org-settings` - レビュー頻度やリテラシーレベルの設定変更
+
+【操作方法の変更】
+• 基本的に `/org-tick` だけ実行すればOK（エージェント自動選択）
+• 以下のコマンドは `/org-tick` に統合されました:
+  - /org-plan, /org-review, /org-integrate, /org-codex 等
+
+【新しい設定項目】
+• `owner_literacy_level` - ITリテラシーレベル（beginner/intermediate/advanced）
+• `owner_review_policy.mode` - レビュー頻度モード
+
+【改善点】
+• `/org-start` が対話形式に改善（4ステップで開始可能）
+• 専門用語に説明が付くようになりました（リテラシー適応）
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 更新されたファイル:
 - .ai/VERSION.yaml
 - .ai/CHANGELOG.md
-- .claude/commands/org-*.md (15ファイル)
+- .claude/commands/org-*.md
 - CLAUDE.md
 
-保持されたファイル（既存のため上書きなし）:
-- .ai/PROJECT.md
-- .ai/TASKS.yaml
+マイグレーションした設定:
+- owner_literacy_level: "intermediate"（新規追加）
 
-初期化されたファイル（新規作成）:
+📌 次はこちら: /org-settings
+   新しい設定項目を確認・調整できます
+   └─ 変更不要なら: /org-tick で通常作業を再開
+```
+
+**新規インストールの場合:**
+
+```
+✅ OrgOS $VERSION をインストールしました。
+
+ソース: https://github.com/Yokotani-Dev/OrgOS/releases/tag/$VERSION
+
+初期化されたファイル:
 - .ai/BRIEF.md
 - .ai/CONTROL.yaml
 - .ai/DASHBOARD.md
+- .ai/OWNER_INBOX.md
+- .ai/OWNER_COMMENTS.md
 
-マイグレーションした設定（既存CONTROLに追加）:
-- owner_review_policy.mode: "every_n_tasks"（既存値から推測）
-- owner_review_policy.tasks_since_last_review: 0
-- owner_literacy_level: "intermediate"
+📌 次はこちら: /org-start
+   対話形式でプロジェクトを初期化します（約4ステップ）
+```
 
-次のステップ:
-- 初めての導入の場合: `/org-start` でプロジェクト初期化
-- 設定を変更したい場合: `/org-settings` で調整
-- 変更内容: `.ai/CHANGELOG.md` を参照
+**同一バージョンの場合:**
+
+```
+ℹ️ 現在のバージョン ($VERSION) が最新です。
+
+変更はありません。
+
+📌 次はこちら: /org-tick
+   通常作業を継続します
 ```
 
 ## 使用例
