@@ -233,8 +233,22 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 マイグレーションした設定:
 - owner_literacy_level: "intermediate"（新規追加）
 
-📌 次はこちら: /org-settings
-   新しい設定項目を確認・調整できます
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  Claude Code の再起動が必要です
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+新しいスラッシュコマンドを反映するため、Claude Code を再起動してください。
+
+[A] 今すぐ再起動する（推奨）
+    → VS Code: Cmd+Shift+P → "Developer: Reload Window"
+    → CLI: このセッションを終了して新しいセッションを開始
+
+[B] あとで再起動する
+    → 再起動するまで、古いコマンドがサジェストに残ります
+    → 再起動手順: 上記 [A] と同じ
+
+📌 次はこちら:
+   再起動後 → /org-settings で新しい設定項目を確認
    └─ 変更不要なら: /org-tick で通常作業を再開
 ```
 
@@ -252,8 +266,22 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 - .ai/OWNER_INBOX.md
 - .ai/OWNER_COMMENTS.md
 
-📌 次はこちら: /org-start
-   対話形式でプロジェクトを初期化します（約4ステップ）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚠️  Claude Code の再起動が必要です
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+新しいスラッシュコマンドを反映するため、Claude Code を再起動してください。
+
+[A] 今すぐ再起動する（推奨）
+    → VS Code: Cmd+Shift+P → "Developer: Reload Window"
+    → CLI: このセッションを終了して新しいセッションを開始
+
+[B] あとで再起動する
+    → 再起動するまで、古いコマンドがサジェストに残ります
+    → 再起動手順: 上記 [A] と同じ
+
+📌 次はこちら:
+   再起動後 → /org-start で対話形式のプロジェクト初期化（約4ステップ）
 ```
 
 **同一バージョンの場合:**

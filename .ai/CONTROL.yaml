@@ -5,6 +5,11 @@
 # プロジェクト名（/org-start で BRIEF.md から設定）
 project_name: "<SET_ME>"
 
+# プロジェクトスコープ（このリポジトリで受け付ける作業の範囲）
+# OrgOS 開発ディレクトリでは "OrgOS development only" に設定
+# 一般プロジェクトでは BRIEF.md のスコープに設定
+project_scope: "OrgOS development only"
+
 # ステージ
 # KICKOFF -> REQUIREMENTS -> DESIGN -> IMPLEMENTATION -> INTEGRATION -> RELEASE
 stage: KICKOFF

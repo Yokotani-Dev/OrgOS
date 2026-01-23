@@ -20,7 +20,7 @@ OrgOS-Dev (private)  ──→  OrgOS (public)
 1. 公開リポジトリ `Yokotani-Dev/OrgOS` が存在すること
 2. remote `public` が設定されていること
    ```bash
-   git remote add public git@github.com:Yokotani-Dev/OrgOS.git
+   git remote add public https://github.com/Yokotani-Dev/OrgOS.git
    ```
 3. `/org-release` でタグが作成済みであること
 4. `allow_push: true` が設定されていること
@@ -110,7 +110,7 @@ git describe --tags --abbrev=0
 # 一時ディレクトリで公開リポジトリをクローン
 WORK_DIR=$(mktemp -d)
 cd $WORK_DIR
-git clone git@github.com:Yokotani-Dev/OrgOS.git
+git clone https://github.com/Yokotani-Dev/OrgOS.git
 cd OrgOS
 ```
 
@@ -193,7 +193,7 @@ rm -rf $WORK_DIR
 1. GitHubで `Yokotani-Dev/OrgOS` (public) を作成
 2. remote追加
    ```bash
-   git remote add public git@github.com:Yokotani-Dev/OrgOS.git
+   git remote add public https://github.com/Yokotani-Dev/OrgOS.git
    ```
 3. `/org-publish` を実行
 

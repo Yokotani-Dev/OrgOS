@@ -71,6 +71,41 @@ tasks:
       - "評価結果が DECISIONS.md に記録される"
     notes: "記事参照: Verification Loops and Evals"
 
+  - id: T-OS-004
+    title: "上司レビューモード（スーパーバイザーレビュー機能）"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "/org-start で「作業者」「上司レビュー要否」を質問"
+      - "CONTROL.yaml に supervisor_review セクション追加"
+      - "重要な判断時にレビュードキュメント自動生成（.ai/SUPERVISOR_REVIEW/）"
+      - "計画乖離を自動検知（BRIEF.md とのずれ）"
+      - "レビュー承認待ち状態で停止する仕組み"
+    notes: |
+      3つのモード:
+      1. 自分 + レビューあり（重要な判断で上司レビューをリマインド）
+      2. 自分のみ（上司レビューなし）
+      3. 部下 + スーパーバイザー（部下が作業、上司レビュー必須）
+
+  - id: T-OS-005
+    title: "プロジェクト引き継ぎ機能"
+    status: queued
+    deps: ["T-OS-004"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/hooks/", "CLAUDE.md"]
+    acceptance:
+      - "CONTROL.yaml に handoff セクション追加"
+      - "引き継ぎドキュメント（.ai/HANDOFF.md）自動生成"
+      - "SessionStart フックで引き継ぎ検知"
+      - "引き継ぎ時の注意事項を表示"
+    notes: |
+      引き継ぎパターン:
+      - 上司が BRIEF → 要件定義 → git push
+      - 部下が git pull → /org-tick で続きから作業
+      - 引き継ぎ情報（誰から誰へ、どこまで完了、注意事項）を記録
+
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"
