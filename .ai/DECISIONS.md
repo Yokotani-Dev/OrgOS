@@ -51,3 +51,30 @@
   Date: 2026-01-18
   Rationale: 既存実装を活用し、開発速度を優先
 -->
+
+---
+
+## RELEASE-001: v0.11.0 公開 (2026-01-23)
+
+### 決定内容
+- OrgOS v0.11.0 を公開リポジトリにリリース
+
+### 公開内容
+- AI ドリブン開発ルール追加
+  - `.claude/rules/ai-driven-development.md`
+  - Manager が技術判断を主導、Owner はビジネス判断のみ
+- 評価ループルール追加
+  - `.claude/rules/eval-loop.md`
+- manifest 更新（上記2ファイルを追加）
+
+### 技術的判断
+- HTTPS を使用（gh CLI の認証情報を利用）
+  - 理由: SSH 接続がサンドボックスで制限される可能性があるため
+- `public` リモートを HTTPS に変更
+
+### 公開先
+- リポジトリ: https://github.com/Yokotani-Dev/OrgOS
+- コミット: 394f24e
+- タグ: v0.11.0
+- ファイル数: 52
+
