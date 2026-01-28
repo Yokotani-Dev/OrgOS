@@ -8,6 +8,14 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONTROL_FILE="$PROJECT_ROOT/.ai/CONTROL.yaml"
 HANDOFF_FILE="$PROJECT_ROOT/.ai/HANDOFF.md"
 
+# 現在日付の注入（日付誤認防止）
+TODAY=$(date +"%Y-%m-%d")
+CURRENT_YEAR=$(date +"%Y")
+echo "OrgOS SessionStart:"
+echo "- Read: $PROJECT_ROOT/.ai/DASHBOARD.md"
+echo "- Owner questions: $PROJECT_ROOT/.ai/OWNER_INBOX.md"
+echo "- Control plane: $CONTROL_FILE"
+
 # CONTROL.yaml から handoff.enabled を確認
 handoff_enabled=$(grep "enabled:" "$CONTROL_FILE" | grep -A 1 "handoff:" | tail -1 | sed 's/.*enabled: //' | tr -d ' ')
 

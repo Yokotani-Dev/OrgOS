@@ -593,6 +593,24 @@ def diagnose_and_select_agents():
         if needs_architecture_decision():
             agents_to_run.append("org-architect")
 
+    # P1.5: DESIGN ステージ特別処理（設計ドキュメント主体的生成）
+    # 参照: .claude/rules/design-documentation.md, .claude/skills/research-skill.md
+    if stage == "DESIGN":
+        # DESIGN 遷移直後: 設計タスクを自動バックログ
+        if not design_tasks_exist_in_tasks_yaml():
+            auto_generate_design_tasks()
+            # T-DESIGN-RESEARCH, T-DESIGN-ARCH, T-DESIGN-CONTRACT 等を TASKS.yaml に追加
+            # プロジェクト種別（BRIEF.md）に応じてタスクを選択
+
+        # リサーチ未完了なら最優先で実行（WebSearch で最新情報収集）
+        if not research_task_completed():
+            # BRIEF.md からキーワード抽出 → WebSearch → .ai/DESIGN/TECH_RESEARCH.md に保存
+            agents_to_run.insert(0, "org-architect")  # リサーチ込みで実行
+
+        # 設計ドキュメント未作成なら生成
+        elif not design_docs_completed():
+            agents_to_run.append("org-architect")
+
     # P2: 実装フェーズ
     if stage == "IMPLEMENTATION":
         if has_completed_tasks_awaiting_review():

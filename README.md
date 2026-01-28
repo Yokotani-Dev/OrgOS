@@ -14,9 +14,13 @@ Claude Code で大規模開発を安全に進めるためのフレームワー�
 ### 方法1: git clone（推奨）
 
 ```bash
-# リポジトリをクローン（最後の引数でフォルダ名を指定）
+# 方法A: 新しいフォルダにクローン（フォルダ名を指定）
 git clone https://github.com/Yokotani-Dev/OrgOS.git my-project
 cd my-project
+
+# 方法B: 既存の空フォルダ内に直接展開（入れ子にならない）
+mkdir my-project && cd my-project
+git clone https://github.com/Yokotani-Dev/OrgOS.git .
 
 # Claude Code を起動
 claude
@@ -24,6 +28,8 @@ claude
 # OrgOSを初期化（対話形式でプロジェクト概要をヒアリング）
 /org-start
 ```
+
+> **注意:** `git clone URL` だけで実行すると `OrgOS/` フォルダが作られ、その中にファイルが配置されます。フォルダ名を指定するか、`.` を使って現在のフォルダに展開してください。
 
 ### 方法2: 既存プロジェクトにインポート
 

@@ -152,6 +152,81 @@ tasks:
 
       .gitignore: outputs/ を管理対象にするか Owner に確認（デフォルト: 管理する）
 
+  # === 上司FB対応タスク (2026-01-28) ===
+
+  - id: T-OS-008
+    title: "/org-start で README.md をプロジェクト用に置換する仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["README.md", ".claude/commands/org-start.md", ".ai/TEMPLATES/"]
+    acceptance:
+      - "/org-start 実行時に README.md をプロジェクト用テンプレに置換"
+      - "OrgOS の README は ORGOS_README.md 等にリネーム保持"
+    notes: "上司FB#1: GitHub冒頭のREADMEがOrgOSのREADMEになっている"
+
+  - id: T-OS-009
+    title: "生成物フォルダ位置の安定化（outputs/ ルール強化）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/", "CLAUDE.md", "outputs/"]
+    acceptance:
+      - "生成物の配置先ルールを明確化（outputs/ 直下 or サブフォルダ）"
+      - "エージェントが生成物を正しい場所に配置する検証"
+    notes: "上司FB#2: 生成物のフォルダ位置が不安定"
+
+  - id: T-OS-010
+    title: "設計フェーズで自動的にドキュメント生成タスクをバックログする仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/rules/", ".claude/agents/"]
+    acceptance:
+      - "DESIGN ステージ遷移時に設計ドキュメント作成タスクを自動追加"
+      - "ドキュメント生成を主体的に進める org-tick ロジック"
+    notes: "上司FB#3: 設計のドキュメント作成をもっと主体的にバックログして進めてほしい"
+
+  - id: T-OS-011
+    title: "設計フェーズでの最新情報自動取得スキル（WebSearch/DeepResearch連携）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/skills/", ".claude/rules/", ".claude/agents/"]
+    acceptance:
+      - "設計フェーズ開始時に WebSearch で最新技術情報を自動収集"
+      - "収集結果を .ai/RESOURCES/ に保存"
+      - "設計判断時に最新情報を参照する仕組み"
+    notes: |
+      上司FB#4/#5: 最新情報を持っていない、設計時に情報が古い
+      DeepResearch を別途かけている現状を解消する
+      モデル選定にはベンチマークサイト参照も検討
+
+  - id: T-OS-012
+    title: "日付認識の強化（SessionStart での日付注入 + 制約ルール）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/hooks/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "SessionStart hook で現在日付を明示的に注入"
+      - "日付出力時に必ず現在日付を参照するルール追加"
+      - "2024年等の誤出力を防止"
+    notes: "上司FB#6: 今日がいつか分かっていない、24年と出してくる"
+
+  - id: T-OS-013
+    title: "git clone 時のフォルダ入れ子問題の改善"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["README.md", "ORGOS_QUICKSTART.md"]
+    acceptance:
+      - "clone コマンドの案内を改善（. 指定で中身だけ展開）"
+      - "セットアップスクリプト or 手順の明確化"
+    notes: |
+      上司FB#7: フォルダの中にOrgOSフォルダができて入れ子になる
+      git clone URL . で解決可能だが案内を改善
+
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"

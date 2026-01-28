@@ -366,6 +366,40 @@ git push -u origin main
     PACKETS/        # 空
 ```
 
+### Step 3b: README.md のプロジェクト用置換
+
+`README.md` が OrgOS の README（冒頭が `# OrgOS` で始まる）の場合：
+
+1. 既存の README.md を `ORGOS_README.md` にリネーム
+2. プロジェクト用の README.md を生成（Step 4 の BRIEF 完了後に内容を反映）
+
+```markdown
+# <プロジェクト名>
+
+> このプロジェクトは [OrgOS](ORGOS_README.md) で管理されています。
+
+## 概要
+
+（/org-start のヒアリング後に自動更新されます）
+
+## セットアップ
+
+```bash
+git clone <repository-url> .
+claude
+/org-tick
+```
+
+## OrgOS について
+
+このプロジェクトは OrgOS フレームワークを使用しています。
+詳細は [ORGOS_README.md](ORGOS_README.md) を参照してください。
+```
+
+**注意:** OrgOS 開発モード（`is_orgos_dev: true`）ではこのステップをスキップする。
+
+---
+
 ### Step 4: 対話形式でBRIEF.mdを作成（ヒアリング）
 
 `.ai/BRIEF.md` を確認し、対話形式でプロジェクト概要を収集する。
