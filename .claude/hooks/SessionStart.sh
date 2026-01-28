@@ -59,6 +59,17 @@ if [ -f "$OWNER_INBOX" ]; then
   fi
 fi
 
+# Codex CLI チェック
+if ! command -v codex &>/dev/null; then
+  echo ""
+  echo "⚠️ Codex CLI が未インストールです（コーディング・レビューに必要）"
+  echo "  npm install -g @openai/codex && codex --login"
+elif [ ! -f "$HOME/.codex/auth.json" ] && [ ! -f "$HOME/.config/codex/auth.json" ]; then
+  echo ""
+  echo "⚠️ Codex CLI が未ログインです"
+  echo "  codex --login"
+fi
+
 # CONTROL.yaml の表示
 echo ""
 echo "⚙️  Control plane: $CONTROL_FILE"

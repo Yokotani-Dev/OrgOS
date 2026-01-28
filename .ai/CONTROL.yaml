@@ -140,7 +140,7 @@ owner_review_policy:
 codex:
   # true: Manager が codex exec を自動実行
   # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
-  auto_exec: false
+  auto_exec: true
 
   # sandbox ポリシー (-s, --sandbox)
   # read-only: 読み取りのみ（最も安全）
