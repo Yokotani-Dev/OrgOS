@@ -695,6 +695,22 @@ to_run = executable[:slots]
 
 #### 8.2.1 auto_exec: true の場合（Manager が自動実行）
 
+**実行前チェック（必須）：**
+
+Codex タスクを実行する前に、必ず以下を確認する：
+
+```bash
+# 1. インストール確認
+command -v codex || echo "NOT_INSTALLED"
+
+# 2. ログイン確認
+[ -f "$HOME/.codex/auth.json" ] || [ -f "$HOME/.config/codex/auth.json" ] || echo "NOT_LOGGED_IN"
+```
+
+- `NOT_INSTALLED` → Owner に `npm install -g @openai/codex` を案内し、タスクを blocked にする
+- `NOT_LOGGED_IN` → Owner に `codex --login` を案内し、タスクを blocked にする
+- 両方 OK → 実行に進む。**「Codex CLI で実行します」と明示する**
+
 Manager が Bash ツールで `codex exec` を直接呼び出す：
 
 ```bash
