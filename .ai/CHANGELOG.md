@@ -4,6 +4,17 @@
 
 ---
 
+## v0.15.0 (2026-01-28)
+
+### 追加
+- SessionStart hook に Codex CLI インストール・ログイン状態の自動検知を追加
+- `/org-import` に Codex CLI セットアップガイドを追加（新規インストール・アップグレード両対応）
+
+### 改善
+- `codex.auto_exec` のデフォルトを `true` に変更（Manager が自動で Codex CLI を実行）
+
+---
+
 ## v0.14.0 (2026-01-28)
 
 ### 追加
