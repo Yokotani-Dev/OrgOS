@@ -102,6 +102,10 @@
 
 ## 📝 Recent Changes (last tick)
 
+- ✅ T-OS-014 完了: Codex CLI 統合 Phase 1（検証）
+  - `codex exec` が read-only / workspace-write 両モードで正常動作
+  - Work Order → Bash → codex exec のパイプライン確認済み
+  - 次: T-OS-015（Phase 2: org-implementer への統合）
 - ✅ T-OS-005 完了: プロジェクト引き継ぎ機能を実装
   - [CONTROL.yaml](.ai/CONTROL.yaml) に handoff セクション追加
   - [.ai/HANDOFF.md](.ai/HANDOFF.md) テンプレート作成

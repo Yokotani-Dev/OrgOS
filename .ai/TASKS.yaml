@@ -227,6 +227,45 @@ tasks:
       上司FB#7: フォルダの中にOrgOSフォルダができて入れ子になる
       git clone URL . で解決可能だが案内を改善
 
+  # === Codex CLI 統合 (OIP-008) ===
+
+  - id: T-OS-014
+    title: "Codex CLI 統合 Phase 1: 検証（codex exec での実装品質検証）"
+    status: done
+    deps: []
+    owner_role: "org-architect"
+    allowed_paths: [".claude/agents/", ".claude/rules/", ".ai/"]
+    acceptance:
+      - "codex exec で小タスクを実行し、品質を検証"
+      - "Work Order → codex exec のパイプラインが動作"
+      - "検証結果を DECISIONS.md に記録"
+    notes: |
+      OIP-008 Phase 1 完了（2026-01-28）
+      検証結果:
+      - read-only/workspace-write 両モード正常動作
+      - デフォルトモデル: gpt-5.2-codex（ChatGPT 最上位プランで利用可能）
+      - -m codex-5.2 / -m o3 は ChatGPT アカウントでは使用不可
+      - 日本語プロンプト正常動作
+      - Bash 経由で prompt を渡すパイプラインが動作確認済み
+
+  - id: T-OS-015
+    title: "Codex CLI 統合 Phase 2: org-implementer に Codex CLI 呼び出しを追加"
+    status: done
+    deps: ["T-OS-014"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/", ".claude/rules/", ".claude/commands/"]
+    acceptance:
+      - "org-implementer が Codex CLI を呼び出して実装を実行"
+      - "CONTROL.yaml の codex.auto_exec フラグで制御"
+      - "レビューフローと統合"
+    notes: |
+      OIP-008 Phase 2 完了（2026-01-28）
+      変更内容:
+      - org-tick.md Step 8.2.1: auto_exec: true 時の自動実行フロー追加
+      - agent-coordination.md: Codex CLI 実行パターン・役割分担表を追加
+      - run-parallel.sh: タスクID正規表現を ^T- に修正（T-OS-xxx 対応）
+      - Work Order テンプレート生成済み（.ai/CODEX/ORDERS/T-OS-015.md）
+
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"

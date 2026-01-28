@@ -9,7 +9,7 @@
 | 項目 | 値 |
 |------|-----|
 | Stage | KICKOFF |
-| Completed tasks | 7 |
+| Completed tasks | 15 |
 | In progress | 0 |
 | Blocked | 0 |
 | Queued | 2 |
@@ -26,6 +26,9 @@
 | T-OS-005 | 引き継ぎ機能 | **done** | codex-implementer |
 | T-OS-006 | ゴール階層管理 | **done** | codex-implementer |
 | T-OS-007 | 成果物管理機能 | **done** | codex-implementer |
+| T-OS-008〜013 | 上司FB対応6件 | **done** | codex-implementer |
+| T-OS-014 | Codex CLI 統合 Phase 1 | **done** | org-architect |
+| T-OS-015 | Codex CLI 統合 Phase 2 | **done** | codex-implementer |
 
 ---
 
@@ -37,6 +40,12 @@
 
 ## Recent Activity
 
+- T-OS-014: ✅ Codex CLI 統合 Phase 1 完了（2026-01-28）
+  - read-only / workspace-write 両モード正常動作確認
+  - ChatGPT アカウントでは o3 モデル使用不可（デフォルトモデルは OK）
+  - Bash 経由パイプライン動作確認済み
+  - OIP-008 / TECH-DECISION-002 に記録
+- T-OS-008〜013: ✅ 上司FB対応6件完了（2026-01-28）
 - T-OS-005: ✅ プロジェクト引き継ぎ機能を実装完了
   - CONTROL.yaml に handoff セクション追加
   - .ai/HANDOFF.md テンプレート作成

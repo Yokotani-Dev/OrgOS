@@ -290,7 +290,7 @@ main() {
             # タスクIDのリストとして処理
             local pids=()
             for task_id in "$@"; do
-                if [[ "$task_id" =~ ^T-[0-9]+ ]]; then
+                if [[ "$task_id" =~ ^T- ]]; then
                     pid=$(run_codex "$task_id")
                     pids+=("$pid")
                 else

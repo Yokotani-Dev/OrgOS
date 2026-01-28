@@ -690,8 +690,35 @@ to_run = executable[:slots]
 2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
 
 3. 実行方法を決定：
-   - **`codex.auto_exec: true`** → バックグラウンドで自動実行
+   - **`codex.auto_exec: true`** → Manager が Bash 経由で自動実行（下記参照）
    - **`codex.auto_exec: false`（デフォルト）** → Ownerに実行コマンドを提示
+
+#### 8.2.1 auto_exec: true の場合（Manager が自動実行）
+
+Manager が Bash ツールで `codex exec` を直接呼び出す：
+
+```bash
+# 単体実行（バックグラウンド）
+codex exec -s workspace-write -C .worktrees/<TASK_ID> \
+  "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
+  2>&1 | tee .ai/CODEX/LOGS/<TASK_ID>.log
+```
+
+**実行フロー：**
+
+1. Worktree を作成（まだない場合）
+   ```bash
+   git worktree add .worktrees/<TASK_ID> -b task/<TASK_ID>
+   ```
+2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
+3. `codex exec` を Bash ツールで実行（`run_in_background: true`）
+4. 結果を回収（次の Tick、または TaskOutput で確認）
+5. タスクステータスを更新
+
+**注意:**
+- デフォルトモデルは `gpt-5.2-codex`（ChatGPT 最上位プランで利用可能）
+- `-m` オプション不要（デフォルトで最上位モデルが使われる）
+- sandbox は CONTROL.yaml の `codex.sandbox` に従う
 
 **Claude subagent タスク：**
 - Task ツールで該当エージェントを起動

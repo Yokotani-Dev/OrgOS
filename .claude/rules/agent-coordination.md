@@ -115,6 +115,46 @@ TaskOutput({ task_id: "xxx", block: false });
 
 ---
 
+## Codex CLI 実行パターン
+
+### Manager → Codex CLI（実装委任）
+
+`codex-implementer` タスクは Codex CLI（`codex exec`）で実行する。
+デフォルトモデルは `gpt-5.2-codex`。
+
+```bash
+# auto_exec: true の場合、Manager が直接実行
+codex exec -s workspace-write -C .worktrees/T-003 \
+  "AGENTS.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
+
+# 並列実行（run-parallel.sh）
+./.claude/scripts/run-parallel.sh T-003 T-004
+
+# 結果確認
+./.claude/scripts/run-parallel.sh --status
+```
+
+### 役割分担
+
+| 担当 | Claude Code（Manager） | Codex CLI |
+|------|------------------------|-----------|
+| 設計 | org-architect | - |
+| 実装 | - | codex exec |
+| レビュー | org-reviewer | codex exec (review) |
+| 台帳管理 | org-scribe | - |
+| 統合 | org-integrator | - |
+
+### CONTROL.yaml 設定
+
+```yaml
+codex:
+  auto_exec: false        # true: Manager が自動実行 / false: Owner に案内
+  sandbox: "workspace-write"  # read-only / workspace-write / danger-full-access
+  approval: "on-request"      # untrusted / on-failure / on-request / never
+```
+
+---
+
 ## マルチパースペクティブ分析
 
 ### 同じコードを複数の視点でレビュー

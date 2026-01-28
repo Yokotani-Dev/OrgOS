@@ -300,3 +300,49 @@
 
 ### トリガー
 上司FB（2026-01-28）
+
+---
+
+## PLAN-UPDATE-005: Codex CLI 統合タスク追加 (2026-01-28)
+
+### 変更内容
+- 追加: T-OS-014（Codex CLI 統合 Phase 1: 検証）
+- 追加: T-OS-015（Codex CLI 統合 Phase 2: 統合）
+- OIP-008 作成
+
+### 理由
+Owner から「Codex CLI の方が実装品質が高い」というフィードバック。
+Claude Code（設計・レビュー・台帳管理）と Codex CLI（実装）の強みを組み合わせる。
+
+### 影響
+- 実装タスクの実行エンジンが Codex CLI に移行
+- CONTROL.yaml の既存 codex セクションを活用
+- コスト増（OpenAI API 費用）
+
+### トリガー
+Owner 依頼（2026-01-28）
+
+---
+
+## TECH-DECISION-002: Codex CLI 統合検証結果 (2026-01-28)
+
+### 検証内容
+Codex CLI (`codex exec`) を OrgOS の実装エンジンとして使用可能か検証
+
+### 検証結果
+
+| 項目 | 結果 |
+|------|------|
+| read-only モード | OK |
+| workspace-write モード | OK |
+| デフォルトモデル | OK |
+| o3 モデル | NG（ChatGPT アカウント非対応） |
+| 日本語プロンプト | OK |
+| Bash 経由パイプライン | OK |
+
+### 判断
+Codex CLI は OrgOS の実装エンジンとして使用可能。Phase 2（統合）に進む。
+
+### 注意点
+- ChatGPT アカウントでは o3 モデルが使えない（Platform アカウントの API キーが必要な場合あり）
+- `codex exec` の出力は標準出力に返るため、結果の回収が容易
