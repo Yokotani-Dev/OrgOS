@@ -50,6 +50,7 @@ publish:
   - ".claude/skills/backend-patterns.md"
   - ".claude/skills/frontend-patterns.md"
   - ".claude/skills/tdd-workflow.md"
+  - ".claude/skills/research-skill.md"
   # Rules（品質基準）
   - ".claude/rules/security.md"
   - ".claude/rules/testing.md"
@@ -61,8 +62,13 @@ publish:
   - ".claude/rules/owner-task-minimization.md"
   - ".claude/rules/ai-driven-development.md"
   - ".claude/rules/eval-loop.md"
+  - ".claude/rules/date-awareness.md"
+  - ".claude/rules/design-documentation.md"
+  - ".claude/rules/output-management.md"
   # 設定
   - ".claude/settings.json"
+  # Hooks
+  - ".claude/hooks/SessionStart.sh"
   # Git hooks
   - ".githooks/pre-push"
   # GitHub Actions

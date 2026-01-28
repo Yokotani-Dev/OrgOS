@@ -4,6 +4,23 @@
 
 ---
 
+## v0.13.0 (2026-01-28)
+
+### 追加
+- **日付認識ルール** (`date-awareness.md`): SessionStart hook で現在日付を注入し、2024年等の誤出力を防止
+- **設計ドキュメント自動生成ルール** (`design-documentation.md`): DESIGN ステージ遷移時にリサーチ・設計タスクを自動バックログ
+- **生成物配置ルール** (`output-management.md`): コード・設計書・成果物の配置先決定フローを明確化
+- **最新情報取得スキル** (`research-skill.md`): 設計フェーズで WebSearch を使い最新技術情報を自動収集
+
+### 改善
+- **SessionStart hook**: 現在日付(`TODAY`, `CURRENT_YEAR`)を環境に注入
+- **`/org-start`**: README.md をプロジェクト用に自動置換するステップ追加（OrgOS README は ORGOS_README.md に退避）
+- **`/org-tick`**: DESIGN ステージ特別処理ブロック追加（設計タスク自動バックログ・リサーチ自動実行）
+- **README.md**: `git clone` 手順にフォルダ入れ子防止の案内を追加（方法A: フォルダ名指定、方法B: `.` 直接展開）
+- **manifest**: 新規4ファイル + SessionStart hook を publish 対象に追加
+
+---
+
 ## v0.11.0 (2026-01-23)
 
 ### 追加
