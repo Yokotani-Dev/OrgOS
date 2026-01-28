@@ -4,6 +4,20 @@
 
 ---
 
+## v0.14.0 (2026-01-28)
+
+### 追加
+- **Codex CLI 統合** (OIP-008): OpenAI Codex CLI を OrgOS ワークフローに統合
+  - Phase 1: `codex exec` の動作検証（read-only / workspace-write 両モード）
+  - Phase 2: `org-tick` に `auto_exec` フロー追加（CONTROL.yaml で制御）
+  - `agent-coordination.md` に Codex CLI 実行パターン・役割分担表を追加
+  - Work Order テンプレートによるタスク委任パイプライン
+
+### 改善
+- `run-parallel.sh`: タスクID正規表現を `T-OS-xxx` 形式に対応
+
+---
+
 ## v0.13.0 (2026-01-28)
 
 ### 追加
