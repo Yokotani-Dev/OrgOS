@@ -715,8 +715,15 @@ Manager が Bash ツールで `codex exec` を直接呼び出す：
 
 ```bash
 # 単体実行（バックグラウンド）
+# 重要: Work Order と CODEX_WORKER_GUIDE.md を worktree にコピーしてから実行
+# （git worktree は untracked files を共有しないため）
+mkdir -p .worktrees/<TASK_ID>/.ai/CODEX/ORDERS
+cp .ai/CODEX/ORDERS/<TASK_ID>.md .worktrees/<TASK_ID>/.ai/CODEX/ORDERS/
+mkdir -p .worktrees/<TASK_ID>/.claude/agents
+cp .claude/agents/CODEX_WORKER_GUIDE.md .worktrees/<TASK_ID>/.claude/agents/
+
 codex exec -s workspace-write -C .worktrees/<TASK_ID> \
-  "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
+  "CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
   2>&1 | tee .ai/CODEX/LOGS/<TASK_ID>.log
 ```
 
@@ -727,7 +734,8 @@ codex exec -s workspace-write -C .worktrees/<TASK_ID> \
    git worktree add .worktrees/<TASK_ID> -b task/<TASK_ID>
    ```
 2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
-3. `codex exec` を Bash ツールで実行（`run_in_background: true`）
+3. Work Order と CODEX_WORKER_GUIDE.md を worktree にコピー（untracked files は worktree 間で共有されないため）
+4. `codex exec` を Bash ツールで実行（`run_in_background: true`）
 4. 結果を回収（次の Tick、または TaskOutput で確認）
 5. タスクステータスを更新
 
@@ -760,7 +768,7 @@ Ownerに以下を表示：
 ./.claude/scripts/run-parallel.sh T-003 T-004
 
 # または個別実行
-cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-003.md に従って実行"
+cd .worktrees/T-003 && codex exec "CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
 ```
 
 実行後、再度 `/org-tick` で結果を回収します。

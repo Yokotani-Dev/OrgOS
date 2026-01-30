@@ -125,7 +125,7 @@ TaskOutput({ task_id: "xxx", block: false });
 ```bash
 # auto_exec: true の場合、Manager が直接実行
 codex exec -s workspace-write -C .worktrees/T-003 \
-  "AGENTS.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
+  "CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
 
 # 並列実行（run-parallel.sh）
 ./.claude/scripts/run-parallel.sh T-003 T-004

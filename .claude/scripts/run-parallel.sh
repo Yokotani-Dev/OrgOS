@@ -82,6 +82,20 @@ run_codex() {
     # Worktreeの準備
     setup_worktree "$task_id"
 
+    # Work Order を worktree にコピー（worktree は untracked files を共有しないため）
+    local worktree_order_dir="$worktree_path/.ai/CODEX/ORDERS"
+    mkdir -p "$worktree_order_dir"
+    cp "$order_file" "$worktree_order_dir/"
+    log_info "Copied Work Order to worktree: $worktree_order_dir/$task_id.md"
+
+    # CODEX_WORKER_GUIDE.md を worktree にコピー（エージェントが参照するため）
+    local guide_src="$PROJECT_ROOT/.claude/agents/CODEX_WORKER_GUIDE.md"
+    if [[ -f "$guide_src" ]]; then
+        local guide_dest="$worktree_path/.claude/agents/"
+        mkdir -p "$guide_dest"
+        cp "$guide_src" "$guide_dest/"
+    fi
+
     # Codex設定を取得
     local sandbox=$(get_codex_config "sandbox" "workspace-write")
     local approval=$(get_codex_config "approval" "on-request")
@@ -116,7 +130,7 @@ run_codex() {
             ;;
     esac
 
-    local prompt="AGENTS.md を読み、$order_file の指示に従って実行せよ"
+    local prompt="CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/$task_id.md の指示に従って実行せよ"
 
     log_info "Starting Codex for $task_id..."
     log_info "Working directory: $worktree_path"
