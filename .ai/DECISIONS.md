@@ -346,3 +346,25 @@ Codex CLI は OrgOS の実装エンジンとして使用可能。Phase 2（統�
 ### 注意点
 - ChatGPT アカウントでは o3 モデルが使えない（Platform アカウントの API キーが必要な場合あり）
 - `codex exec` の出力は標準出力に返るため、結果の回収が容易
+
+## PLAN-UPDATE-006: OrgOS 構成最適化タスク追加 (2026-01-28)
+
+### 変更内容
+- 追加: T-OS-016 (OrgOS 構成リファクタリング ~850行削減)
+- 追加: T-OS-017 (Codex Worker の .claude/ ルール参照強化)
+- 変更: AGENTS.md に「参照すべきルール・スキル」セクションを追加（T-OS-017 の即時対応分）
+
+### 理由
+OrgOS 全体コードレビューにより、以下の構造的問題を検出:
+1. CLAUDE.md と manager.md / project-flow.md の広範な重複（~150行）
+2. patterns.md が skills/ のコピペ集（~300行）
+3. 選択肢提示ルール・コンテキスト使用率テーブル・セキュリティコード例の多重定義
+4. Codex Worker が .claude/rules/ と .claude/skills/ を参照する仕組みが不足
+
+### 影響
+- 毎セッションのコンテキスト消費を ~310トークン削減（CLAUDE.md 圧縮）
+- 保守コスト低減（変更箇所の一元化）
+- Codex Worker の実装・レビュー品質向上（ルール参照の明示化）
+
+### トリガー
+Owner 依頼（OrgOS 全体コードレビュー）

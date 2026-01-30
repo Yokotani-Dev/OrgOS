@@ -266,6 +266,53 @@ tasks:
       - run-parallel.sh: タスクID正規表現を ^T- に修正（T-OS-xxx 対応）
       - Work Order テンプレート生成済み（.ai/CODEX/ORDERS/T-OS-015.md）
 
+  # === OrgOS 構成最適化 (2026-01-28) ===
+
+  - id: T-OS-016
+    title: "OrgOS 構成リファクタリング（冗長性削減 ~850行）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["CLAUDE.md", ".claude/rules/", ".claude/skills/", ".claude/agents/", ".claude/commands/", "AGENTS.md", "requirements.md"]
+    acceptance:
+      - "CLAUDE.md を 390行 → ~80行に圧縮（原則要約 + 参照リストのみ）"
+      - "patterns.md を廃止し skills/ に統合（または目次化）"
+      - "選択肢提示ルールを next-step-guidance.md に一元化"
+      - "コンテキスト使用率テーブルを session-management.md に一元化"
+      - "セキュリティコード例を security.md に一元化"
+      - "requirements.md に歴史的文書宣言を追加"
+      - "既存の動作が壊れないこと（全ルール・コマンドが正しく参照解決）"
+    notes: |
+      コードレビュー結果に基づくリファクタリング。
+      主な重複箇所:
+      1. CLAUDE.md ↔ manager.md / project-flow.md (~150行)
+      2. patterns.md ↔ skills/ (~300行)
+      3. ai-driven-development.md ↔ next-step-guidance.md (~80行)
+      4. コンテキスト使用率テーブル 3箇所 (~60行)
+      5. セキュリティコード例 3箇所 (~100行)
+      サブタスク分割は実行時に検討。
+
+  - id: T-OS-017
+    title: "Codex Worker が .claude/ ルール群を参照できる仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["AGENTS.md", ".claude/agents/AGENTS.md", ".ai/CODEX/"]
+    acceptance:
+      - "AGENTS.md に .claude/rules/ と .claude/skills/ の参照ガイドを追加"
+      - "Work Order テンプレートに参照すべきルール/スキルの明示セクションを強化"
+      - "Codex Worker が実装・レビュー時に適切なルールを参照できること"
+    notes: |
+      現状: AGENTS.md は review-criteria.md と security.md のみ参照。
+      追加すべき参照:
+      - .claude/rules/patterns.md（→ T-OS-016 後は skills/ を直接参照）
+      - .claude/skills/coding-standards.md
+      - .claude/skills/backend-patterns.md
+      - .claude/skills/frontend-patterns.md
+      - .claude/skills/tdd-workflow.md
+      - .claude/rules/testing.md
+      Work Order 生成時に、タスク種別に応じた参照ファイルリストを自動付与する。
+
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"

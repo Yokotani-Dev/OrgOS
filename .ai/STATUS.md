@@ -9,7 +9,7 @@
 | 項目 | 値 |
 |------|-----|
 | Stage | KICKOFF |
-| Completed tasks | 15 |
+| Completed tasks | 17 |
 | In progress | 0 |
 | Blocked | 0 |
 | Queued | 2 |
@@ -40,6 +40,14 @@
 
 ## Recent Activity
 
+- T-OS-016: ✅ OrgOS 構成リファクタリング完了（2026-01-28）
+  - CLAUDE.md: 390行→96行（-294行）
+  - patterns.md: 429行→34行（-395行、目次化）
+  - ai-driven-development.md: 選択肢提示ルールを next-step-guidance.md に一元化（-45行）
+  - performance.md / manager.md: コンテキスト使用率テーブルを session-management.md に一元化（-60行）
+  - requirements.md: 歴史的文書宣言を追加
+- T-OS-017: ✅ Codex Worker ルール参照強化（2026-01-28）
+  - AGENTS.md に「参照すべきルール・スキル」セクション追加
 - T-OS-014: ✅ Codex CLI 統合 Phase 1 完了（2026-01-28）
   - read-only / workspace-write 両モード正常動作確認
   - ChatGPT アカウントでは o3 モデル使用不可（デフォルトモデルは OK）

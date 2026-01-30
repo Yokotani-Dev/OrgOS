@@ -190,14 +190,51 @@ Work Order は `.ai/CODEX/ORDERS/<TASK_ID>.md` に置かれる。
 
 ---
 
+## 参照すべきルール・スキル
+
+Work Order に明示されていなくても、タスク種別に応じて以下のファイルを **必ず** 参照すること。
+
+### 全タスク共通（必須）
+
+| ファイル | 内容 |
+|----------|------|
+| `.claude/skills/coding-standards.md` | コーディング規約（命名、構造、型定義） |
+| `.claude/rules/security.md` | セキュリティチェックリスト（OWASP Top 10） |
+
+### Implementer タスク
+
+| ファイル | いつ参照するか |
+|----------|---------------|
+| `.claude/skills/backend-patterns.md` | バックエンド実装（API、DB、認証） |
+| `.claude/skills/frontend-patterns.md` | フロントエンド実装（React、状態管理、フック） |
+| `.claude/skills/tdd-workflow.md` | テスト作成時（TDD フロー、AAA パターン） |
+| `.claude/rules/testing.md` | テスト品質基準（カバレッジ 80%、必須テスト種別） |
+| `.claude/rules/patterns.md` | 共通パターン（API レスポンス形式、エラークラス、Zod） |
+
+### Reviewer タスク
+
+| ファイル | いつ参照するか |
+|----------|---------------|
+| `.claude/rules/review-criteria.md` | レビュー判定基準（CRITICAL/HIGH/MEDIUM/LOW） |
+| `.claude/rules/testing.md` | テストカバレッジ確認 |
+
+### 参照の優先度
+
+1. **Work Order に明示されたファイル**（最優先）
+2. **上記テーブルの該当ファイル**
+3. **Work Order の `additional_context` に記載されたファイル**
+
+---
+
 ## 実行フロー
 
 1. Work Order を読む
-2. 指定された Skills/Rules を確認
-3. 必要なファイルを確認
-4. タスクを実行
-5. 結果を所定のフォーマットで出力
-6. **共有台帳は触らない**（Manager が結果を読んで更新する）
+2. **上記「参照すべきルール・スキル」テーブルから該当ファイルを確認**
+3. 指定された Skills/Rules を確認
+4. 必要なファイルを確認
+5. タスクを実行
+6. 結果を所定のフォーマットで出力
+7. **共有台帳は触らない**（Manager が結果を読んで更新する）
 
 ---
 

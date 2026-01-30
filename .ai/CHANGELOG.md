@@ -4,6 +4,21 @@
 
 ---
 
+## v0.16.0 (2026-01-30)
+
+### 改善
+- **OrgOS 構成リファクタリング** (~850行の冗長性削減)
+  - CLAUDE.md を 390行 → ~80行に圧縮（原則要約 + 参照リストのみ）
+  - patterns.md を目次化（詳細は skills/ に集約）
+  - 選択肢提示ルールを next-step-guidance.md に一元化
+  - コンテキスト使用率テーブルを session-management.md に一元化
+  - セキュリティコード例を security.md に一元化
+  - requirements.md に歴史的文書宣言を追加
+- **Codex Worker ルール参照強化**: AGENTS.md に .claude/rules/ と .claude/skills/ の参照ガイドを追加
+- **org-tick**: Codex CLI 実行前に環境チェック（インストール・ログイン状態）を追加
+
+---
+
 ## v0.15.0 (2026-01-28)
 
 ### 追加

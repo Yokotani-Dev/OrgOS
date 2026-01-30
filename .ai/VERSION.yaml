@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.15.0"
-released_at: "2026-01-28"
+current: "0.16.0"
+released_at: "2026-01-30"
 
 history:
+  - version: "0.16.0"
+    date: "2026-01-30"
+    description: "Structure refactoring (~850 lines reduced), Codex Worker rule references, org-tick pre-checks"
   - version: "0.15.0"
     date: "2026-01-28"
     description: "Codex CLI setup guide and auto-detection"
