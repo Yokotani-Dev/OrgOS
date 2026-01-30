@@ -1,4 +1,4 @@
-# Codex Worker ガイドライン
+# CODEX_WORKER_GUIDE
 
 > Codex worker（OpenAI Codex CLI）が参照するガイドライン
 
@@ -26,7 +26,7 @@ Work Order（`.ai/CODEX/ORDERS/<TASK_ID>.md`）に従って作業を進めます
 ### 2. 関連ドキュメントを読む
 
 Work Order に記載された参考資料を読む：
-- `AGENTS.md`（このファイル、必読）
+- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
 - `.ai/PROJECT.md`
 - `.ai/GIT_WORKFLOW.md`
 - `.claude/skills/*`（該当するもの）

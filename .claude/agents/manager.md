@@ -221,7 +221,7 @@ Owner に次のステップを明示（`.claude/rules/next-step-guidance.md` 参
 |----------|------|
 | `CLAUDE.md` | Manager の振る舞い定義 |
 | `.claude/agents/manager.md` | Manager の詳細仕様 |
-| `AGENTS.md` | Codex worker のルール |
+| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
 | `.claude/**` | コマンド、エージェント、スキル、ルール |
 | `.ai/*.template` | 台帳テンプレート |
 | `requirements.md` | OrgOS 仕様書 |
