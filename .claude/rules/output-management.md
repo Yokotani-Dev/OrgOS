@@ -69,4 +69,4 @@
 ## 参考資料
 
 - [outputs/README.md](../../outputs/README.md) - 成果物管理ガイド
-- [.claude/agents/AGENTS.md](../agents/AGENTS.md) - Codex worker の資料管理フロー
+- [.claude/agents/CODEX_WORKER_GUIDE.md](../agents/CODEX_WORKER_GUIDE.md) - Codex worker の資料管理フロー
