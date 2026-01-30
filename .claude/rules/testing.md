@@ -229,7 +229,7 @@ npm test -- --coverage --coverageReporters=text-summary
 
 ## 参考資料
 
-- [.claude/skills/tdd-workflow.md](.claude/skills/tdd-workflow.md)
+- [tdd-workflow.md](../skills/tdd-workflow.md)
 - [Jest Documentation](https://jestjs.io/)
 - [Vitest Documentation](https://vitest.dev/)
 - [Playwright Documentation](https://playwright.dev/)
