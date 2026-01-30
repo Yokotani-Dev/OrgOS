@@ -104,9 +104,8 @@
 
 ## 📝 Recent Changes (last tick)
 
-- ✅ T-OS-020 完了: rules/ 間の重複排除（-185行、SSOT確立）
-- ✅ T-OS-021 完了: エージェント定義補完・整理（integrator/maintainer拡充、AGENTS.md→CODEX_WORKER_GUIDE.mdリネーム、org-implementer.md削除）
-- ✅ T-OS-019 完了: P0修正（壊れた参照パス + 関数サイズ基準統一）
+- ✅ BUG-FIX-001: Codex worktree パスバグ修正（Work Order コピー処理追加）
+- ✅ T-OS-019〜022 全完了: レビュー指摘修正（P0〜P3）
 - ✅ T-OS-018 完了: 全体コードレビュー（64件検出: C1/H11/M25/L27）
   - 修正タスク T-OS-019〜022 を追加
 - ✅ T-OS-016 完了: OrgOS 構成リファクタリング（~800行削減）

@@ -4,6 +4,20 @@
 
 ---
 
+## v0.16.1 (2026-01-30)
+
+### 修正
+- **Codex CLI worktree バグ修正**: Work Order と CODEX_WORKER_GUIDE.md を worktree にコピーする処理を追加（git worktree は untracked files を共有しないため）
+- **壊れた参照パス修正**: testing.md の参照パスを修正、関数サイズ基準を統一（20行推奨/50行上限）
+
+### 改善
+- **rules/ 間の重複排除**: モデル選択・コンテキスト管理・応答チェックリストを SSOT に一元化（-185行）
+- **エージェント定義補完・整理**: org-integrator.md/org-os-maintainer.md を拡充、AGENTS.md → CODEX_WORKER_GUIDE.md にリネーム、org-implementer.md 削除
+- **commands/ 重複集約**: patterns.md 削除（CLAUDE.md から直接 skills/ を参照）、DASHBOARD.md ゲートテーブル修正
+- **manifest 整備**: 欠落ファイル追加（manager.md、session-management.md 等）、削除済みファイル除去
+
+---
+
 ## v0.16.0 (2026-01-30)
 
 ### 改善

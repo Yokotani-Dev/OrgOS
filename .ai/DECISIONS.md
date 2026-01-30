@@ -368,3 +368,42 @@ OrgOS 全体コードレビューにより、以下の構造的問題を検出:
 
 ### トリガー
 Owner 依頼（OrgOS 全体コードレビュー）
+
+---
+
+## PLAN-UPDATE-007: レビュー指摘修正タスク追加 (2026-01-30)
+
+### 変更内容
+- 完了: T-OS-018（全体コードレビュー）→ done
+- 追加: T-OS-019（P0: 壊れた参照パス修正 + 関数サイズ基準統一）
+- 追加: T-OS-020（P1: rules/ 間の重複排除）
+- 追加: T-OS-021（P2: エージェント定義の補完・整理）
+- 追加: T-OS-022（P3: commands/ 重複集約 + 台帳整理）
+
+### 理由
+T-OS-018 全体コードレビューで 64件の指摘（CRITICAL 1, HIGH 11, MEDIUM 25, LOW 27）を検出。
+優先度別に4タスクに分割して修正を計画。
+
+### 影響
+- 4タスク追加（T-OS-019〜022）
+- 既存機能への影響なし（リファクタリングのみ）
+
+### トリガー
+T-OS-018 レビュー完了
+
+## BUG-FIX-001: Codex CLI worktree で Work Order が見つからないバグ修正 (2026-01-30)
+
+### 問題
+`codex exec -C .worktrees/<TASK_ID>` 実行時、Codex が `.ai/CODEX/ORDERS/<TASK_ID>.md` を読めない。
+git worktree は untracked files を共有しないため、main で作成した Work Order が worktree 内に存在しない。
+
+### 修正内容
+- run-parallel.sh: Work Order と CODEX_WORKER_GUIDE.md を worktree にコピーする処理を追加
+- org-tick.md: 実行フローにコピー手順を明記、プロンプト例を修正
+- agent-coordination.md: AGENTS.md → CODEX_WORKER_GUIDE.md 参照修正
+
+### 影響
+Codex CLI による並列タスク実行が正常に動作するようになる。
+
+### トリガー
+Tick #13 での T-OS-020/T-OS-021 実行時に発覚

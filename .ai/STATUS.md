@@ -9,7 +9,7 @@
 | 項目 | 値 |
 |------|-----|
 | Stage | KICKOFF |
-| Completed tasks | 17 |
+| Completed tasks | 22 |
 | In progress | 0 |
 | Blocked | 0 |
 | Queued | 2 |
@@ -40,6 +40,14 @@
 
 ## Recent Activity
 
+- ad-hoc: ✅ BUG-FIX-001 Codex worktree パスバグ修正（2026-01-30）
+- T-OS-020: ✅ rules/ 間の重複排除（2026-01-30）
+- T-OS-021: ✅ エージェント定義補完・整理（2026-01-30）
+- T-OS-022: ✅ commands/ 重複集約 + 台帳整理（2026-01-30）
+- T-OS-019: ✅ P0修正完了（2026-01-30）壊れた参照パス + 関数サイズ基準統一
+- T-OS-018: ✅ 全体コードレビュー完了（2026-01-30）
+  - 64件検出: CRITICAL 1, HIGH 11, MEDIUM 25, LOW 27
+  - 修正タスク T-OS-019〜022 を追加（PLAN-UPDATE-007）
 - T-OS-016: ✅ OrgOS 構成リファクタリング完了（2026-01-28）
   - CLAUDE.md: 390行→96行（-294行）
   - patterns.md: 429行→34行（-395行、目次化）

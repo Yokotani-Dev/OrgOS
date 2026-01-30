@@ -32,12 +32,13 @@ publish:
   - ".claude/commands/org-publish.md"
   - ".claude/commands/org-admin.md"
   # エージェント（13エージェント）
+  - ".claude/agents/manager.md"
   - ".claude/agents/org-planner.md"
   - ".claude/agents/org-architect.md"
   - ".claude/agents/org-integrator.md"
   - ".claude/agents/org-scribe.md"
   - ".claude/agents/org-os-maintainer.md"
-  - ".claude/agents/org-implementer.md"
+  - ".claude/agents/CODEX_WORKER_GUIDE.md"
   - ".claude/agents/org-reviewer.md"
   - ".claude/agents/org-security-reviewer.md"
   - ".claude/agents/org-build-fixer.md"
@@ -55,7 +56,6 @@ publish:
   - ".claude/rules/security.md"
   - ".claude/rules/testing.md"
   - ".claude/rules/review-criteria.md"
-  - ".claude/rules/patterns.md"
   - ".claude/rules/agent-coordination.md"
   - ".claude/rules/performance.md"
   - ".claude/rules/literacy-adaptation.md"
@@ -65,6 +65,12 @@ publish:
   - ".claude/rules/date-awareness.md"
   - ".claude/rules/design-documentation.md"
   - ".claude/rules/output-management.md"
+  - ".claude/rules/next-step-guidance.md"
+  - ".claude/rules/plan-sync.md"
+  - ".claude/rules/project-flow.md"
+  - ".claude/rules/session-management.md"
+  # Scripts
+  - ".claude/scripts/run-parallel.sh"
   # 設定
   - ".claude/settings.json"
   # Hooks

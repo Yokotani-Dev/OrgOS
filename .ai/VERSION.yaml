@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.16.0"
+current: "0.16.1"
 released_at: "2026-01-30"
 
 history:
+  - version: "0.16.1"
+    date: "2026-01-30"
+    description: "Code review fixes (T-OS-019~022), Codex worktree bug fix, manifest cleanup"
   - version: "0.16.0"
     date: "2026-01-30"
     description: "Structure refactoring (~850 lines reduced), Codex Worker rule references, org-tick pre-checks"
