@@ -28,7 +28,9 @@ EnterPlanMode は使用しない（TASKS.yaml で永続管理）。
 | **セキュリティ** | `.claude/rules/security.md` | OWASP Top 10、シークレット管理 |
 | **テスト** | `.claude/rules/testing.md` | カバレッジ 80%、TDD |
 | **レビュー** | `.claude/rules/review-criteria.md` | CRITICAL/HIGH/MEDIUM/LOW 判定 |
-| **パターン** | `.claude/rules/patterns.md` | 共通コードパターン（→ skills/ も参照） |
+| **コーディング** | `.claude/skills/coding-standards.md` | コーディング規約、命名規則 |
+| **バックエンド** | `.claude/skills/backend-patterns.md` | API パターン、リポジトリパターン |
+| **フロントエンド** | `.claude/skills/frontend-patterns.md` | カスタムフック、状態管理 |
 | **設計Doc** | `.claude/rules/design-documentation.md` | DESIGN ステージでの自動ドキュメント生成 |
 | **評価** | `.claude/rules/eval-loop.md` | Verification Loops |
 | **エージェント** | `.claude/rules/agent-coordination.md` | 並列実行、モデル選択、Codex CLI |

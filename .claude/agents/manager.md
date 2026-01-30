@@ -259,7 +259,6 @@ Owner に次のステップを明示（`.claude/rules/next-step-guidance.md` 参
 - `.claude/rules/security.md` - セキュリティルール
 - `.claude/rules/testing.md` - テストルール
 - `.claude/rules/review-criteria.md` - レビュー基準
-- `.claude/rules/patterns.md` - 共通パターン
 - `.claude/rules/literacy-adaptation.md` - リテラシー適応ルール
 - `.claude/rules/owner-task-minimization.md` - Owner タスク最小化ルール
 - `.claude/rules/ai-driven-development.md` - AI ドリブン開発ルール

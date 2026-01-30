@@ -39,7 +39,7 @@ tasks:
     title: "セッション間メモリ永続化（Stop フック + sessions フォルダ）"
     status: done
     deps: []
-    owner_role: "org-implementer"
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
     allowed_paths: [".claude/hooks/", ".ai/sessions/", ".ai/LEARNED/"]
     acceptance:
       - "Stop フックがセッション学習を抽出・保存"
@@ -51,7 +51,7 @@ tasks:
     title: "継続学習スキル（/org-learn コマンド）"
     status: done
     deps: ["T-OS-001"]
-    owner_role: "org-implementer"
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
     allowed_paths: [".claude/commands/", ".claude/skills/learned/"]
     acceptance:
       - "/org-learn コマンドが動作する"
@@ -63,7 +63,7 @@ tasks:
     title: "評価ループ（CONTROL.yaml 拡張 + 評価ポリシー）"
     status: done
     deps: []
-    owner_role: "org-implementer"
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
     allowed_paths: [".ai/CONTROL.yaml", ".claude/rules/", "CLAUDE.md"]
     acceptance:
       - "CONTROL.yaml に eval_policy セクション追加"
@@ -312,6 +312,81 @@ tasks:
       - .claude/skills/tdd-workflow.md
       - .claude/rules/testing.md
       Work Order 生成時に、タスク種別に応じた参照ファイルリストを自動付与する。
+
+  # === 全体コードレビュー (2026-01-30) ===
+
+  - id: T-OS-018
+    title: "OrgOS 全体コードレビュー（品質改善）"
+    status: done
+    deps: []
+    owner_role: "org-reviewer"
+    allowed_paths: [".claude/", ".ai/"]
+    acceptance:
+      - ".claude/rules/ 全ファイルレビュー完了"
+      - ".claude/skills/ 全ファイルレビュー完了"
+      - ".claude/agents/ 全ファイルレビュー完了"
+      - ".claude/commands/ 全ファイルレビュー完了"
+      - ".ai/ 台帳・設定ファイルレビュー完了"
+      - "問題点を CRITICAL/HIGH/MEDIUM/LOW で分類"
+      - "改善提案を具体的に提示"
+    notes: |
+      BRIEF.md 参照。品質改善目的の全体レビュー。
+      修正は別タスクとして計画（このタスクでは修正しない）。
+
+  # === レビュー指摘修正タスク (2026-01-30) ===
+
+  - id: T-OS-019
+    title: "レビュー指摘修正 P0: 壊れた参照パス修正 + 関数サイズ基準統一"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/skills/"]
+    acceptance:
+      - "testing.md L232 の参照パスを修正"
+      - "関数サイズ基準を統一（coding-standards.md: 20行推奨 / review-criteria.md: 50行上限）"
+    notes: |
+      T-OS-018 レビュー結果: CRITICAL 1件 + HIGH 1件
+
+  - id: T-OS-020
+    title: "レビュー指摘修正 P1: rules/ 間の重複排除"
+    status: done
+    deps: ["T-OS-019"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/"]
+    acceptance:
+      - "モデル選択ガイダンスを agent-coordination.md に一元化"
+      - "コンテキスト管理を session-management.md に一元化"
+      - "応答末尾チェックリストを next-step-guidance.md に一元化"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 3件（重複排除）
+
+  - id: T-OS-021
+    title: "レビュー指摘修正 P2: エージェント定義の補完・整理"
+    status: done
+    deps: ["T-OS-019"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/"]
+    acceptance:
+      - "org-integrator.md を拡充（役割・手順・判断基準を追加）"
+      - "org-os-maintainer.md を拡充"
+      - "org-implementer.md を削除（DEPRECATED済み）"
+      - "AGENTS.md を CODEX_WORKER_GUIDE.md にリネーム"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 2件 + MEDIUM 2件
+
+  - id: T-OS-022
+    title: "レビュー指摘修正 P3: commands/ 重複集約 + 台帳整理"
+    status: queued
+    deps: ["T-OS-020"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".ai/"]
+    acceptance:
+      - "org-tick.md の Codex CLI チェックを共通セクションに集約"
+      - "patterns.md を削除（CLAUDE.md から直接 skills/ を参照）"
+      - "DASHBOARD.md のゲート制御テーブルを実態と一致させる"
+      - "TASKS.yaml の deprecated org-implementer ロール参照を修正"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 2件 + MEDIUM 6件
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003

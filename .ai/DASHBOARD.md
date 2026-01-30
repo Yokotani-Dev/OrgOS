@@ -64,10 +64,12 @@
 
 | 操作 | 状態 | 変更方法 |
 |------|------|----------|
-| git push | ❌ 禁止 | CONTROL.yaml で allow_push: true |
-| push to main | ❌ 禁止 | CONTROL.yaml で allow_push_main: true |
+| git push | ✅ 許可 | CONTROL.yaml: allow_push: true |
+| push to main | ✅ 許可 | CONTROL.yaml: allow_push_main: true |
+| main mutation | ✅ 許可 | CONTROL.yaml: allow_main_mutation: true |
 | deploy | ❌ 禁止 | CONTROL.yaml で allow_deploy: true |
-| OS変更 | ❌ 禁止 | CONTROL.yaml で allow_os_mutation: true |
+| destructive ops | ❌ 禁止 | CONTROL.yaml で allow_destructive_ops: true |
+| OS変更 | ✅ 許可 | CONTROL.yaml: allow_os_mutation: true |
 
 > これらの変更には **Owner 承認** が必要です。
 
@@ -102,6 +104,11 @@
 
 ## 📝 Recent Changes (last tick)
 
+- ✅ T-OS-020 完了: rules/ 間の重複排除（-185行、SSOT確立）
+- ✅ T-OS-021 完了: エージェント定義補完・整理（integrator/maintainer拡充、AGENTS.md→CODEX_WORKER_GUIDE.mdリネーム、org-implementer.md削除）
+- ✅ T-OS-019 完了: P0修正（壊れた参照パス + 関数サイズ基準統一）
+- ✅ T-OS-018 完了: 全体コードレビュー（64件検出: C1/H11/M25/L27）
+  - 修正タスク T-OS-019〜022 を追加
 - ✅ T-OS-016 完了: OrgOS 構成リファクタリング（~800行削減）
   - CLAUDE.md: 390→96行、patterns.md: 429→34行、重複テーブル一元化
 - ✅ T-OS-017 完了: Codex Worker ルール参照強化（AGENTS.md 更新）
