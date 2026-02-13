@@ -120,7 +120,7 @@ TaskOutput({ task_id: "xxx", block: false });
 ### Manager → Codex CLI（実装委任）
 
 `codex-implementer` タスクは Codex CLI（`codex exec`）で実行する。
-デフォルトモデルは `gpt-5.2-codex`。
+デフォルトモデルは `gpt-5.3-codex-spark`。
 
 ```bash
 # auto_exec: true の場合、Manager が直接実行

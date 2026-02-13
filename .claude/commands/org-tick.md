@@ -740,7 +740,7 @@ codex exec -s workspace-write -C .worktrees/<TASK_ID> \
 5. タスクステータスを更新
 
 **注意:**
-- デフォルトモデルは `gpt-5.2-codex`（ChatGPT 最上位プランで利用可能）
+- デフォルトモデルは `gpt-5.3-codex-spark`（ChatGPT 最上位プランで利用可能）
 - `-m` オプション不要（デフォルトで最上位モデルが使われる）
 - sandbox は CONTROL.yaml の `codex.sandbox` に従う
 

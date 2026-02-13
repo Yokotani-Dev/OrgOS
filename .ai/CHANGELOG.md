@@ -4,6 +4,18 @@
 
 ---
 
+## v0.17.0 (2026-02-13)
+
+### 改善
+- **Codex デフォルトモデル更新**: `gpt-5.2-codex` → `gpt-5.3-codex-spark`（Cerebras 上で 1000+ tok/s の高速推論に対応）
+  - `agent-coordination.md`, `org-tick.md` のモデル参照を更新
+
+### 内部
+- **OrgOS Intelligence 設計完了**: T-INT-000〜006 タスク追加、設計書（`.ai/DESIGN/ORGOS_INTELLIGENCE.md`）作成
+- **Codex Work Order/Logs**: T-OS-019〜021 の実行ログ追加
+
+---
+
 ## v0.16.1 (2026-01-30)
 
 ### 修正

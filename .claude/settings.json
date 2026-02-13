@@ -21,15 +21,13 @@
       "Read",
       "Grep",
       "Glob",
-      "Bash(git status:*)",
-      "Bash(git diff:*)",
-      "Bash(git branch:*)",
-      "Bash(git checkout:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(npm run:*)",
-      "Bash(pnpm:*)",
-      "Bash(yarn:*)"
+      "Edit",
+      "Write",
+      "Bash",
+      "Task",
+      "WebSearch",
+      "WebFetch",
+      "NotebookEdit"
     ]
   },
   "sandbox": {

@@ -1,0 +1,3695 @@
+OpenAI Codex v0.77.0 (research preview)
+--------
+workdir: /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021
+model: gpt-5.2-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c0c6f-cc78-7ee2-b330-663049922a36
+--------
+user
+AGENTS.md を読み、.ai/CODEX/ORDERS/T-OS-021.md の指示に従って実行せよ
+mcp startup: no servers
+
+thinking
+**Preparing to locate work order file**
+
+I'm planning to find the work order file by searching and inspecting files using command-line tools.
+exec
+/bin/zsh -lc ls in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 51ms:
+AGENTS.md
+CLAUDE.md
+ORGOS_QUICKSTART.md
+README.md
+outputs
+requirements.md
+
+thinking
+**Searching for specific file**
+
+I'm listing directory contents to locate a potentially hidden or nested file named like the given path to proceed with accessing its contents.
+exec
+/bin/zsh -lc "rg --files -g '.ai/**'" in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 exited 1 in 66ms:
+
+
+thinking
+**Checking repository contents**
+
+I'm listing all files, including hidden ones, to confirm whether the `.ai` directory exists in the repo.
+exec
+/bin/zsh -lc 'ls -a' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 64ms:
+.
+..
+.ai
+.claude
+.git
+.githooks
+.github
+.gitignore
+.orgos-manifest.yaml
+AGENTS.md
+CLAUDE.md
+ORGOS_QUICKSTART.md
+README.md
+outputs
+requirements.md
+
+thinking
+**Reading work order file**
+exec
+/bin/zsh -lc 'cat .ai/CODEX/ORDERS/T-OS-021.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 exited 1 in 50ms:
+cat: .ai/CODEX/ORDERS/T-OS-021.md: No such file or directory
+
+thinking
+**Requesting list .ai structure**
+exec
+/bin/zsh -lc 'ls .ai' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 45ms:
+ARTIFACTS
+BRIEF.md
+CHANGELOG.md
+CODEX
+CONTROL.yaml
+DASHBOARD.md
+DECISIONS.md
+GIT_WORKFLOW.md
+GOALS.yaml.template
+HANDOFF.md
+LEARNED
+LEARNINGS
+OIP
+OS
+OWNER_COMMENTS.md
+OWNER_INBOX.md
+PROJECT.md
+RESOURCES
+REVIEW
+RISKS.md
+
+thinking
+**Noting potential order path**
+exec
+/bin/zsh -lc 'ls .ai/CODEX' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 44ms:
+LOGS
+ORDERS
+README.md
+RESULTS
+
+thinking
+**Listing orders**
+exec
+/bin/zsh -lc 'ls .ai/CODEX/ORDERS' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 57ms:
+T-OS-015.md
+
+thinking
+**Checking for missing order file**
+
+I'm verifying the presence of the T-OS-021 order file using a search to determine if it's missing and whether to block further action pending instructions.
+exec
+/bin/zsh -lc 'rg "T-OS-021" -n .ai' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 67ms:
+.ai/CODEX/ORDERS/T-OS-021.md:1:# Work Order: T-OS-021
+.ai/CODEX/ORDERS/T-OS-021.md:4:- ID: T-OS-021
+
+thinking
+**Checking for hidden or uppercase files**
+
+I'm running a full directory listing with hidden files included to verify if the file found earlier is hidden or differently cased, which might explain why it didn't show in the normal listing.
+exec
+/bin/zsh -lc 'ls -a .ai/CODEX/ORDERS' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 39ms:
+.
+..
+.gitkeep
+T-OS-015.md
+T-OS-021.md
+
+thinking
+**Displaying file content**
+exec
+/bin/zsh -lc 'cat .ai/CODEX/ORDERS/T-OS-021.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 59ms:
+# Work Order: T-OS-021
+
+## Task
+- ID: T-OS-021
+- Title: レビュー指摘修正 P2: エージェント定義の補完・整理
+- Role: implementer
+
+## Allowed Paths
+- `.claude/agents/`
+
+## Acceptance Criteria
+- org-integrator.md を拡充（役割・手順・判断基準を追加）
+- org-os-maintainer.md を拡充
+- org-implementer.md を削除（DEPRECATED済み）
+- AGENTS.md を CODEX_WORKER_GUIDE.md にリネーム
+
+## Dependencies
+- T-OS-019: done
+
+## Instructions
+
+thinking
+**Planning file review**
+
+I'm focusing on reviewing coding standards, security rules, and possibly pattern files to guide implementation with required skills and compliance.
+exec
+/bin/zsh -lc 'cat .claude/skills/coding-standards.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 51ms:
+# コーディング規約
+
+> OrgOS プロジェクトで適用する開発標準
+
+---
+
+## 基本原則
+
+| 原則 | 説明 |
+|------|------|
+| **KISS** | シンプルに保つ。複雑な解決策より単純な解決策を選ぶ |
+| **DRY** | 繰り返しを避ける。ただし早すぎる抽象化も避ける |
+| **YAGNI** | 必要になるまで作らない。仮説的な要件に対応しない |
+| **可読性優先** | コードは書く時間より読む時間の方が長い |
+
+---
+
+## 命名規則
+
+### 変数・関数
+exec
+/bin/zsh -lc 'cat .claude/rules/security.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 63ms:
+# セキュリティルール
+
+> コードレビュー・実装時に必ず確認するセキュリティチェックリスト
+
+---
+
+## 必須チェック（コミット前）
+
+| # | カテゴリ | チェック内容 |
+|---|----------|--------------|
+| 1 | シークレット | API キー、パスワード、トークンがハードコードされていない |
+| 2 | 入力検証 | すべてのユーザー入力がバリデーションされている |
+| 3 | SQL インジェクション | パラメータ化クエリを使用している |
+| 4 | XSS | HTML 出力がサニタイズされている |
+| 5 | CSRF | 状態変更リクエストに CSRF 対策がある |
+| 6 | 認証・認可 | 適切なアクセス制御が実装されている |
+| 7 | レートリミット | エンドポイントにレート制限がある |
+| 8 | エラーメッセージ | エラーで機密情報が漏洩しない |
+
+---
+
+thinking
+**Opening key agent documentation**
+exec
+/bin/zsh -lc 'cat .claude/agents/org-integrator.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 57ms:
+---
+name: org-integrator
+description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
+tools: Read, Write, Edit, Grep, Glob, Bash
+model: sonnet
+permissionMode: acceptEdits
+---
+
+あなたはIntegrator。
+- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+- merge順序を制御し、衝突を専門的に解消
+- 統合前にOwner Reviewポリシーに従う
+exec
+/bin/zsh -lc 'cat .claude/agents/org-os-maintainer.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 62ms:
+---
+name: org-os-maintainer
+description: OrgOSの運用ログを読み、改善提案（OIP）を書く。適用はしない
+tools: Read, Write, Edit, Grep, Glob
+model: haiku
+permissionMode: acceptEdits
+---
+
+あなたはOS Maintainer。
+- `.ai/` の台帳を読み、摩擦点を抽出
+- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+- 適用はOwner承認後にIntegratorが行う
+
+thinking
+**Clarifying role changes**
+
+Noting that the org-implementer role should be deleted and the org-reviewer role formatted and opened for review.
+exec
+/bin/zsh -lc 'cat .claude/agents/org-reviewer.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 69ms:
+---
+name: org-reviewer
+description: 設計妥当性レビュー（プロジェクト全体の文脈を踏まえた判断）
+tools: Read, Grep, Glob
+model: sonnet
+permissionMode: default
+---
+
+# org-reviewer
+
+設計の妥当性をレビューする Claude subagent。
+プロジェクト全体の文脈を踏まえた判断が必要なレビューを担当。
+
+---
+
+## 役割
+
+Codex Reviewer（コード品質・堅牢性）とは異なり、以下を重点的にレビューする：
+
+| 観点 | 説明 |
+exec
+/bin/zsh -lc 'cat .claude/rules/agent-coordination.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 43ms:
+# エージェント協調パターン
+
+> OrgOS エージェントの効率的な協調・実行パターン
+
+---
+
+## モデル選択ガイダンス
+
+### 使い分けの原則
+
+| モデル | ユースケース | 特徴 |
+|--------|--------------|------|
+| **Haiku** | 単純なタスク、高速応答が必要な場合 | 低コスト、低レイテンシ |
+| **Sonnet** | 通常の実装・レビュー・分析 | バランス型（デフォルト） |
+| **Opus** | 複雑な設計判断、難解なデバッグ | 最高精度、高コスト |
+
+### タスク別推奨モデル
+
+```yaml
+# Haiku を使うタスク
+
+
+thinking
+**Clarifying edit permissions for AGENTS.md and related files**
+
+The root AGENTS.md file (the constitution) can't be edited, but renaming the AGENTS.md located under .claude/agents is permissible since it's a different file within allowed paths. However, updating references in files outside .claude/agents conflicts with the "allowed paths" restriction, so I'll limit edits to .claude/agents and only search other files without modifying them.
+thinking
+**Confirming scope limits and partial progress plan**
+
+The instructions conflict, so I'll proceed only with edits allowed inside .claude/agents, renaming that AGENTS.md and updating references there. I'll search broadly to identify out-of-scope references but mark updating those as blocked due to path restrictions, delivering partial progress accordingly.
+exec
+/bin/zsh -lc 'ls .claude/agents' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 65ms:
+AGENTS.md
+manager.md
+org-architect.md
+org-build-fixer.md
+org-doc-updater.md
+org-e2e-runner.md
+org-implementer.md
+org-integrator.md
+org-os-maintainer.md
+org-planner.md
+org-refactor-cleaner.md
+org-reviewer.md
+org-scribe.md
+org-security-reviewer.md
+org-tdd-coach.md
+
+thinking
+**Searching for references to rename**
+
+I'm searching for references to the file "AGENTS.md" inside .claude, CLAUDE, and .ai directories to identify where updates are needed after renaming.
+exec
+/bin/zsh -lc 'rg "AGENTS.md" .claude CLAUDE.md .ai' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 68ms:
+.ai/DECISIONS.md:- `AGENTS.md`（Codex worker）に資料複製→outputs/ 配置のフローを追加
+.ai/DECISIONS.md:   - `.claude/agents/AGENTS.md` 追加（Codex worker ガイドライン）
+.ai/DECISIONS.md:- 変更: AGENTS.md に「参照すべきルール・スキル」セクションを追加（T-OS-017 の即時対応分）
+.ai/TASKS.yaml:    allowed_paths: ["outputs/", ".gitignore", "CLAUDE.md", ".claude/agents/AGENTS.md", ".claude/rules/"]
+.ai/TASKS.yaml:      - "AGENTS.md（Codex worker）に資料複製→outputs/ 配置のフローを追加"
+.ai/TASKS.yaml:    allowed_paths: ["CLAUDE.md", ".claude/rules/", ".claude/skills/", ".claude/agents/", ".claude/commands/", "AGENTS.md", "requirements.md"]
+.ai/TASKS.yaml:    allowed_paths: ["AGENTS.md", ".claude/agents/AGENTS.md", ".ai/CODEX/"]
+.ai/TASKS.yaml:      - "AGENTS.md に .claude/rules/ と .claude/skills/ の参照ガイドを追加"
+.ai/TASKS.yaml:      現状: AGENTS.md は review-criteria.md と security.md のみ参照。
+.claude/commands/org-publish.md:- `AGENTS.md`
+.claude/commands/org-admin.md:- AGENTS.md
+.claude/commands/org-admin.md:| `AGENTS.md` 編集 | Codex worker のルール |
+.claude/commands/org-tick.md:  "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
+.claude/commands/org-tick.md:cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-003.md に従って実行"
+.claude/commands/org-tick.md:- AGENTS.md（必読）
+.claude/rules/output-management.md:- [.claude/agents/AGENTS.md](../agents/AGENTS.md) - Codex worker の資料管理フロー
+.claude/rules/agent-coordination.md:  "AGENTS.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
+.ai/sessions/2026-01-30.md:  - AGENTS.md に「参照すべきルール・スキル」セクション追加
+.ai/sessions/2026-01-30.md:  - .claude/agents/AGENTS.md を新規作成（Codex worker ガイドライン + 資料複製フロー）
+.ai/sessions/2026-01-28.md:  - .claude/agents/AGENTS.md を新規作成（Codex worker ガイドライン + 資料複製フロー）
+
+
+thinking
+**Following allowed path with blocking**
+
+I'm updating references only within .claude/agents as allowed—including renaming, deleting, and updating agent files there—but cannot edit .ai or other paths, so I'll report those external reference updates as blocked and mark overall status as blocked due to incomplete acceptance.
+thinking
+**Proceeding with allowed partial updates**
+
+I'll perform permitted changes inside .claude/agents, including renaming and editing AGENTS.md, while reporting blocked status due to changes needed outside allowed paths and listing those files for user awareness.
+exec
+/bin/zsh -lc 'cat .claude/agents/AGENTS.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 61ms:
+# Codex Worker ガイドライン
+
+> Codex worker（OpenAI Codex CLI）が参照するガイドライン
+
+---
+
+## 概要
+
+Codex worker は OrgOS Manager から委任されたタスクを実行します。
+Work Order（`.ai/CODEX/ORDERS/<TASK_ID>.md`）に従って作業を進めます。
+
+---
+
+## 作業フロー
+
+### 1. Work Order を読む
+
+`.ai/CODEX/ORDERS/<TASK_ID>.md` を読み、以下を確認：
+- タスクID
+- タイトル
+
+thinking
+**Planning file rename and reference updates**
+
+I'm preparing to rename AGENTS.md to CODEX_WORKER_GUIDE.md with corresponding title changes to "Codex Worker Guide" and update internal self-references accordingly. I also plan to delete org-implementer.md while checking and updating remaining references to these files in related directories before removal.
+exec
+/bin/zsh -lc 'rg "AGENTS.md" .claude/agents -n' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 60ms:
+.claude/agents/AGENTS.md:29:- `AGENTS.md`（このファイル、必読）
+.claude/agents/org-implementer.md:19:- Codex を実行：`codex exec "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ"`
+.claude/agents/org-implementer.md:25:- AGENTS.md による統一的なルール適用
+.claude/agents/org-implementer.md:29:- `AGENTS.md` - Codex worker の憲法
+.claude/agents/manager.md:224:| `AGENTS.md` | Codex worker のルール |
+
+thinking
+**Planning agent file updates**
+
+I'm updating the manager reference to point to a new allowed file path and renaming the AGENTS guide file along with its title and internal references. I'll expand the org-integrator and org-os-maintainer files to include necessary sections, using org-reviewer's format as a template, and will review org-architect and other agent files to ensure consistent formatting.
+exec
+/bin/zsh -lc 'cat .claude/agents/org-architect.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 61ms:
+---
+name: org-architect
+description: 境界（Contract）を定義し、並列開発が衝突しない設計を作る
+tools: Read, Write, Edit, Grep, Glob
+model: sonnet
+permissionMode: acceptEdits
+---
+
+# org-architect
+
+システム設計、アーキテクチャ決定、パターン推奨を担当するエージェント。
+並列開発が衝突しない境界（Contract）を定義する。
+
+---
+
+## ミッション
+
+**スケーラブルで保守しやすいアーキテクチャを設計し、並列開発を可能にする**
+
+---
+
+
+thinking
+**Defining detailed agent formats**
+
+I'm outlining expanded formats for org-integrator and org-os-maintainer including roles, workflows, decision criteria, and safety rules aligned with instructions and existing agent styles. I'll also remove org-implementer.md and rename AGENTS.md to CODEX_WORKER_GUIDE.md with updated title.
+thinking
+**Planning multi-file updates and renames**
+
+I'm preparing a multi-step plan to rename AGENTS.md to CODEX_WORKER_GUIDE.md, update all internal references accordingly, and modify org-integrator, org-os-maintainer, and manager files while respecting allowed edit paths. I'll formalize this with the plan tool given the task complexity.
+Plan update
+Update agent definitions, rename guide, and remove deprecated file within allowed paths; note any blocked reference updates outside scope.
+  ✓ Review current agent files and identify required content and references to AGENTS.md within .claude/agents
+  → Expand org-integrator.md and org-os-maintainer.md per work order
+  • Rename .claude/agents/AGENTS.md to CODEX_WORKER_GUIDE.md and update in-file/agent references within allowed paths
+  • Remove org-implementer.md and document any blocked reference updates outside allowed paths
+
+
+thinking
+**Designing org-integrator content structure**
+
+Planning org-integrator.md with detailed sections on roles, procedures (including git merge vs rebase criteria), decision-making, and safety rules, modeled after org-reviewer but expanded to cover integration-specific workflows.
+thinking
+**Designing org-integrator and org-os-maintainer content**
+
+Planning detailed, structured content for org-integrator covering roles, stepwise integration flow with git merge/rebase criteria, judgment rules, and owner approval safety rules; also designing org-os-maintainer with role, inputs/outputs, judgment criteria, constraints, and process around proposing OIPs. Preparing to remove org-implementer and rename AGENTS.md to CODEX_WORKER_GUIDE.md with updated references.
+file update
+M /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021/.claude/agents/org-integrator.md
+@@ -2,3 +2,3 @@
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+@@ -8,5 +8,60 @@
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+apply_patch(auto_approved=true) exited 0 in 25ms:
+Success. Updated the following files:
+M .claude/agents/org-integrator.md
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+
+
+thinking
+**Preparing to patch org-os-maintainer**
+file update
+M /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021/.claude/agents/org-os-maintainer.md
+@@ -8,6 +8,47 @@
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+apply_patch(auto_approved=true) exited 0 in 38ms:
+Success. Updated the following files:
+M .claude/agents/org-os-maintainer.md
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Preparing to rename agents file**
+exec
+/bin/zsh -lc 'mv .claude/agents/AGENTS.md .claude/agents/CODEX_WORKER_GUIDE.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 58ms:
+
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Updating references in documentation**
+exec
+/bin/zsh -lc 'cat .claude/agents/CODEX_WORKER_GUIDE.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 48ms:
+# Codex Worker ガイドライン
+
+> Codex worker（OpenAI Codex CLI）が参照するガイドライン
+
+---
+
+## 概要
+
+Codex worker は OrgOS Manager から委任されたタスクを実行します。
+Work Order（`.ai/CODEX/ORDERS/<TASK_ID>.md`）に従って作業を進めます。
+
+---
+
+## 作業フロー
+
+### 1. Work Order を読む
+
+`.ai/CODEX/ORDERS/<TASK_ID>.md` を読み、以下を確認：
+- タスクID
+- タイトル
+file update:
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Choosing markdown title update**
+
+Deciding to rename the title line to "# CODEX_WORKER_GUIDE" to match the filename with a clear uppercase style, aligning with the work order rename while maintaining readability. I'll also update references from AGENTS.md to CODEX_WORKER_GUIDE.md accordingly.
+file update
+M /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,2 +1,2 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+@@ -28,3 +28,3 @@
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+apply_patch(auto_approved=true) exited 0 in 54ms:
+Success. Updated the following files:
+M .claude/agents/CODEX_WORKER_GUIDE.md
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Planning reference update in manager.md**
+
+I'm locating the AGENTS reference in .claude/agents/manager.md using line numbers, preparing to patch it accordingly.
+exec
+/bin/zsh -lc 'rg "AGENTS.md" -n .claude/agents/manager.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 54ms:
+224:| `AGENTS.md` | Codex worker のルール |
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Updating worker guide documentation**
+file update
+M /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021/.claude/agents/manager.md
+@@ -223,3 +223,3 @@
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+apply_patch(auto_approved=true) exited 0 in 69ms:
+Success. Updated the following files:
+M .claude/agents/manager.md
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Deleting obsolete documentation file**
+exec
+/bin/zsh -lc 'rm .claude/agents/org-implementer.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 44ms:
+
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Checking AGENTS references after rename**
+
+I'm searching the .claude/agents directory for mentions of AGENTS.md and any references in org-implementer to ensure no broken links remain after the file removal and renaming.
+exec
+/bin/zsh -lc 'rg "AGENTS.md" .claude/agents -n' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 exited 1 in 58ms:
+
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Updating plan steps**
+
+Step 2 and Step 3 are done with renaming and updating references in the allowed path; Step 4 involves deleting the file due to blocking, and the plan will be updated accordingly.
+Plan update
+Core agent updates and rename are done within allowed paths; remaining reference updates outside .claude/agents are blocked by scope.
+  ✓ Review current agent files and identify required content and references to AGENTS.md within .claude/agents
+  ✓ Expand org-integrator.md and org-os-maintainer.md per work order
+  ✓ Rename .claude/agents/AGENTS.md to CODEX_WORKER_GUIDE.md and update in-file/agent references within allowed paths
+  ✓ Remove org-implementer.md and document any blocked reference updates outside allowed paths
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+
+thinking
+**Flagging blocked file writes due to path restrictions**
+
+Recognized a conflict where required result files must be written outside the allowed directories, making their creation impossible; will note this blockage explicitly in the final report without attempting to write those files.
+thinking
+**Confirming path restrictions block result file creation**
+
+Clarified that writing results outside `.claude/agents/` is disallowed despite instructions, so result files cannot be created; will note this blockage and compile related file update info within allowed paths only.
+exec
+/bin/zsh -lc 'cat .claude/agents/org-integrator.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 53ms:
+---
+name: org-integrator
+description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+tools: Read, Write, Edit, Grep, Glob, Bash
+model: sonnet
+permissionMode: acceptEdits
+---
+
+# org-integrator
+
+main ブランチへの統合と競合解消を担当するエージェント。
+リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
+
+---
+
+## 役割
+
+- main ブランチへの統合（worktree からの取り込み）
+- 競合解消と統合順序の制御
+- リリース判断の補助（テスト・レビュー状況の整理）
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Checking org-os-maintainer**
+exec
+/bin/zsh -lc 'cat .claude/agents/org-os-maintainer.md' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 59ms:
+---
+name: org-os-maintainer
+description: OrgOSの運用ログを読み、改善提案（OIP）を書く。適用はしない
+tools: Read, Write, Edit, Grep, Glob
+model: haiku
+permissionMode: acceptEdits
+---
+
+# org-os-maintainer
+
+OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
+提案のみを行い、適用はしない。
+
+---
+
+## 役割
+
+- 運用ログや台帳から摩擦点を抽出
+- 改善提案（OIP）を文書化
+- 問題パターンを分類し、再発防止の方向性を示す
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+
+thinking
+**Checking agent references and docs**
+
+I'm verifying references to the removed file and renamed components across .claude/agents and relevant docs to ensure no missing updates, and preparing to list all references for the final report while respecting path restrictions.
+thinking
+**Refreshing AGENTS.md references**
+
+I'm rerunning the search across key directories to capture updated references reflecting recent renames and ensure the final list is accurate.
+exec
+/bin/zsh -lc 'rg "AGENTS.md" .claude CLAUDE.md .ai' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 65ms:
+.ai/DECISIONS.md:- `AGENTS.md`（Codex worker）に資料複製→outputs/ 配置のフローを追加
+.ai/DECISIONS.md:   - `.claude/agents/AGENTS.md` 追加（Codex worker ガイドライン）
+.ai/DECISIONS.md:- 変更: AGENTS.md に「参照すべきルール・スキル」セクションを追加（T-OS-017 の即時対応分）
+.ai/TASKS.yaml:    allowed_paths: ["outputs/", ".gitignore", "CLAUDE.md", ".claude/agents/AGENTS.md", ".claude/rules/"]
+.ai/TASKS.yaml:      - "AGENTS.md（Codex worker）に資料複製→outputs/ 配置のフローを追加"
+.ai/TASKS.yaml:    allowed_paths: ["CLAUDE.md", ".claude/rules/", ".claude/skills/", ".claude/agents/", ".claude/commands/", "AGENTS.md", "requirements.md"]
+.ai/TASKS.yaml:    allowed_paths: ["AGENTS.md", ".claude/agents/AGENTS.md", ".ai/CODEX/"]
+.ai/TASKS.yaml:      - "AGENTS.md に .claude/rules/ と .claude/skills/ の参照ガイドを追加"
+.ai/TASKS.yaml:      現状: AGENTS.md は review-criteria.md と security.md のみ参照。
+.claude/commands/org-publish.md:- `AGENTS.md`
+.claude/commands/org-admin.md:- AGENTS.md
+.claude/commands/org-admin.md:| `AGENTS.md` 編集 | Codex worker のルール |
+.claude/commands/org-tick.md:  "AGENTS.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
+.claude/commands/org-tick.md:cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-003.md に従って実行"
+.claude/commands/org-tick.md:- AGENTS.md（必読）
+.claude/rules/output-management.md:- [.claude/agents/AGENTS.md](../agents/AGENTS.md) - Codex worker の資料管理フロー
+.claude/rules/agent-coordination.md:  "AGENTS.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
+.ai/sessions/2026-01-30.md:  - AGENTS.md に「参照すべきルール・スキル」セクション追加
+.ai/sessions/2026-01-30.md:  - .claude/agents/AGENTS.md を新規作成（Codex worker ガイドライン + 資料複製フロー）
+.ai/sessions/2026-01-28.md:  - .claude/agents/AGENTS.md を新規作成（Codex worker ガイドライン + 資料複製フロー）
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+thinking
+**Confirming allowed paths and planned renames**
+
+The .claude/agents directory is cleared for renaming and deletions per updated allowed paths, while .ai/CODEX/ORDERS/T-OS-021 remains untouched due to embedded agent instructions. I'll check git status next for final changes summary.
+exec
+/bin/zsh -lc 'git status --short' in /Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-021 succeeded in 68ms:
+ D .claude/agents/AGENTS.md
+ M .claude/agents/manager.md
+ D .claude/agents/org-implementer.md
+ M .claude/agents/org-integrator.md
+ M .claude/agents/org-os-maintainer.md
+?? .ai/CODEX/ORDERS/T-OS-021.md
+?? .claude/agents/CODEX_WORKER_GUIDE.md
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+
+
+thinking
+**Noticing unexpected untracked file**
+
+An untracked file in .ai/CODEX/ORDERS exists that wasn't modified by us and likely preexisted; we'll ignore it since it's not our change.
+thinking
+**Clarifying change scope and blockers**
+
+The agent docs were expanded with roles, procedures, and criteria; the main agents file was renamed and internal references updated; the deprecated org-implementer was removed. However, updating references outside `.claude/agents/` is blocked due to allowed paths, so many `.claude` commands and `.ai` docs remain unchanged. Also, creating results and review packet files under `.ai/` is blocked. Tests were not run. Next steps include requesting broader allowed paths to update references and generate outputs or having the user perform these updates.
+codex
+Expanded the agent definitions and guide within `.claude/agents/` and removed the deprecated implementer doc, aligning the content with the required role/procedure/criteria/safety guidance. Renamed the Codex worker guide and updated the local agent reference to match.
+
+- Updated integrator responsibilities/flow/criteria/safety in `.claude/agents/org-integrator.md`.
+- Expanded OS maintainer role/inputs/outputs/criteria/constraints in `.claude/agents/org-os-maintainer.md`.
+- Renamed and retitled the guide: `.claude/agents/CODEX_WORKER_GUIDE.md` (from `.claude/agents/AGENTS.md`) and updated its self-reference.
+- Updated the manager reference in `.claude/agents/manager.md`.
+- Removed the deprecated `.claude/agents/org-implementer.md`.
+
+**Blocked**
+- References to `AGENTS.md` still exist outside the allowed path and need updates to `CODEX_WORKER_GUIDE.md`: `CLAUDE.md`, `.claude/commands/org-tick.md`, `.claude/commands/org-admin.md`, `.claude/commands/org-publish.md`, `.claude/rules/output-management.md`, `.claude/rules/agent-coordination.md`, `.claude/scripts/run-parallel.sh`.
+- `.ai/` references remain (e.g., `.ai/DECISIONS.md`, `.ai/TASKS.yaml`, `.ai/CHANGELOG.md`, `.ai/STATUS.md`, `.ai/DASHBOARD.md`, `.ai/CODEX/README.md`, `.ai/RESOURCES/ORGOS_ARCHITECTURE.md`, `.ai/RESOURCES/designs/ecd-integration-plan.md`, `.ai/sessions/2026-01-30.md`).
+- Result artifacts were not written because `.ai/` is outside the allowed paths (`.ai/CODEX/RESULTS/T-OS-021.json`, `.ai/REVIEW/PACKETS/T-OS-021.md`).
+
+Tests not run (doc-only updates).
+
+Next steps if you want me to finish the remaining acceptance criteria:
+1) Expand `allowed_paths` to include `.claude/commands/`, `.claude/rules/`, `CLAUDE.md`, `.claude/scripts/`, and `.ai/` so I can update all references and write the required result artifacts.
+2) Alternatively, you can update the remaining references and create the results/review packet yourself, and I’ll verify.
+file update:
+diff --git a/.claude/agents/CODEX_WORKER_GUIDE.md b/.claude/agents/CODEX_WORKER_GUIDE.md
+index baccfe211029eabf5d2db84dfbd8877e8693506b..394c9446637883c52e920df8d4dafcbe64bc1193
+--- a/.claude/agents/CODEX_WORKER_GUIDE.md
++++ b/.claude/agents/CODEX_WORKER_GUIDE.md
+@@ -1,4 +1,4 @@
+-# Codex Worker ガイドライン
++# CODEX_WORKER_GUIDE
+ 
+ > Codex worker（OpenAI Codex CLI）が参照するガイドライン
+ 
+@@ -26,7 +26,7 @@
+ ### 2. 関連ドキュメントを読む
+ 
+ Work Order に記載された参考資料を読む：
+-- `AGENTS.md`（このファイル、必読）
++- `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+ - `.ai/PROJECT.md`
+ - `.ai/GIT_WORKFLOW.md`
+ - `.claude/skills/*`（該当するもの）
+diff --git a/.claude/agents/manager.md b/.claude/agents/manager.md
+index 484cd8ba5b18b901ada4ec331592776530209a29..be95d66942bdf28e029b3304f0396e47646ab99c
+--- a/.claude/agents/manager.md
++++ b/.claude/agents/manager.md
+@@ -221,7 +221,7 @@
+ |----------|------|
+ | `CLAUDE.md` | Manager の振る舞い定義 |
+ | `.claude/agents/manager.md` | Manager の詳細仕様 |
+-| `AGENTS.md` | Codex worker のルール |
++| `CODEX_WORKER_GUIDE.md` | Codex worker のルール |
+ | `.claude/**` | コマンド、エージェント、スキル、ルール |
+ | `.ai/*.template` | 台帳テンプレート |
+ | `requirements.md` | OrgOS 仕様書 |
+diff --git a/.claude/agents/org-integrator.md b/.claude/agents/org-integrator.md
+index 37bd2f6ba81d96b137c5c36b2f3b117aec8e7e14..240c672de8769095c21925679089cc62b35a8aea
+--- a/.claude/agents/org-integrator.md
++++ b/.claude/agents/org-integrator.md
+@@ -1,12 +1,67 @@
+ ---
+ name: org-integrator
+-description: マージ順制御、競合解消、main統合、リリース判断の補助（Owner承認が必要な操作は止める）
++description: main統合、競合解消、リリース判断の補助（Owner承認が必要な操作は止める）
+ tools: Read, Write, Edit, Grep, Glob, Bash
+ model: sonnet
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはIntegrator。
+-- main操作/Push/DeployはCONTROL.yamlの許可がない限り実行しない
+-- merge順序を制御し、衝突を専門的に解消
+-- 統合前にOwner Reviewポリシーに従う
++# org-integrator
++
++main ブランチへの統合と競合解消を担当するエージェント。
++リリース可否の判断材料を整理し、Owner/Manager の意思決定を補助する。
++
++---
++
++## 役割
++
++- main ブランチへの統合（worktree からの取り込み）
++- 競合解消と統合順序の制御
++- リリース判断の補助（テスト・レビュー状況の整理）
++
++---
++
++## 手順（worktree 統合フロー）
++
++1. **前提確認**
++   - Work Order の受け入れ基準を満たしているか
++   - Review Packet / レビュー結果が揃っているか
++   - テスト結果が最新か
++   - `.ai/CONTROL.yaml` の `allow_push_main` が許可状態か
++2. **merge / rebase の選択**
++   - merge を選ぶ: 共同作業ブランチ、履歴保持を優先、長期ブランチ
++   - rebase を選ぶ: 単独作業ブランチ、履歴を線形に保ちたい、共有前のブランチ
++   - 共有後のブランチは rebase しない（履歴改変を避ける）
++3. **統合実行**
++   - main 取り込み前に対象ブランチを最新化
++   - merge/rebase を実行し、競合が出たら最小差分で解消
++4. **最終確認**
++   - テスト再実行 or 主要テストの再検証
++   - リリース判断に必要な情報をまとめて報告
++
++---
++
++## 判断基準（マージ可否）
++
++| 項目 | 判定 |
++|------|------|
++| テスト | 必須テストが全て通過している |
++| レビュー | org-reviewer / Codex reviewer の承認が揃っている |
++| 設定 | `.ai/CONTROL.yaml` の `allow_push_main` が許可 |
++| リスク | Blocker が未解決でない |
++
++---
++
++## 安全ルール（Owner 承認が必要な操作）
++
++- main への push / merge / rebase
++- force push や履歴改変を伴う操作
++- タグ付け、リリース、デプロイ
++- main ブランチのロールバックやリバート
++
++---
++
++## 注意事項
++
++- main 操作 / Push / Deploy は `CONTROL.yaml` の許可がない限り実行しない
++- 統合前に Owner Review ポリシーに従う
+diff --git a/.claude/agents/org-os-maintainer.md b/.claude/agents/org-os-maintainer.md
+index 430ffd57ac251eeddc9e7225713e3d1bbd500b84..36b9bbe0e4920f08254e0beed9d2fbfe714754fc
+--- a/.claude/agents/org-os-maintainer.md
++++ b/.claude/agents/org-os-maintainer.md
+@@ -6,8 +6,49 @@
+ permissionMode: acceptEdits
+ ---
+ 
+-あなたはOS Maintainer。
+-- `.ai/` の台帳を読み、摩擦点を抽出
+-- 提案は `.ai/OS/PROPOSALS/` に OIP として記録
+-- OSファイル（.claude/** や CLAUDE.md や .ai/CONTROL.yaml）を直接変更してはいけない
+-- 適用はOwner承認後にIntegratorが行う
++# org-os-maintainer
++
++OrgOS の運用ログを読み、改善提案（OIP）を作成するエージェント。
++提案のみを行い、適用はしない。
++
++---
++
++## 役割
++
++- 運用ログや台帳から摩擦点を抽出
++- 改善提案（OIP）を文書化
++- 問題パターンを分類し、再発防止の方向性を示す
++
++---
++
++## 入力
++
++- `.ai/sessions/`（セッションログ）
++- `.ai/RUN_LOG.md`
++- `.ai/DECISIONS.md`
++
++---
++
++## 出力
++
++- `.ai/OIP/` に改善提案を記録
++- ファイル名は日付やテーマが分かる形式にする
++  - 例: `2026-02-01-agent-onboarding.md`
++
++---
++
++## 判断基準（OIP に値するパターン）
++
++- 同じエラーやブロッカーが複数回発生している
++- 指示の曖昧さにより作業が停滞している
++- 手作業の繰り返しが多く、自動化余地がある
++- ログにセキュリティ上の懸念が残っている
++- 運用ルールが矛盾している/更新が追いついていない
++
++---
++
++## 制約
++
++- OIP を書くだけで、実装や適用はしない
++- OSファイル（`.claude/**` / `CLAUDE.md` / `.ai/CONTROL.yaml`）を直接変更しない
++- 適用は Manager / Owner 判断で Integrator が実施する
+
+tokens used
+52,883
+Expanded the agent definitions and guide within `.claude/agents/` and removed the deprecated implementer doc, aligning the content with the required role/procedure/criteria/safety guidance. Renamed the Codex worker guide and updated the local agent reference to match.
+
+- Updated integrator responsibilities/flow/criteria/safety in `.claude/agents/org-integrator.md`.
+- Expanded OS maintainer role/inputs/outputs/criteria/constraints in `.claude/agents/org-os-maintainer.md`.
+- Renamed and retitled the guide: `.claude/agents/CODEX_WORKER_GUIDE.md` (from `.claude/agents/AGENTS.md`) and updated its self-reference.
+- Updated the manager reference in `.claude/agents/manager.md`.
+- Removed the deprecated `.claude/agents/org-implementer.md`.
+
+**Blocked**
+- References to `AGENTS.md` still exist outside the allowed path and need updates to `CODEX_WORKER_GUIDE.md`: `CLAUDE.md`, `.claude/commands/org-tick.md`, `.claude/commands/org-admin.md`, `.claude/commands/org-publish.md`, `.claude/rules/output-management.md`, `.claude/rules/agent-coordination.md`, `.claude/scripts/run-parallel.sh`.
+- `.ai/` references remain (e.g., `.ai/DECISIONS.md`, `.ai/TASKS.yaml`, `.ai/CHANGELOG.md`, `.ai/STATUS.md`, `.ai/DASHBOARD.md`, `.ai/CODEX/README.md`, `.ai/RESOURCES/ORGOS_ARCHITECTURE.md`, `.ai/RESOURCES/designs/ecd-integration-plan.md`, `.ai/sessions/2026-01-30.md`).
+- Result artifacts were not written because `.ai/` is outside the allowed paths (`.ai/CODEX/RESULTS/T-OS-021.json`, `.ai/REVIEW/PACKETS/T-OS-021.md`).
+
+Tests not run (doc-only updates).
+
+Next steps if you want me to finish the remaining acceptance criteria:
+1) Expand `allowed_paths` to include `.claude/commands/`, `.claude/rules/`, `CLAUDE.md`, `.claude/scripts/`, and `.ai/` so I can update all references and write the required result artifacts.
+2) Alternatively, you can update the remaining references and create the results/review packet yourself, and I’ll verify.

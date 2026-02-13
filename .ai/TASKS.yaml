@@ -376,7 +376,7 @@ tasks:
 
   - id: T-OS-022
     title: "レビュー指摘修正 P3: commands/ 重複集約 + 台帳整理"
-    status: queued
+    status: done
     deps: ["T-OS-020"]
     owner_role: "codex-implementer"
     allowed_paths: [".claude/commands/", ".ai/"]
@@ -387,6 +387,120 @@ tasks:
       - "TASKS.yaml の deprecated org-implementer ロール参照を修正"
     notes: |
       T-OS-018 レビュー結果: HIGH 2件 + MEDIUM 6件
+
+  # === OrgOS Intelligence (2026-01-30) ===
+
+  - id: T-INT-000
+    title: "Intelligence Phase 0: 手動レポート生成で質を検証"
+    status: done
+    deps: []
+    owner_role: "org-architect"
+    allowed_paths: [".ai/DESIGN/", "outputs/"]
+    acceptance:
+      - "手動で1回分のレポートを生成し outputs/ に保存"
+      - "Owner がレポート品質を承認"
+      - "情報ソース・フィルタリング基準の妥当性を確認"
+    notes: |
+      設計書: .ai/DESIGN/ORGOS_INTELLIGENCE.md
+      Phase 0: 実装前にレポートの質を検証する。
+      完了: 2026-01-30。Owner承認済み。要件#23-31を設計書に反映。
+      成果物: outputs/2026-01-30/intelligence-report-2026-01-30.md
+
+  - id: T-INT-001
+    title: "Intelligence Phase 1: orgos-intelligence リポジトリ初期構築"
+    status: queued
+    deps: ["T-INT-000"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "orgos-intelligence リポジトリ作成（別リポジトリ）"
+      - "Cloudflare Workers + Hono プロジェクト初期化"
+      - "Wrangler 設定（cron trigger 毎朝 0:00 UTC = 9:00 JST）"
+      - "Google Custom Search API 連携"
+      - "Gemini Flash API 連携（収集・要約）"
+      - "Claude Sonnet API 連携（分析・OIP生成）"
+      - "Cloudflare KV 設定（report-cache, oip-counter, config-cache, search-count）"
+      - "日次レポート生成パイプライン動作"
+    notes: |
+      設計書 Section 3-9 参照。
+      別リポジトリ orgos-intelligence に構築。
+      技術スタック: Cloudflare Workers Paid + Hono + KV。
+      Owner 作業: Cloudflare アカウント作成、API キー設定。
+
+  - id: T-INT-002
+    title: "Intelligence Phase 2: Slack Bot 構築（配信 + 承認 + 対話）"
+    status: queued
+    deps: ["T-INT-001"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Slack App 作成（#orgos-intelligence チャンネル）"
+      - "毎朝 9:00 JST にレポート配信"
+      - "ボタン付き承認 UI（Approve / Hold / Reject）"
+      - "スレッド内対話（過去7日分コンテキスト）"
+      - "月曜に週次ダイジェスト配信"
+    notes: |
+      設計書 Section 6 参照。
+      Hono + @slack/web-api（Slack Bolt は Workers 非互換）。
+      Owner 作業: Slack App 作成・チャンネル作成。
+
+  - id: T-INT-003
+    title: "Intelligence Phase 3: OIP-AUTO 生成 + OrgOS PR 自動作成"
+    status: queued
+    deps: ["T-INT-002"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "レポートから OIP-AUTO を自動生成"
+      - "Owner が Slack で承認 → OrgOS リポジトリに PR 作成"
+      - "GitHub App 連携（最小権限、短命トークン）"
+      - "OIP 7日間未応答 → 自動 Hold"
+    notes: |
+      設計書 Section 7, 10 参照。
+      GitHub App で OrgOS リポジトリにアクセス。
+
+  - id: T-INT-004
+    title: "Intelligence Phase 4: OS Evals 整備 + Level 1 自動承認"
+    status: queued
+    deps: ["T-INT-003"]
+    owner_role: "org-architect"
+    allowed_paths: [".ai/", ".claude/"]
+    acceptance:
+      - "OS Evals テストスイート構築（OrgOS 側）"
+      - "Level 0（情報提供のみ）は自動適用"
+      - "Level 1（軽微な Userland 変更）の自動承認を解禁"
+      - "Eval 結果に基づく自動 approve/reject 判定"
+    notes: |
+      設計書 Section 11, 12 参照。
+      Kernel/Userland 境界の定義に基づく安全な自動承認。
+
+  - id: T-INT-005
+    title: "Intelligence Phase 5: ロールバック機構 + Kernel 保護"
+    status: queued
+    deps: ["T-INT-004"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "自動適用した変更のロールバック機構"
+      - "Kernel 変更の自動検知・ブロック"
+      - "ロールバック時の Owner 通知"
+    notes: |
+      設計書 Section 12 参照。
+      Kernel（security.md, review-criteria.md, CONTROL.yaml 等）への変更は自動適用禁止。
+
+  - id: T-INT-006
+    title: "Intelligence Phase 6: ソース追加の Slack 対話フロー"
+    status: queued
+    deps: ["T-INT-002"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Slack から情報ソースの追加・削除が可能"
+      - "ソース設定が Cloudflare KV に保存"
+      - "追加ソースが次回収集から反映"
+    notes: |
+      設計書 Section 4 参照。
+      Owner が Slack で「Anthropic Blog を追加して」→ 自動反映。
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003

@@ -407,3 +407,28 @@ Codex CLI による並列タスク実行が正常に動作するようになる�
 
 ### トリガー
 Tick #13 での T-OS-020/T-OS-021 実行時に発覚
+
+---
+
+## PLAN-UPDATE-008: OrgOS Intelligence 実装タスク追加 (2026-01-30)
+
+### 変更内容
+- 追加: T-INT-000 〜 T-INT-006（OrgOS Intelligence Phase 0〜6）
+  - T-INT-000: 手動レポート生成で質を検証
+  - T-INT-001: orgos-intelligence リポジトリ初期構築（Workers + Hono + KV）
+  - T-INT-002: Slack Bot 構築（配信 + 承認 + 対話）
+  - T-INT-003: OIP-AUTO 生成 + OrgOS PR 自動作成
+  - T-INT-004: OS Evals 整備 + Level 1 自動承認
+  - T-INT-005: ロールバック機構 + Kernel 保護
+  - T-INT-006: ソース追加の Slack 対話フロー
+
+### 理由
+Owner との設計議論で OrgOS Intelligence の全要件が確定。
+設計書: .ai/DESIGN/ORGOS_INTELLIGENCE.md（19セクション、org-reviewer レビュー済み）
+
+### 影響
+新規タスク系列の追加。既存タスクへの依存なし（全て done）。
+別リポジトリ orgos-intelligence に構築するため、OrgOS 本体への影響は Phase 4 以降。
+
+### トリガー
+Owner 指示（設計完了 → 実装フェーズへ移行）

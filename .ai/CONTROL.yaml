@@ -195,4 +195,4 @@ eval_policy:
 # ランタイム設定
 runtime:
   max_parallel_tasks: 6  # 同時実行タスク数上限
-  tick_count: 15         # Tick カウンタ
+  tick_count: 16         # Tick カウンタ

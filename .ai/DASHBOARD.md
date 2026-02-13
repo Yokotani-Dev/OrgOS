@@ -104,14 +104,9 @@
 
 ## 📝 Recent Changes (last tick)
 
-- ✅ BUG-FIX-001: Codex worktree パスバグ修正（Work Order コピー処理追加）
-- ✅ T-OS-019〜022 全完了: レビュー指摘修正（P0〜P3）
-- ✅ T-OS-018 完了: 全体コードレビュー（64件検出: C1/H11/M25/L27）
-  - 修正タスク T-OS-019〜022 を追加
-- ✅ T-OS-016 完了: OrgOS 構成リファクタリング（~800行削減）
-  - CLAUDE.md: 390→96行、patterns.md: 429→34行、重複テーブル一元化
-- ✅ T-OS-017 完了: Codex Worker ルール参照強化（AGENTS.md 更新）
-- ✅ T-OS-014 完了: Codex CLI 統合 Phase 1（検証）
+- ad-hoc: Codex CLI 0.98.0→0.101.0 アップデート + デフォルトモデル gpt-5.3-codex-spark に更新（2026-02-13）
+  - agent-coordination.md, org-tick.md のモデル参照を更新
+- 前回: T-INT-000 完了、T-OS-019〜022 全完了、BUG-FIX-001 修正済み
 - ✅ T-OS-005 完了: プロジェクト引き継ぎ機能を実装
   - [CONTROL.yaml](.ai/CONTROL.yaml) に handoff セクション追加
   - [.ai/HANDOFF.md](.ai/HANDOFF.md) テンプレート作成
