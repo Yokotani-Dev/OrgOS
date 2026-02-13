@@ -213,9 +213,15 @@ git remote -v
 
 リモート設定の状態によって処理を分岐する。
 
+| パターン | 条件 | 処理 |
+|----------|------|------|
+| A | origin が存在しない | 新しいリポジトリ設定を案内 |
+| B | origin が OrgOS リポジトリ（`/OrgOS` を含む） | **自動切断** + 新しいリポジトリ設定 |
+| C | origin が OrgOS 以外のリポジトリ | 維持して続行 |
+
 ---
 
-**パターン A: origin が存在しない場合（Publicリポジトリからクローンした通常ケース）**
+**パターン A: origin が存在しない場合**
 
 origin が設定されていない場合、切断確認は不要。新しいリポジトリの設定のみ行う。
 
@@ -255,49 +261,43 @@ git push -u origin main
 
 ---
 
-**パターン B: OrgOS-Dev リポジトリに接続中の場合（origin に `OrgOS-Dev` を含む）**
+**パターン B: OrgOS リポジトリに接続中の場合（公開版 or 開発版）**
 
-⚠️ 警告を表示：
+origin に OrgOS 関連の URL が含まれる場合（`/OrgOS` を含む）、自動で切断する。
+
+```bash
+# OrgOS リポジトリ判定
+origin_url=$(git remote get-url origin 2>/dev/null)
+is_orgos_repo=$(echo "$origin_url" | grep -i '/OrgOS')
+
+if [ -n "$is_orgos_repo" ]; then
+  # OrgOS リポジトリ → 自動切断
+fi
+```
+
+**自動切断を実行：**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ OrgOS-Dev リポジトリに接続されています
+OrgOS リポジトリとの接続を解除しました
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-このリポジトリは OrgOS の開発用リポジトリです。
+OrgOS のテンプレートリポジトリから clone されたため、
+元のリポジトリとの接続を自動で解除しました。
 
-■ 新しいプロジェクトを始める場合:
-  → 切断して新しいリポジトリを設定します
-
-■ OrgOS 自体を編集する場合:
-  → /org-admin を使用してください
-  ⚠️ OrgOS のコア機能を変更します。不要な場合は選択しないでください。
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+新しいプロジェクト用のリポジトリを設定してください。
 ```
 
-AskUserQuestion で確認：
-```
-質問: どちらを行いますか？
-
-選択肢:
-- 切断して新しいプロジェクトを始める（推奨）
-- キャンセル（OrgOS開発には /org-admin を使用）
-```
-
-**「キャンセル」の場合：**
-- 「キャンセルしました。OrgOS開発には /org-admin を使用してください。」と表示
-- **ここで処理終了**
-
-**「切断して新しいプロジェクトを始める」の場合：**
 ```bash
 git remote remove origin
 ```
 
 新しいリポジトリURLを聞く（AskUserQuestion）：
 ```
-質問: 新しいプロジェクトのリポジトリURLを入力してください
+質問: プロジェクト用のリポジトリURLを設定しますか？
 
 選択肢:
-- 今すぐ入力する
+- 今すぐ入力する（推奨）
 - 後で設定する（スキップ）
 ```
 
@@ -324,7 +324,7 @@ git push -u origin main
 
 ---
 
-**パターン C: 他のリポジトリに接続中の場合（OrgOS-Dev 以外）**
+**パターン C: 他のリポジトリに接続中の場合（OrgOS 以外）**
 
 - 既存の接続を維持（切断確認不要）
 - Step 2 へ進む
@@ -365,7 +365,7 @@ git push -u origin main
 
 ```
 .ai/
-  CONTROL.yaml      # stage: KICKOFF, allow_*: false, awaiting_owner: false
+  CONTROL.yaml      # stage: KICKOFF, is_orgos_dev: false, allow_*: false, awaiting_owner: false
   DASHBOARD.md      # 起動直後テンプレ
   TASKS.yaml        # 空（T-001 kickoffのみ）
   STATUS.md         # 空テンプレ

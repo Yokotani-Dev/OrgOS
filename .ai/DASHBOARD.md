@@ -104,15 +104,18 @@
 
 ## 📝 Recent Changes (last tick)
 
+- Tick #29（2026-02-13）: T-INT-007〜010 統合 + T-OS-025 完了
+  - T-INT-007: Gemini スコアリング JSON 抽出強化 + OIP 生成改善
+  - T-INT-008: HN フィルタリング精度改善（単語境界マッチ + ストップワード除外）
+  - T-INT-009: HTML タグ残留修正（stripHtml 2パス処理）
+  - T-INT-010: 重複排除強化（URL 正規化 + 単語 Jaccard 0.5）
+  - 全4件 TypeScript ビルド通過、main マージ + push (a6c2a87)
+  - T-OS-025: /org-start FlowA で public OrgOS リポジトリの origin を自動切断
+  - Owner 作業: orgos-intelligence で `wrangler deploy` が必要（品質改善の反映）
+- Tick #26-28（2026-02-13）: T-INT-005 + T-INT-006 完了（Intelligence Phase 5-6）
+  - OrgOS Intelligence Phase 0-6 全完了
+- Tick #25（2026-02-13）: T-OS-024 全作業 TASKS.yaml 登録必須化
 - Tick #24（2026-02-13）: T-INT-004 OS Evals 実装完了
-  - `.claude/evals/` ディレクトリ新設（7ファイル）
-  - org-tick に Step 9A（OIP PR 検出 + Eval 判定）を追加
-  - レビュー: CRITICAL 1 + HIGH 4 → 全件修正済み、全 Eval PASS
-  - TECH-DECISION-003: Level 判定は Worker 側メタデータ方式を採用
-  - T-INT-005（ロールバック機構）のブロック解除
-- Tick #22: T-INT-003 レビュー承認 → done
-- Tick #21: T-INT-003 レビュー修正（5ファイル、CRITICAL 1 + HIGH 6 修正）
-- Tick #20: T-INT-003 実装完了
 - ✅ T-OS-005 完了: プロジェクト引き継ぎ機能を実装
   - [CONTROL.yaml](.ai/CONTROL.yaml) に handoff セクション追加
   - [.ai/HANDOFF.md](.ai/HANDOFF.md) テンプレート作成
@@ -144,4 +147,4 @@
 
 ## ⚠️ Blockers
 
-- (なし)
+(なし)

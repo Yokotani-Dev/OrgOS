@@ -4,6 +4,31 @@
 
 ---
 
+## v0.19.0 (2026-02-13)
+
+### 追加
+- **org-tick オートコンティニュー** (T-OS-023): Tick 完了後に条件を満たせば自動的に次の Tick を連続実行
+  - batch/manual モードで Owner に毎回返さず連続処理
+  - 最大 10 Tick/回、コンテキスト 80% で強制停止
+- **全作業 TASKS.yaml 登録必須化** (T-OS-024): ad-hoc 実行を禁止、全作業を TASKS.yaml 経由で管理
+  - 割り込みタスク受付フロー追加（allowed_paths 衝突チェック）
+  - org-tick Step 2.2「新規依頼のタスク化」を追加
+
+### 改善
+- **`/org-start` public OrgOS 自動切断** (T-OS-025): public OrgOS リポジトリをクローンした場合、選択肢を出さず自動で origin を切断
+  - FlowA Step 1 に Pattern B（`/OrgOS` URL 判定）を追加
+  - Step 3 テンプレートに `is_orgos_dev: false` を明示
+
+### 内部
+- **Intelligence パイプライン品質修正** (T-INT-007〜010): orgos-intelligence リポジトリで4件の品質改善
+  - T-INT-007: Gemini スコアリング JSON 抽出強化 + OIP 生成改善
+  - T-INT-008: HN フィルタリング精度改善（単語境界マッチ + ストップワード除外）
+  - T-INT-009: HTML タグ残留修正（stripHtml 2パス処理）
+  - T-INT-010: 重複排除強化（URL 正規化 + 単語 Jaccard 0.5）
+- **Intelligence Phase 5-6** (T-INT-005〜006): ロールバック機構、Kernel 保護、ソース管理 Slack フロー
+
+---
+
 ## v0.18.0 (2026-02-13)
 
 ### 追加

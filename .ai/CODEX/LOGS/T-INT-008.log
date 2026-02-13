@@ -1,0 +1,795 @@
+OpenAI Codex v0.101.0 (research preview)
+--------
+workdir: /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008
+model: gpt-5.2-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c55fa-3a04-7052-b6d8-4b10347e9fd1
+--------
+user
+.ai/CODEX/ORDERS/T-INT-008.md を読み、その指示に従って実装せよ。修正完了後に npx tsc --noEmit でビルドチェックを行い、エラーがあれば修正せよ。
+mcp startup: no servers
+2026-02-13T07:49:48.198069Z ERROR codex_core::rollout::list: state db missing rollout path for thread 019c55fa-330a-7cf0-8993-b7caa67ed237
+
+thinking
+**Reading orders file**
+exec
+/bin/zsh -lc ls in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 succeeded in 51ms:
+README.md
+package-lock.json
+package.json
+src
+tsconfig.json
+wrangler.toml
+exec
+/bin/zsh -lc 'cat .ai/CODEX/ORDERS/T-INT-008.md' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 succeeded in 52ms:
+# Work Order: T-INT-008
+
+## Task
+- ID: T-INT-008
+- Title: Intelligence 品質修正: HN フィルタリング精度改善
+- Role: implementer
+
+## Repository
+orgos-intelligence (/Users/youyokotani/Dev/Private/orgos-intelligence)
+
+## Problem Analysis
+
+`src/collector/hackernews.ts` の `isAiRelated` 関数がキーワードの部分一致（`titleLower.includes(kw)`）で判定しているため、AI 無関係の記事が大量に通過している。
+
+### 具体的な問題:
+
+1. **"ai" の部分一致**: `"email"`, `"fair"`, `"repair"`, `"maintain"`, `"ukraine"` 等に一致
+2. **"agent" の部分一致**: `"reagent"` 等に一致
+3. **"prompt" の部分一致**: `"prompted"`, `"impromptu"` 等に一致
+4. **"rag" の部分一致**: `"outrage"`, `"storage"`, `"garage"` 等に一致
+exec
+/bin/zsh -lc 'cat .ai/DESIGN/ORGOS_INTELLIGENCE.md' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 exited 1 in 51ms:
+cat: .ai/DESIGN/ORGOS_INTELLIGENCE.md: No such file or directory
+
+thinking
+**Noting missing design file**
+exec
+/bin/zsh -lc "sed -n '1,220p' src/collector/hackernews.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 succeeded in 51ms:
+import type { CollectedArticle, Source } from "../types.js";
+
+const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+const MAX_STORIES_TO_CHECK = 50;
+
+interface HNItem {
+  id: number;
+  title: string;
+  url?: string;
+  score: number;
+  time: number;
+  type: string;
+}
+
+/**
+ * Hacker News の Top Stories から AI 関連記事を取得
+ */
+export async function collectFromHackerNews(
+  source: Source,
+  since: Date,
+
+thinking
+**Planning score threshold and keyword rules**
+
+Noticing no existing HN score threshold in code, I'll introduce a new minimum score constant (likely 50) to filter low-scoring noise, adjust keyword length rules with word boundaries for short ones, and handle stopwords with a min length or list.
+exec
+/bin/zsh -lc 'rg -n "HN score|hackernews|Hacker News|HN" src' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 succeeded in 52ms:
+src/collector/hackernews.ts:3:const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+src/collector/hackernews.ts:6:interface HNItem {
+src/collector/hackernews.ts:16: * Hacker News の Top Stories から AI 関連記事を取得
+src/collector/hackernews.ts:27:    const res = await fetch(`${HN_API_BASE}/topstories.json`);
+src/collector/hackernews.ts:28:    if (!res.ok) throw new Error(`HN API: ${res.status}`);
+src/collector/hackernews.ts:35:      topIds.map(async (id): Promise<HNItem | null> => {
+src/collector/hackernews.ts:37:          const r = await fetch(`${HN_API_BASE}/item/${id}.json`);
+src/collector/hackernews.ts:61:        summary: `HN score: ${item.score}`,
+src/collector/hackernews.ts:67:    console.error(`HN collection failed:`, error);
+src/config/sources.ts:49:    name: "Hacker News",
+src/collector/index.ts:3:import { collectFromHackerNews } from "./hackernews.js";
+src/collector/index.ts:43:  // Hacker News
+src/collector/index.ts:54:      errors.push({ name: "Hacker News", error: String(error) });
+
+
+
+thinking
+**Deciding score threshold**
+
+I'm adding a new constant for minimum score filtering, setting it to 30 to moderately exclude low-score noise while preserving relevant items, and will implement a check to skip articles below this threshold.
+thinking
+**Designing refined keyword and watch topic matching**
+
+I'm planning to implement word-boundary regex matching for short AI keywords and watch topic tokens to avoid false positives, plus add a stopword list for watch topics while keeping a minimum token length of 3, balancing strictness and user flexibility in matching logic.
+thinking
+**Adding stopwords and score filtering**
+
+I'm adding a lower-case stopword set for watch topics and defining a minimum HN score constant of 30 to filter out low-score items early in the collection loop before relevance checks.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008/src/collector/hackernews.ts
+@@ -4,2 +4,3 @@
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+@@ -97,14 +98,63 @@
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+apply_patch(auto_approved=true) exited 0 in 33ms:
+Success. Updated the following files:
+M src/collector/hackernews.ts
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..bf169df645f013a1156255ca3538ec2183948cbe
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -95,16 +96,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..bf169df645f013a1156255ca3538ec2183948cbe
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -95,16 +96,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+
+thinking
+**Adding score check in loop**
+
+Planning to insert a score check after the existing time check in the loop using apply_patch to modify the code accordingly.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008/src/collector/hackernews.ts
+@@ -50,2 +50,3 @@
+       if (item.time < sinceUnix) continue;
++      if (item.score < MIN_HN_SCORE) continue;
+ 
+apply_patch(auto_approved=true) exited 0 in 32ms:
+Success. Updated the following files:
+M src/collector/hackernews.ts
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..1dfb1db5a72ce24ce36080fed26d55bf04a5b7c1
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -47,6 +48,7 @@
+     for (const item of items) {
+       if (!item || item.type !== "story" || !item.url) continue;
+       if (item.time < sinceUnix) continue;
++      if (item.score < MIN_HN_SCORE) continue;
+ 
+       // AI 関連キーワードでフィルタ
+       const titleLower = item.title.toLowerCase();
+@@ -95,16 +97,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..1dfb1db5a72ce24ce36080fed26d55bf04a5b7c1
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -47,6 +48,7 @@
+     for (const item of items) {
+       if (!item || item.type !== "story" || !item.url) continue;
+       if (item.time < sinceUnix) continue;
++      if (item.score < MIN_HN_SCORE) continue;
+ 
+       // AI 関連キーワードでフィルタ
+       const titleLower = item.title.toLowerCase();
+@@ -95,16 +97,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+
+thinking
+**Confirming constant setups and hoisting**
+
+Verified that `escapeRegex` function is safely hoisted for use in defining `SHORT_AI_REGEX`, which relies on non-empty keyword lists ensuring proper regex behavior; also set `MIN_HN_SCORE` threshold to 30 and prepared to run type checking next.
+exec
+/bin/zsh -lc 'npx tsc --noEmit' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-008 succeeded in 916ms:
+
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..1dfb1db5a72ce24ce36080fed26d55bf04a5b7c1
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -47,6 +48,7 @@
+     for (const item of items) {
+       if (!item || item.type !== "story" || !item.url) continue;
+       if (item.time < sinceUnix) continue;
++      if (item.score < MIN_HN_SCORE) continue;
+ 
+       // AI 関連キーワードでフィルタ
+       const titleLower = item.title.toLowerCase();
+@@ -95,16 +97,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+
+thinking
+**Summarizing changes and noting design doc missing**
+
+I've prepared a summary highlighting the added score threshold, updated regex with stopwords and word boundaries, and noted running type checks with `npx tsc --noEmit`. Also flagged the missing design document at `.ai/DESIGN/ORGOS_INTELLIGENCE.md` for inclusion.
+codex
+**Summary**
+- `src/collector/hackernews.ts` に `MIN_HN_SCORE = 30` を導入し、低スコアの HN 記事を除外しました。
+- `src/collector/hackernews.ts` の `isAiRelated` を短いキーワードは単語境界マッチ、長いキーワードは部分一致に分離しました。
+- `src/collector/hackernews.ts` の watchTopics トークン化にストップワード除外と短いトークンの単語境界マッチを追加しました。
+
+**Tests**
+- `npx tsc --noEmit`
+
+**Note**
+- 参照指定の `.ai/DESIGN/ORGOS_INTELLIGENCE.md` はリポジトリ内に見当たりませんでした（読み取り失敗）。
+file update:
+diff --git a/src/collector/hackernews.ts b/src/collector/hackernews.ts
+index 82f5261e88f5eb5d630aa5d45fd94100e28ea641..1dfb1db5a72ce24ce36080fed26d55bf04a5b7c1
+--- a/src/collector/hackernews.ts
++++ b/src/collector/hackernews.ts
+@@ -2,6 +2,7 @@
+ 
+ const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+ const MAX_STORIES_TO_CHECK = 50;
++const MIN_HN_SCORE = 30;
+ 
+ interface HNItem {
+   id: number;
+@@ -47,6 +48,7 @@
+     for (const item of items) {
+       if (!item || item.type !== "story" || !item.url) continue;
+       if (item.time < sinceUnix) continue;
++      if (item.score < MIN_HN_SCORE) continue;
+ 
+       // AI 関連キーワードでフィルタ
+       const titleLower = item.title.toLowerCase();
+@@ -95,16 +97,65 @@
+   "model context protocol",
+ ];
+ 
++const SHORT_KEYWORD_MAX_LEN = 4;
++const SHORT_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++);
++const LONG_AI_KEYWORDS = AI_KEYWORDS.filter(
++  (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
++);
++const SHORT_AI_REGEX = new RegExp(
++  `\\b(?:${SHORT_AI_KEYWORDS.map(escapeRegex).join("|")})\\b`
++);
++
++const WATCH_TOPIC_STOPWORDS = new Set([
++  "code",
++  "testing",
++  "patterns",
++  "review",
++  "safety",
++  "driven",
++  "development",
++]);
++
+ function isAiRelated(titleLower: string, watchTopics: string[]): boolean {
+   // Check built-in keywords
+-  if (AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
++  if (SHORT_AI_REGEX.test(titleLower)) return true;
++  if (LONG_AI_KEYWORDS.some((kw) => titleLower.includes(kw))) return true;
+ 
+   // Check configured watch topics
+-  const topicKeywords = watchTopics.flatMap((t) =>
+-    t
+-      .toLowerCase()
+-      .split(/[\/\s,]+/)
+-      .filter((w) => w.length > 2)
++  const topicKeywords = extractWatchTopicKeywords(watchTopics);
++  if (topicKeywords.length === 0) return false;
++
++  const shortTopics = topicKeywords.filter(
++    (kw) => kw.length <= SHORT_KEYWORD_MAX_LEN
++  );
++  if (shortTopics.length > 0) {
++    const shortTopicRegex = new RegExp(
++      `\\b(?:${shortTopics.map(escapeRegex).join("|")})\\b`
++    );
++    if (shortTopicRegex.test(titleLower)) return true;
++  }
++
++  const longTopics = topicKeywords.filter(
++    (kw) => kw.length > SHORT_KEYWORD_MAX_LEN
+   );
+-  return topicKeywords.some((kw) => titleLower.includes(kw));
++  return longTopics.some((kw) => titleLower.includes(kw));
++}
++
++function extractWatchTopicKeywords(watchTopics: string[]): string[] {
++  const keywords = new Set<string>();
++  for (const topic of watchTopics) {
++    for (const token of topic.toLowerCase().split(/[\/\s,]+/)) {
++      const normalized = token.trim();
++      if (normalized.length < 3) continue;
++      if (WATCH_TOPIC_STOPWORDS.has(normalized)) continue;
++      keywords.add(normalized);
++    }
++  }
++  return [...keywords];
++}
++
++function escapeRegex(value: string): string {
++  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+ }
+
+tokens used
+15,053
+**Summary**
+- `src/collector/hackernews.ts` に `MIN_HN_SCORE = 30` を導入し、低スコアの HN 記事を除外しました。
+- `src/collector/hackernews.ts` の `isAiRelated` を短いキーワードは単語境界マッチ、長いキーワードは部分一致に分離しました。
+- `src/collector/hackernews.ts` の watchTopics トークン化にストップワード除外と短いトークンの単語境界マッチを追加しました。
+
+**Tests**
+- `npx tsc --noEmit`
+
+**Note**
+- 参照指定の `.ai/DESIGN/ORGOS_INTELLIGENCE.md` はリポジトリ内に見当たりませんでした（読み取り失敗）。

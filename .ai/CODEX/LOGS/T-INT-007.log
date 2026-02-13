@@ -1,0 +1,3572 @@
+OpenAI Codex v0.101.0 (research preview)
+--------
+workdir: /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007
+model: gpt-5.2-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c55fa-330a-7cf0-8993-b7caa67ed237
+--------
+user
+.ai/CODEX/ORDERS/T-INT-007.md を読み、その指示に従って実装せよ。修正完了後に npx tsc --noEmit でビルドチェックを行い、エラーがあれば修正せよ。
+mcp startup: no servers
+
+thinking
+**Reading orders file**
+
+I'm using a command to read the contents of the orders file to gather necessary data.
+exec
+/bin/zsh -lc ls in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 52ms:
+README.md
+package-lock.json
+package.json
+src
+tsconfig.json
+wrangler.toml
+exec
+/bin/zsh -lc 'cat .ai/CODEX/ORDERS/T-INT-007.md' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 52ms:
+# Work Order: T-INT-007
+
+## Task
+- ID: T-INT-007
+- Title: Intelligence 品質修正: Gemini API スコアリング復旧 + OIP 生成修正
+- Role: implementer
+
+## Repository
+orgos-intelligence (/Users/youyokotani/Dev/Private/orgos-intelligence)
+
+## Problem Analysis
+
+### Problem 1: Gemini API スコアリングが全件 medium/要調査にフォールバック
+
+`src/analyzer/filter.ts:116-126` の catch ブロックで、Gemini API エラー時に全記事を medium/要調査 に設定している。
+本日のレポート（2026-02-13）で全22トピックが medium / orgosImpact: "要調査" になっていることから、Gemini API 呼び出しが毎回失敗していると推定。
+
+**原因候補:**
+1. Gemini API の JSON レスポンスのパースが失敗している（`filter.ts:97-104` で `JSON.parse(jsonStr)` が例外）
+   - Gemini がマークダウンコードブロック以外の形式で返す場合、`replace(/```json?\n?/g, "")` では除去しきれない
+exec
+/bin/zsh -lc 'rg -n "scoreBatch|Gemini|orgosImpact|deep-research|oip|sonnet" src/analyzer src/reporter' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 52ms:
+src/analyzer/oip-generator.ts:10:const OIP_COUNTER_KEY = "oip-auto:counter";
+src/analyzer/oip-generator.ts:23:    (a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査"
+src/analyzer/oip-generator.ts:105:      model: "claude-sonnet-4-5-20250929",
+src/analyzer/oip-generator.ts:124:    const oipProposals: OipAutoProposal[] = [];
+src/analyzer/oip-generator.ts:144:      oipProposals.push(proposal);
+src/analyzer/oip-generator.ts:147:      await env.INTEL_KV.put(`oip-auto:${id}`, JSON.stringify(proposal), {
+src/analyzer/oip-generator.ts:155:    return oipProposals;
+src/reporter/index.ts:17:  oipProposals: OipAutoProposal[],
+src/reporter/index.ts:32:    orgosImpact: a.orgosImpact === "あり"
+src/reporter/index.ts:34:      : a.orgosImpact === "要調査"
+src/reporter/index.ts:41:  const { summaryLine, orgosImpactSummary } = await generateSummary(
+src/reporter/index.ts:43:    oipProposals,
+src/reporter/index.ts:51:    orgosImpactSummary,
+src/reporter/index.ts:53:    oipProposals,
+src/reporter/index.ts:68:  oipProposals: OipAutoProposal[],
+src/reporter/index.ts:70:): Promise<{ summaryLine: string; orgosImpactSummary: string }> {
+src/reporter/index.ts:74:      orgosImpactSummary: "なし",
+src/reporter/index.ts:87:      model: "claude-sonnet-4-5-20250929",
+src/reporter/index.ts:97:OIP提案数: ${oipProposals.length}件
+src/reporter/index.ts:102:  "orgosImpactSummary": "OrgOS への影響（あり/なし/要検討 + 簡単な説明）"
+exec
+/bin/zsh -lc "sed -n '1,220p' src/analyzer/filter.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 52ms:
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type {
+  CollectedArticle,
+  ScoredArticle,
+  Relevance,
+  Category,
+  IntelConfig,
+} from "../types.js";
+
+/**
+ * Gemini Flash で記事の関連性を判定・要約する
+ */
+export async function filterAndScore(
+  articles: CollectedArticle[],
+  config: IntelConfig,
+  geminiApiKey: string
+): Promise<ScoredArticle[]> {
+  if (articles.length === 0) return [];
+
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+thinking
+**Planning robust batch processing**
+
+I'll implement JSON parsing that safely extracts arrays from responses with retries, add detailed error logging, and build fallback logic to process articles individually if batch processing fails. I'll update deep-research.ts, oip-generator, and reporter model accordingly.
+exec
+/bin/zsh -lc "sed -n '1,220p' src/analyzer/deep-research.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 51ms:
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import type { ScoredArticle, DeepResearchResult, Env } from "../types.js";
+
+/**
+ * Gemini Deep Research API で HIGH トピックを深掘り調査
+ * 1日あたり最大3件（コスト制御）
+ */
+export async function deepResearch(
+  highArticles: ScoredArticle[],
+  env: Env
+): Promise<Map<string, DeepResearchResult>> {
+  const results = new Map<string, DeepResearchResult>();
+  const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+
+  // OrgOS 影響度が高い順にソート
+  const sorted = highArticles
+    .filter((a) => a.orgosImpact === "あり")
+    .slice(0, maxPerDay);
+
+  if (sorted.length === 0 && highArticles.length > 0) {
+
+thinking
+**Adjusting selection filter to include "要調査"**
+
+Planning to update the filter from only including "あり" to also add "要調査" with a max of 3 items, prioritizing "あり" items before "要調査" ones, simplifying by sorting with a ranking rather than relying on fallback pushes.
+exec
+/bin/zsh -lc "sed -n '1,240p' src/analyzer/oip-generator.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 52ms:
+import Anthropic from "@anthropic-ai/sdk";
+import type {
+  ScoredArticle,
+  DeepResearchResult,
+  OipAutoProposal,
+  Env,
+} from "../types.js";
+import { includesKernelFiles } from "../constants/kernel.js";
+
+const OIP_COUNTER_KEY = "oip-auto:counter";
+
+/**
+ * Claude Sonnet で OIP-AUTO 提案を生成
+ * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+ */
+export async function generateOipProposals(
+  articles: ScoredArticle[],
+  deepResearchResults: Map<string, DeepResearchResult>,
+  env: Env
+): Promise<OipAutoProposal[]> {
+
+thinking
+**Keeping model name constant and planning logging**
+
+I'm confirming the model name is valid per instructions and will keep it as is, possibly moving it into a constant. I'll also add logging with error details and update the reporter index model accordingly.
+exec
+/bin/zsh -lc "sed -n '1,220p' src/reporter/index.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 51ms:
+import Anthropic from "@anthropic-ai/sdk";
+import type {
+  ScoredArticle,
+  DeepResearchResult,
+  OipAutoProposal,
+  DailyReport,
+  TopicEntry,
+  Env,
+} from "../types.js";
+
+/**
+ * 分析結果からレポートを構築
+ */
+export async function buildReport(
+  scoredArticles: ScoredArticle[],
+  deepResearchResults: Map<string, DeepResearchResult>,
+  oipProposals: OipAutoProposal[],
+  failedSources: { name: string; error: string }[],
+  env: Env
+): Promise<DailyReport> {
+
+
+
+thinking
+**Designing robust JSON extraction helper**
+
+Planning to add a helper that extracts JSON arrays from text by stripping code fences and isolating bracketed content, to improve parsing reliability in the filter module without broad model or logging changes.
+thinking
+**Designing detailed error classification and fallback for batch scoring**
+
+Planning to refine batch scoring by adding robust JSON extraction, custom error classes distinguishing API, JSON parse, and mapping errors, plus a fallback that retries scoring per article on batch failure with improved logging and a reduced batch size.
+thinking
+**Finalizing batch scoring with error handling and per-article fallback**
+
+Finalizing batch scoring to catch and classify errors, log them once, and on batch failure retry scoring each article individually with fallback defaults if those fail, ensuring robust JSON extraction and missing evaluation checks.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007/src/analyzer/filter.ts
+@@ -24,4 +24,4 @@
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+@@ -45,2 +45,51 @@
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+@@ -50,2 +99,33 @@
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+@@ -92,8 +172,15 @@
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+@@ -103,6 +190,33 @@
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+@@ -116,11 +230,6 @@
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+apply_patch(auto_approved=true) exited 0 in 28ms:
+Success. Updated the following files:
+M src/analyzer/filter.ts
+file update:
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+
+file update:
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+
+
+thinking
+**Refining error handling strategy**
+
+I'm clarifying that the nested try inside the scoring function might make the outer try redundant, but the outer try currently ensures unknown errors get wrapped as "json" ScoreBatchError for fallback. I’ll keep "json" as the generic fallback error category and plan to adjust the deep research accordingly before patching.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007/src/analyzer/deep-research.ts
+@@ -15,12 +15,9 @@
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+apply_patch(auto_approved=true) exited 0 in 45ms:
+Success. Updated the following files:
+M src/analyzer/deep-research.ts
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+
+
+thinking
+**Adding helper for error logging**
+
+I'm implementing a helper function for consistent Anthropics-related error logging in the oip-generator, placed below the existing OIP_COUNTER_KEY to avoid nested bullets.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007/src/analyzer/oip-generator.ts
+@@ -11,2 +11,25 @@
+ 
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
++
++  console.error(context, error);
++}
++
+ /**
+@@ -156,3 +179,3 @@
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+apply_patch(auto_approved=true) exited 0 in 58ms:
+Success. Updated the following files:
+M src/analyzer/oip-generator.ts
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..80b82dd8127c4fc8763837f485c9d8826aa58269
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -9,6 +9,29 @@
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
+ 
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
++
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -154,7 +177,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..80b82dd8127c4fc8763837f485c9d8826aa58269
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -9,6 +9,29 @@
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
+ 
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
++
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -154,7 +177,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+
+
+
+thinking
+**Adding model name constant for clarity**
+
+Decided to add a constant for the Anthropic model name in reporter/index.ts to confirm using the correct model per instructions, even though no actual model change is needed. This makes the model usage explicit and aligned.
+thinking
+**Adding model constants to both modules**
+
+Planning to add explicit model name constants in both reporter and oip-generator to unify the usage and avoid duplication, updating message creation to reference these constants.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007/src/analyzer/oip-generator.ts
+@@ -10,2 +10,3 @@
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
+ 
+@@ -127,3 +128,3 @@
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+apply_patch(auto_approved=true) exited 0 in 58ms:
+Success. Updated the following files:
+M src/analyzer/oip-generator.ts
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007/src/reporter/index.ts
+@@ -10,2 +10,4 @@
+ 
++const SUMMARY_MODEL = "claude-sonnet-4-5-20250929";
++
+ /**
+@@ -86,3 +88,3 @@
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: SUMMARY_MODEL,
+       max_tokens: 256,
+apply_patch(auto_approved=true) exited 0 in 101ms:
+Success. Updated the following files:
+M src/reporter/index.ts
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+diff --git a/src/reporter/index.ts b/src/reporter/index.ts
+index bc356071f3eb8e94c937e0e243c40049dc1bce4a..b4983c151034b438ab0cfb0ab3254498f4112f25
+--- a/src/reporter/index.ts
++++ b/src/reporter/index.ts
+@@ -8,6 +8,8 @@
+   Env,
+ } from "../types.js";
+ 
++const SUMMARY_MODEL = "claude-sonnet-4-5-20250929";
++
+ /**
+  * 分析結果からレポートを構築
+  */
+@@ -84,7 +86,7 @@
+       .join("\n");
+ 
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: SUMMARY_MODEL,
+       max_tokens: 256,
+       messages: [
+         {
+
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+diff --git a/src/reporter/index.ts b/src/reporter/index.ts
+index bc356071f3eb8e94c937e0e243c40049dc1bce4a..b4983c151034b438ab0cfb0ab3254498f4112f25
+--- a/src/reporter/index.ts
++++ b/src/reporter/index.ts
+@@ -8,6 +8,8 @@
+   Env,
+ } from "../types.js";
+ 
++const SUMMARY_MODEL = "claude-sonnet-4-5-20250929";
++
+ /**
+  * 分析結果からレポートを構築
+  */
+@@ -84,7 +86,7 @@
+       .join("\n");
+ 
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: SUMMARY_MODEL,
+       max_tokens: 256,
+       messages: [
+         {
+
+
+
+thinking
+**Assessing error handling and JSON extraction**
+
+The code uses nested try-catches in scoring that rethrow custom errors to ensure unknown errors get classified properly, which works but the outer try is mostly for this fallback. The JSON extraction via regex assumes the first-to-last array covers the full response, which might risk including extra arrays or non-array JSON, but it aligns with usual expected responses.
+thinking
+**Updating deep-research filtering logic**
+
+The filter now uses `impactRank` specifically for certain status values, handling others with a default rank of 1; logging for missing targets was considered but deemed unnecessary. Next, tests will be run with type checking only.
+exec
+/bin/zsh -lc 'npx tsc --noEmit' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-007 succeeded in 886ms:
+
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+diff --git a/src/reporter/index.ts b/src/reporter/index.ts
+index bc356071f3eb8e94c937e0e243c40049dc1bce4a..b4983c151034b438ab0cfb0ab3254498f4112f25
+--- a/src/reporter/index.ts
++++ b/src/reporter/index.ts
+@@ -8,6 +8,8 @@
+   Env,
+ } from "../types.js";
+ 
++const SUMMARY_MODEL = "claude-sonnet-4-5-20250929";
++
+ /**
+  * 分析結果からレポートを構築
+  */
+@@ -84,7 +86,7 @@
+       .join("\n");
+ 
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: SUMMARY_MODEL,
+       max_tokens: 256,
+       messages: [
+         {
+
+
+thinking
+**提供した修正のまとめと結果**
+
+以下の修正を行いました。TypeScriptコンパイルが問題なく通過し、テストは実行していませんが静的検証上のエラーはありません。ウェブアクセスは使っておらず対応不要でした。
+
+- フィルタ条件のJSONパーサー実装追加（ファイル：`src/filter/parser.ts`）
+- 記事ごとにフォールバック処理を追加（`src/article/handler.ts`）
+- バッチ処理のサイズ定数設定（`src/batch/config.ts`）
+- 深堀調査対象に「要調査」を含めるロジック強化（`src/research/deepSelect.ts`）
+- ログ出力の改善、トレース情報付加（`src/logging/logger.ts`）
+- モデル関連の定数維持、変更なし（`src/model/constants.ts`）
+
+コンパイル確認は以下コマンドで実施済みです。
+
+```bash
+npx tsc --noEmit
+```
+
+問題なし。必要に応じて追加テストや実行検証を提案してもよいですが、今回の範囲ではここまでとなります。
+codex
+**概要**
+- GeminiスコアリングのJSON抽出を強化し、バッチ失敗時は1件ずつリトライ→最終フォールバックで`medium/要調査`にしつつ、API/JSON/マッピング別の詳細ログを出すようにしました。`src/analyzer/filter.ts`
+- Deep Researchの対象に`orgosImpact: "要調査"`を含め、`"あり"`優先の並び順で最大3件に制限しました。`src/analyzer/deep-research.ts`
+- OIP生成のAnthropicエラーログを詳細化し、モデル名を定数化しました（モデル名は従来通り）。`src/analyzer/oip-generator.ts` `src/reporter/index.ts`
+
+**テスト**
+- `npx tsc --noEmit`
+
+必要なら、Geminiのレスポンス実例が出たタイミングで、`extractJsonArray`の抽出ロジックをさらに最適化します。
+file update:
+diff --git a/src/analyzer/deep-research.ts b/src/analyzer/deep-research.ts
+index 234fee766dcd264abb29c26cee5494588e6c35e9..d2a25f7c0f00c661e1054fd1613878a07dfe30c1
+--- a/src/analyzer/deep-research.ts
++++ b/src/analyzer/deep-research.ts
+@@ -13,16 +13,13 @@
+   const maxPerDay = parseInt(env.MAX_DEEP_RESEARCH_PER_DAY || "3", 10);
+ 
+   // OrgOS 影響度が高い順にソート
++  const impactRank = (impact: ScoredArticle["orgosImpact"]): number =>
++    impact === "あり" ? 0 : 1;
++
+   const sorted = highArticles
+-    .filter((a) => a.orgosImpact === "あり")
++    .filter((a) => a.orgosImpact === "あり" || a.orgosImpact === "要調査")
++    .sort((a, b) => impactRank(a.orgosImpact) - impactRank(b.orgosImpact))
+     .slice(0, maxPerDay);
+-
+-  if (sorted.length === 0 && highArticles.length > 0) {
+-    // orgosImpact=あり がない場合は「要調査」を対象にする
+-    sorted.push(
+-      ...highArticles.filter((a) => a.orgosImpact === "要調査").slice(0, maxPerDay)
+-    );
+-  }
+ 
+   const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+   // Deep Research API のモデル名（利用可能になり次第更新）
+diff --git a/src/analyzer/filter.ts b/src/analyzer/filter.ts
+index eb92a752ebf9d81e1f727bd4da8136f61156edb4..39f71bd92e919be3d2d283816205fea24042dfd8
+--- a/src/analyzer/filter.ts
++++ b/src/analyzer/filter.ts
+@@ -22,8 +22,8 @@
+ 
+   const scored: ScoredArticle[] = [];
+ 
+-  // バッチ処理（10件ずつ）
+-  const batchSize = 10;
++  // バッチ処理（5件ずつ）
++  const batchSize = 5;
+   for (let i = 0; i < articles.length; i += batchSize) {
+     const batch = articles.slice(i, i + batchSize);
+     const batchResults = await scoreBatch(model, batch, config);
+@@ -43,11 +43,91 @@
+     .sort((a, b) => relevanceOrder[a.relevance] - relevanceOrder[b.relevance]);
+ }
+ 
++type ScoreErrorKind = "api" | "json" | "mapping";
++
++class ScoreBatchError extends Error {
++  kind: ScoreErrorKind;
++  details?: Record<string, unknown>;
++  cause?: unknown;
++
++  constructor(
++    kind: ScoreErrorKind,
++    message: string,
++    options?: { details?: Record<string, unknown>; cause?: unknown }
++  ) {
++    super(message);
++    this.name = "ScoreBatchError";
++    this.kind = kind;
++    this.details = options?.details;
++    this.cause = options?.cause;
++  }
++}
++
++function extractJsonArray(text: string): string {
++  const cleaned = text
++    .replace(/```json?\n?/gi, "")
++    .replace(/```/g, "")
++    .replace(/^\s*json\s*:/i, "")
++    .trim();
++
++  const start = cleaned.indexOf("[");
++  const end = cleaned.lastIndexOf("]");
++  if (start !== -1 && end !== -1 && end > start) {
++    return cleaned.slice(start, end + 1).trim();
++  }
++
++  return cleaned;
++}
++
++function logScoreError(context: string, error: unknown): void {
++  if (error instanceof ScoreBatchError) {
++    console.error(`${context} (${error.kind})`, {
++      message: error.message,
++      details: error.details,
++      cause: error.cause,
++    });
++    return;
++  }
++
++  console.error(context, error);
++}
++
+ async function scoreBatch(
+   model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
+   articles: CollectedArticle[],
+   config: IntelConfig
+ ): Promise<ScoredArticle[]> {
++  try {
++    return await scoreBatchOnce(model, articles, config);
++  } catch (error) {
++    logScoreError("Gemini scoring batch failed", error);
++  }
++
++  const fallbackResults: ScoredArticle[] = [];
++  for (const article of articles) {
++    try {
++      const [result] = await scoreBatchOnce(model, [article], config);
++      fallbackResults.push(result);
++    } catch (error) {
++      logScoreError(`Gemini scoring fallback failed (id: ${article.id})`, error);
++      fallbackResults.push({
++        ...article,
++        relevance: "medium" as Relevance,
++        category: "knowledge" as Category,
++        orgosImpact: "要調査" as const,
++        aiSummary: article.summary,
++      });
++    }
++  }
++
++  return fallbackResults;
++}
++
++async function scoreBatchOnce(
++  model: ReturnType<GoogleGenerativeAI["getGenerativeModel"]>,
++  articles: CollectedArticle[],
++  config: IntelConfig
++): Promise<ScoredArticle[]> {
+   const articlesJson = articles.map((a) => ({
+     id: a.id,
+     title: a.title,
+@@ -90,21 +170,55 @@
+ JSON配列のみ出力してください（マークダウンのコードブロックは不要）。`;
+ 
+   try {
+-    const result = await model.generateContent(prompt);
+-    const text = result.response.text();
++    let text = "";
++    try {
++      const result = await model.generateContent(prompt);
++      text = result.response.text();
++    } catch (error) {
++      throw new ScoreBatchError("api", "Gemini API request failed", {
++        cause: error,
++        details: { batchSize: articles.length },
++      });
++    }
+ 
+-    // JSON を抽出（コードブロックの可能性に対応）
+-    const jsonStr = text.replace(/```json?\n?/g, "").replace(/```/g, "").trim();
+-    const evaluations: Array<{
++    const jsonStr = extractJsonArray(text);
++    let evaluations: Array<{
+       id: string;
+       relevance: Relevance;
+       category: Category;
+       orgosImpact: "あり" | "なし" | "要調査";
+       aiSummary: string;
+-    }> = JSON.parse(jsonStr);
++    }>;
++
++    try {
++      const parsed = JSON.parse(jsonStr);
++      if (!Array.isArray(parsed)) {
++        throw new Error("Response is not a JSON array");
++      }
++      evaluations = parsed;
++    } catch (error) {
++      throw new ScoreBatchError("json", "Failed to parse JSON response", {
++        cause: error,
++        details: { snippet: jsonStr.slice(0, 200) },
++      });
++    }
++
++    const evaluationMap = new Map(evaluations.map((e) => [e.id, e]));
++    const missingIds = articles
++      .filter((article) => !evaluationMap.has(article.id))
++      .map((article) => article.id);
++
++    if (missingIds.length > 0) {
++      throw new ScoreBatchError("mapping", "Missing evaluations for articles", {
++        details: {
++          missingIds,
++          receivedIds: evaluations.map((e) => e.id),
++        },
++      });
++    }
+ 
+     return articles.map((article) => {
+-      const eval_ = evaluations.find((e) => e.id === article.id);
++      const eval_ = evaluationMap.get(article.id);
+       return {
+         ...article,
+         relevance: eval_?.relevance ?? "none",
+@@ -114,14 +228,9 @@
+       };
+     });
+   } catch (error) {
+-    console.error("Gemini scoring failed:", error);
+-    // フォールバック: 全て medium として返す
+-    return articles.map((a) => ({
+-      ...a,
+-      relevance: "medium" as Relevance,
+-      category: "knowledge" as Category,
+-      orgosImpact: "要調査" as const,
+-      aiSummary: a.summary,
+-    }));
++    if (error instanceof ScoreBatchError) {
++      throw error;
++    }
++    throw new ScoreBatchError("json", "Unexpected scoring error", { cause: error });
+   }
+ }
+diff --git a/src/analyzer/oip-generator.ts b/src/analyzer/oip-generator.ts
+index 436a3b5c311da827e1b1f0547734e0dd792844d4..47433b8f29833ee47cbddf2e51fca1159f48889a
+--- a/src/analyzer/oip-generator.ts
++++ b/src/analyzer/oip-generator.ts
+@@ -8,7 +8,31 @@
+ import { includesKernelFiles } from "../constants/kernel.js";
+ 
+ const OIP_COUNTER_KEY = "oip-auto:counter";
++const OIP_MODEL = "claude-sonnet-4-5-20250929";
++
++function logAnthropicError(context: string, error: unknown): void {
++  if (error && typeof error === "object") {
++    const maybe = error as {
++      status?: number;
++      name?: string;
++      message?: string;
++      error?: { type?: string; message?: string };
++    };
++    if (maybe.status || maybe.name || maybe.message || maybe.error) {
++      console.error(context, {
++        status: maybe.status,
++        name: maybe.name,
++        message: maybe.message,
++        type: maybe.error?.type,
++        details: maybe.error?.message,
++      });
++      return;
++    }
++  }
+ 
++  console.error(context, error);
++}
++
+ /**
+  * Claude Sonnet で OIP-AUTO 提案を生成
+  * OrgOS の文脈を理解した上で、具体的な改善提案を作成する
+@@ -102,7 +126,7 @@
+ 
+   try {
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: OIP_MODEL,
+       max_tokens: 4096,
+       messages: [{ role: "user", content: prompt }],
+     });
+@@ -154,7 +178,7 @@
+ 
+     return oipProposals;
+   } catch (error) {
+-    console.error("OIP generation failed:", error);
++    logAnthropicError("OIP generation failed", error);
+     return [];
+   }
+ }
+diff --git a/src/reporter/index.ts b/src/reporter/index.ts
+index bc356071f3eb8e94c937e0e243c40049dc1bce4a..b4983c151034b438ab0cfb0ab3254498f4112f25
+--- a/src/reporter/index.ts
++++ b/src/reporter/index.ts
+@@ -8,6 +8,8 @@
+   Env,
+ } from "../types.js";
+ 
++const SUMMARY_MODEL = "claude-sonnet-4-5-20250929";
++
+ /**
+  * 分析結果からレポートを構築
+  */
+@@ -84,7 +86,7 @@
+       .join("\n");
+ 
+     const response = await client.messages.create({
+-      model: "claude-sonnet-4-5-20250929",
++      model: SUMMARY_MODEL,
+       max_tokens: 256,
+       messages: [
+         {
+
+tokens used
+24,491
+**概要**
+- GeminiスコアリングのJSON抽出を強化し、バッチ失敗時は1件ずつリトライ→最終フォールバックで`medium/要調査`にしつつ、API/JSON/マッピング別の詳細ログを出すようにしました。`src/analyzer/filter.ts`
+- Deep Researchの対象に`orgosImpact: "要調査"`を含め、`"あり"`優先の並び順で最大3件に制限しました。`src/analyzer/deep-research.ts`
+- OIP生成のAnthropicエラーログを詳細化し、モデル名を定数化しました（モデル名は従来通り）。`src/analyzer/oip-generator.ts` `src/reporter/index.ts`
+
+**テスト**
+- `npx tsc --noEmit`
+
+必要なら、Geminiのレスポンス実例が出たタイミングで、`extractJsonArray`の抽出ロジックをさらに最適化します。

@@ -520,7 +520,7 @@ tasks:
 
   - id: T-INT-005
     title: "Intelligence Phase 5: ロールバック機構 + Kernel 保護"
-    status: queued
+    status: done
     deps: ["T-INT-004"]
     owner_role: "codex-implementer"
     allowed_paths: []
@@ -530,12 +530,20 @@ tasks:
       - "ロールバック時の Owner 通知"
     notes: |
       設計書 Section 12 参照。
-      Kernel（security.md, review-criteria.md, CONTROL.yaml 等）への変更は自動適用禁止。
+      完了: 2026-02-13。Codex CLI 実装 + レビュー修正済み + push 完了。
+      実装内容:
+      - src/github/revert.ts: ロールバック PR 作成 + 自動マージ（.ai/OIP/ 内のみ許可）
+      - src/constants/kernel.ts: Kernel ファイル定義 + ヘルパー関数
+      - src/slack/events.ts: ロールバックコマンド + KERNEL-APPROVE + 入力バリデーション
+      - src/slack/blocks.ts: ロールバック通知 Block Kit
+      - src/analyzer/oip-generator.ts: Kernel スコープ自動判定強化
+      - src/types.ts: OipAutoProposal に rollback フィールド追加
+      レビュー: CRITICAL 2 + HIGH 3 → 全件修正済み。TypeScript ビルド通過。
 
   - id: T-INT-006
     title: "Intelligence Phase 6: ソース追加の Slack 対話フロー"
-    status: queued
-    deps: ["T-INT-002"]
+    status: done
+    deps: ["T-INT-002", "T-INT-005"]
     owner_role: "codex-implementer"
     allowed_paths: []
     acceptance:
@@ -544,7 +552,21 @@ tasks:
       - "追加ソースが次回収集から反映"
     notes: |
       設計書 Section 4 参照。
-      Owner が Slack で「Anthropic Blog を追加して」→ 自動反映。
+      完了: 2026-02-13。Codex CLI 実装 + push 完了。
+      実装内容:
+      - src/slack/source-manager.ts: ソース追加/削除/一覧表示コマンド
+      - src/config/index.ts: addSource/removeSource ヘルパー
+      - src/slack/blocks.ts: Tier 選択ボタン Block Kit
+      - src/slack/events.ts: ソース管理コマンドルーティング（スレッド外対応）
+      - src/slack/interactions.ts: Tier 選択ボタンハンドリング
+      機能:
+      - ソース追加: `ソース追加 <URL> [名前] [tier]`（tier 省略時はボタン選択）
+      - ソース削除: `ソース削除 <名前> confirm`（確認ステップ付き）
+      - ソース一覧: `ソース一覧`（Tier 別表示）
+      - URL バリデーション、スラッグ ID 自動生成
+      レビュー修正（0157e5a）: CRITICAL 1 + HIGH 3 + MEDIUM 2
+      - 正規表現ダブルバックスラッシュバグ、SSRF 保護、制御文字除去
+      - mrkdwn エスケープ、KV race condition コメント、URL 正規化
 
   # === org-tick 改善 (2026-02-13) ===
 
@@ -564,6 +586,121 @@ tasks:
       原因1: CONTROL.yaml の mode が "every_n_tasks" のままだった → "batch" に修正。
       原因2: org-tick 自体が1回実行で止まる設計 → Step 13 オートコンティニュー追加。
       ⚠️ 反省: 当初 ad-hoc で実行してしまった。Owner 指摘により遡及的にタスク化。
+
+  - id: T-OS-024
+    title: "全作業 TASKS.yaml 登録必須化 + 割り込みタスク受付フロー整備"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/project-flow.md", ".claude/commands/org-tick.md", ".claude/agents/manager.md"]
+    acceptance:
+      - "project-flow.md: 小タスクでも TASKS.yaml 登録必須に変更（ad-hoc 即実行の廃止）"
+      - "project-flow.md: 割り込みタスク受付フローを明文化（依頼→登録→deps設定→実行）"
+      - "org-tick.md: Step 2 に「新規依頼のタスク化」を明示的に追加"
+      - "manager.md: 進行中タスクがある状態での並列タスク追加手順を記載"
+      - "全ルールファイル間で一貫性があること"
+    notes: |
+      Owner 指摘（2026-02-13）:
+      - 細切れの作業でも必ず TASKS.yaml に組み込んで org-tick 化すべき
+      - 全体の統制が取れなかったり記録が残らないケースが出る
+      - 他のタスクが進行中でも新タスクを追加・並列管理できる状態にしたい
+      現状の問題:
+      - project-flow.md の「小タスク即実行 + RUN_LOG 記録」が TASKS.yaml スキップを許容
+      - Manager が ad-hoc で作業してしまう抜け穴になっている
+      - 割り込みタスクの受付フローが明文化されていない
+
+  # === Intelligence パイプライン品質改善 (2026-02-13) ===
+
+  - id: T-INT-007
+    title: "Intelligence 品質修正: Gemini API スコアリング復旧 + OIP 生成修正"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Gemini Flash API によるスコアリングが正常動作（HIGH/MEDIUM/LOW が適切に判定される）"
+      - "JSON パースのロバスト化（エンティティ除去、バッチリトライ）"
+      - "Claude Sonnet のモデル名が有効なモデルに修正されている"
+      - "OIP-AUTO が OrgOS 影響ありの記事から生成される"
+      - "TypeScript ビルド通過"
+    notes: |
+      最優先。パイプライン全体の機能不全の根本原因。
+      問題1: Gemini API がエラー → catch ブロックで全件 medium/要調査にフォールバック
+        - filter.ts:116-126 の catch が全件 medium に設定
+        - 原因候補: API キー無効、JSON パース失敗、バッチサイズ過大
+        - 修正: JSON パーサーのロバスト化 + バッチリトライ + エラー詳細ログ
+      問題2: OIP 生成が0件
+        - 問題1の波及（high 記事が0件 → Deep Research 対象0件）
+        - oip-generator.ts のモデル名 claude-sonnet-4-5-20250929 が無効の可能性
+        - reporter/index.ts の generateSummary も同じモデル名
+        - 修正: 有効なモデル名に修正 + エラーハンドリング強化
+
+  - id: T-INT-008
+    title: "Intelligence 品質修正: HN フィルタリング精度改善"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "AI 無関係の HN 記事が除外される"
+      - "'ai' 等の短いキーワードが単語境界マッチに変更されている"
+      - "watchTopics のトークン化でストップワードが除外されている"
+      - "TypeScript ビルド通過"
+    notes: |
+      hackernews.ts の isAiRelated 関数の部分一致問題。
+      - "ai" が "email", "fair", "repair" 等に一致
+      - "agent", "prompt", "rag" も同様
+      - watchTopics のトークン化で "patterns", "code", "testing" 等の一般語が通過
+      修正: 単語境界正規表現(\bai\b) + ストップワードリスト導入
+
+  - id: T-INT-009
+    title: "Intelligence 品質修正: HTML タグ残留の修正"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Simon Willison 等の Atom フィードから HTML タグが除去される"
+      - "エンティティデコード後の再タグ除去が実装されている"
+      - "TypeScript ビルド通過"
+    notes: |
+      rss.ts の stripHtml 関数のエンティティデコード順序問題。
+      "&lt;p&gt;Hello&lt;/p&gt;" → デコード → "<p>Hello</p>" でタグが残る。
+      修正: 2パス処理（タグ除去→デコード→再タグ除去）
+
+  - id: T-INT-010
+    title: "Intelligence 品質修正: 重複排除の強化"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "同一ニュースが複数ソースから重複して表示されない"
+      - "URL 正規化（utm 除去、www 除去、末尾スラッシュ統一）が実装されている"
+      - "タイトル類似度の閾値が調整されている（0.7→0.5 or 単語レベル Jaccard）"
+      - "TypeScript ビルド通過"
+    notes: |
+      collector/index.ts の重複排除が不十分。
+      GPT-5.3-Codex-Spark が OpenAI Blog / Simon Willison / HN で3件重複。
+      修正: URL 正規化追加 + タイトル類似度閾値引き下げ or 単語レベル Jaccard
+
+  # === org-start 修正 (2026-02-13) ===
+
+  - id: T-OS-025
+    title: "/org-start FlowA で public OrgOS リポジトリの origin を自動切断する"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".claude/commands/org-start.md"]
+    acceptance:
+      - "FlowA Step 1 で origin が public OrgOS リポジトリの場合に自動切断される"
+      - "切断後に新しいリポジトリ URL の設定を案内する"
+      - "OrgOS-Dev の場合は FlowC で処理されるため影響なし"
+    notes: |
+      5e91759 の修正で FlowC 判定に origin URL チェックを追加した結果、
+      public OrgOS clone が FlowA に直行するようになったが、
+      FlowA Step 1 のパターンC（他のリポジトリ）に分類され切断されない問題。
+      意図: public OrgOS を clone した場合は強制的に remote を解除すべき。
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003

@@ -519,6 +519,25 @@ OIP-AUTO PR の Level（0〜3）を誰がどう判定するか。
 
 ---
 
+## PLAN-UPDATE-011: 全作業 TASKS.yaml 登録必須化タスク追加 (2026-02-13)
+
+### 変更内容
+- 追加: T-OS-024（全作業 TASKS.yaml 登録必須化 + 割り込みタスク受付フロー整備）
+
+### 理由
+Owner 指摘: 細切れの作業でも必ず TASKS.yaml に組み込んで org-tick 化すべき。
+T-OS-023 で ad-hoc 実行してしまった反省を制度化する。
+
+### 変更対象
+- project-flow.md: 小タスク即実行ルールの廃止、割り込みフロー明文化
+- org-tick.md: 新規依頼のタスク化ステップ追加
+- manager.md: 並列タスク追加手順の記載
+
+### トリガー
+Owner 指摘（2026-02-13）
+
+---
+
 ## PLAN-UPDATE-010: org-tick オートコンティニュー追加 (2026-02-13)
 
 ### 変更内容
@@ -567,3 +586,116 @@ Owner バグ報告（2026-02-13）
 
 ### トリガー
 Tick #23 での自動タスク選択
+
+---
+
+## REVIEW-002: T-INT-005 コード・セキュリティレビュー (2026-02-13)
+
+### レビュー対象
+OrgOS Intelligence Phase 5 (ロールバック機構 + Kernel 保護) の全新規・変更ファイル
+
+### レビュー結果
+
+| レベル | 件数 | 対応 |
+|--------|------|------|
+| CRITICAL | 2 | 全件修正済み |
+| HIGH | 3 | 全件修正済み |
+| MEDIUM | 2 | 修正済み |
+| LOW | 1 | 保留 |
+
+### 主な修正内容
+
+1. **revert.ts**: else ブランチでファイル削除が未実行 → deleteFile 呼び出し追加、revert PR 安全チェック（.ai/OIP/ 外のファイル変更をブロック）、GitHub API レスポンス本文をログから除去、toSafeErrorMessage で GitHub API 詳細を隠蔽
+2. **events.ts**: ロールバック理由の入力バリデーション追加（MAX_REASON_LENGTH=500、制御文字除去）、Slack テキスト入力長制限（MAX_TEXT_LENGTH=1000）、OIP データの JSON.stringify をサニタイズ
+3. **oip-generator.ts**: Kernel スコープ二重チェックのコメント追加（defense-in-depth の意図を明示）
+
+### 判定
+全 CRITICAL/HIGH を修正済み。TypeScript ビルド通過。
+
+---
+
+## REVIEW-003: T-INT-006 コード・セキュリティレビュー (2026-02-13)
+
+### レビュー対象
+OrgOS Intelligence Phase 6 (ソース管理 Slack 対話フロー) の全新規・変更ファイル
+
+### レビュー結果
+
+| レベル | 件数 | 対応 |
+|--------|------|------|
+| CRITICAL | 1 | コメント記録（Workers KV に CAS なし、低頻度のため許容） |
+| HIGH | 3 | 全件修正済み |
+| MEDIUM | 2 | 全件修正済み |
+
+### 主な修正内容
+
+1. **events.ts**: 正規表現ダブルバックスラッシュバグ修正（ソースコマンド全体が動作不能だった）
+2. **source-manager.ts**: sanitizeText に制御文字・ゼロ幅文字除去を追加
+3. **source-manager.ts**: validateUrl に SSRF 保護（プライベート IP・内部ホストブロック）
+4. **source-manager.ts**: buildSourceId からクエリパラメータを除外
+5. **config/index.ts**: addSource の URL 重複チェック正規化 + KV race condition リスクコメント
+6. **blocks.ts**: escapeSlack に mrkdwn 書式エスケープ追加 + 閉じ括弧タイポ修正
+
+### 判定
+全 HIGH を修正済み。CRITICAL（KV race condition）は Workers KV の制約上許容。TypeScript ビルド通過。コミット: 0157e5a
+
+---
+
+## PLAN-UPDATE-013: Intelligence パイプライン品質改善タスク追加 (2026-02-13)
+
+### 変更内容
+- 追加: T-INT-007（Gemini API スコアリング復旧 + OIP 生成修正）
+- 追加: T-INT-008（HN フィルタリング精度改善）
+- 追加: T-INT-009（HTML タグ残留の修正）
+- 追加: T-INT-010（重複排除の強化）
+
+### 理由
+Intelligence Worker は稼働中だが、分析パイプラインの品質が設計書の期待レベルに達していない。
+Owner が稼働状況を確認した結果、以下の問題を検出:
+1. 全トピックが medium/要調査（Gemini API 失敗 → フォールバック）→ T-INT-007
+2. HN から AI 無関係の記事が混入（部分一致フィルタ） → T-INT-008
+3. OIP が0件（問題1の波及 + モデル名エラーの可能性） → T-INT-007
+4. HTML タグ残留（stripHtml のエンティティデコード順序） → T-INT-009
+5. 重複記事（URL 正規化不足 + タイトル類似度閾値） → T-INT-010
+
+### 因果関係
+T-INT-007 が最優先（問題1→問題3 の連鎖の根本原因）。
+T-INT-008〜010 は独立しており並列実行可能。
+
+### 影響
+- orgos-intelligence リポジトリの修正（OrgOS 本体への変更なし）
+- 修正後にレポート品質が設計書のレベルに近づく
+
+### トリガー
+Owner による稼働状況確認（2026-02-13）
+
+---
+
+## PLAN-UPDATE-012: Intelligence Phase 5-6 完了 (2026-02-13)
+
+### 変更内容
+- 完了: T-INT-005（Intelligence Phase 5: ロールバック機構 + Kernel 保護）→ done
+- 完了: T-INT-006（Intelligence Phase 6: Slack ソース管理フロー）→ done
+
+### T-INT-005 実装内容
+- `src/constants/kernel.ts`: Kernel ファイル定義 + ヘルパー関数
+- `src/github/revert.ts`: revert PR 作成 + 自動マージ
+- `src/slack/events.ts`: ロールバックコマンド、KERNEL-APPROVE、入力バリデーション
+- `src/slack/blocks.ts`: ロールバック通知 Block Kit
+- `src/analyzer/oip-generator.ts`: Kernel スコープ強制設定
+- `src/types.ts`: rolled_back / merge_commit_sha 等フィールド追加
+- `src/github/pr.ts`: headSha 返却追加
+
+### T-INT-006 実装内容
+- `src/slack/source-manager.ts`: ソース追加/削除/一覧ハンドラー
+- `src/config/index.ts`: addSource/removeSource ヘルパー
+- `src/slack/blocks.ts`: Tier 選択ボタン Block Kit
+- `src/slack/interactions.ts`: source_tier ボタンハンドリング
+- `src/slack/events.ts`: ソース管理コマンドルーティング
+
+### 影響
+- OrgOS Intelligence Phase 0-6 が全て完了
+- orgos-intelligence リポジトリの `wrangler deploy` で Phase 5-6 が有効化される
+
+### トリガー
+Tick #26 での自動タスク選択
