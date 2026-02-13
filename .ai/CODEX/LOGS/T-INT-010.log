@@ -1,0 +1,2729 @@
+OpenAI Codex v0.101.0 (research preview)
+--------
+workdir: /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010
+model: gpt-5.2-codex
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: high
+reasoning summaries: auto
+session id: 019c55fa-4743-7951-b5b0-ae4482faf290
+--------
+user
+.ai/CODEX/ORDERS/T-INT-010.md を読み、その指示に従って実装せよ。修正完了後に npx tsc --noEmit でビルドチェックを行い、エラーがあれば修正せよ。
+mcp startup: no servers
+2026-02-13T07:49:51.585106Z ERROR codex_core::rollout::list: state db missing rollout path for thread 019c55fa-41be-7bb3-85ab-da44ad514c73
+2026-02-13T07:49:51.610460Z ERROR codex_core::rollout::list: state db missing rollout path for thread 019c55fa-3a04-7052-b6d8-4b10347e9fd1
+2026-02-13T07:49:51.634387Z ERROR codex_core::rollout::list: state db missing rollout path for thread 019c55fa-330a-7cf0-8993-b7caa67ed237
+
+thinking
+**Reading order file content**
+exec
+/bin/zsh -lc ls in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+README.md
+package-lock.json
+package.json
+src
+tsconfig.json
+wrangler.toml
+exec
+/bin/zsh -lc 'cat .ai/CODEX/ORDERS/T-INT-010.md' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+# Work Order: T-INT-010
+
+## Task
+- ID: T-INT-010
+- Title: Intelligence 品質修正: 重複排除の強化
+- Role: implementer
+
+## Repository
+orgos-intelligence (/Users/youyokotani/Dev/Private/orgos-intelligence)
+
+## Problem Analysis
+
+`src/collector/index.ts` の重複排除が不十分で、同一ニュースが複数ソースから重複して表示される。
+
+### 具体例:
+GPT-5.3-Codex-Spark が以下3件で重複:
+1. OpenAI Blog (Tier 1): "Introducing GPT-5.3-Codex-Spark"
+2. Simon Willison (Tier 3): "Introducing GPT‑5.3‑Codex‑Spark"
+3. Hacker News (Tier 2): "GPT‑5.3‑Codex‑Spark"
+
+
+thinking
+**Checking design file relevance**
+exec
+/bin/zsh -lc "rg -n \"重複\" -n .ai/DESIGN/ORGOS_INTELLIGENCE.md && sed -n '1,220p' .ai/DESIGN/ORGOS_INTELLIGENCE.md" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 exited 2 in 51ms:
+rg: .ai/DESIGN/ORGOS_INTELLIGENCE.md: IO error for operation on .ai/DESIGN/ORGOS_INTELLIGENCE.md: No such file or directory (os error 2)
+
+thinking
+**Checking for missing design files**
+
+I'm verifying if the design file is missing by listing AI files in the repo root to locate any relevant assets.
+exec
+/bin/zsh -lc 'ls -a .ai' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+.
+..
+CODEX
+
+thinking
+**Opening collector index for edit**
+exec
+/bin/zsh -lc "sed -n '1,220p' src/collector/index.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 51ms:
+import type { CollectedArticle, Env, IntelConfig } from "../types.js";
+import { collectFromRss } from "./rss.js";
+import { collectFromHackerNews } from "./hackernews.js";
+import { collectFromGoogleSearch } from "./google-search.js";
+
+const LAST_COLLECTED_KEY = "last-collected-at";
+
+/**
+ * 全ソースから差分収集を実行
+ */
+export async function collectAll(
+  env: Env,
+  config: IntelConfig
+): Promise<{ articles: CollectedArticle[]; errors: { name: string; error: string }[] }> {
+  const lastCollectedStr = await env.INTEL_KV.get(LAST_COLLECTED_KEY);
+  const since = lastCollectedStr
+    ? new Date(lastCollectedStr)
+    : new Date(Date.now() - 24 * 60 * 60 * 1000); // デフォルト: 24時間前
+
+  const allArticles: CollectedArticle[] = [];
+
+thinking
+**Mapping enhancement requirements**
+
+Identifying the need for deduplication using URL normalization and title similarity with word-level Jaccard excluding stopwords, plus detecting source URLs and applying tier priorities. Next step is to inspect the CollectedArticle data structure to confirm available fields like source and tier.
+exec
+/bin/zsh -lc "sed -n '1,220p' src/types.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 50ms:
+// === Environment bindings ===
+
+export interface Env {
+  INTEL_KV: KVNamespace;
+
+  // Secrets
+  ANTHROPIC_API_KEY: string;
+  GEMINI_API_KEY: string;
+  GOOGLE_SEARCH_API_KEY: string;
+  GOOGLE_SEARCH_ENGINE_ID: string;
+  SLACK_BOT_TOKEN: string;
+  SLACK_SIGNING_SECRET: string;
+  GITHUB_APP_ID: string;
+  GITHUB_APP_PRIVATE_KEY: string;
+  GITHUB_INSTALLATION_ID: string;
+
+  // Vars
+  ENVIRONMENT: string;
+  SLACK_CHANNEL: string;
+  MAX_DEEP_RESEARCH_PER_DAY: string;
+
+thinking
+**Inspecting sourceUrl handling**
+
+Investigating how sourceUrl is captured or linked in collected data since CollectedArticle lacks it; planning to check collector modules for sourceUrl presence and tier info to implement deduplication by highest tier and URL-based rules.
+exec
+/bin/zsh -lc "sed -n '1,220p' src/collector/hackernews.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+import type { CollectedArticle, Source } from "../types.js";
+
+const HN_API_BASE = "https://hacker-news.firebaseio.com/v0";
+const MAX_STORIES_TO_CHECK = 50;
+
+interface HNItem {
+  id: number;
+  title: string;
+  url?: string;
+  score: number;
+  time: number;
+  type: string;
+}
+
+/**
+ * Hacker News の Top Stories から AI 関連記事を取得
+ */
+export async function collectFromHackerNews(
+  source: Source,
+  since: Date,
+
+thinking
+**Checking URL fields for deduplication**
+
+I'm investigating if the RSS feed or other sources provide a separate "sourceUrl" or similar field to identify the original URL for deduplication since Hacker News uses the original item.url but blog posts might link to aggregators or previews instead.
+exec
+/bin/zsh -lc "sed -n '1,220p' src/collector/rss.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+import type { CollectedArticle, Source } from "../types.js";
+
+/**
+ * RSS/Atom フィードを解析して記事を取得する
+ * Workers 環境では DOMParser がないため、正規表現ベースでパース
+ */
+export async function collectFromRss(
+  source: Source,
+  since: Date
+): Promise<CollectedArticle[]> {
+  const articles: CollectedArticle[] = [];
+
+  try {
+    const response = await fetch(source.url, {
+      headers: { "User-Agent": "OrgOS-Intelligence/1.0" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+thinking
+**Checking for source URL**
+exec
+/bin/zsh -lc "sed -n '1,220p' src/collector/google-search.ts" in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 52ms:
+import type { CollectedArticle, Env, Source } from "../types.js";
+
+const GOOGLE_API_BASE = "https://www.googleapis.com/customsearch/v1";
+
+interface SearchResult {
+  title: string;
+  link: string;
+  snippet: string;
+}
+
+interface SearchResponse {
+  items?: SearchResult[];
+}
+
+/**
+ * Google Custom Search API で AI 関連の最新記事を検索
+ * 無料枠: 100回/日、80回で警告
+ */
+export async function collectFromGoogleSearch(
+  env: Env,
+
+
+thinking
+**Clarifying source URL ambiguity**
+
+I'm identifying that "sourceUrl" isn't explicitly present in the current data and may refer to normalized URLs elsewhere or in additional pipeline steps; this complicates detecting blog articles referencing originals by domain+path using only the collected article URLs.
+thinking
+**Considering URL normalization for source matching**
+
+I'm exploring interpreting the requirement as matching articles whose URLs share the same normalized domain and path to represent "sourceUrl" equivalence, though it’s unclear if config holds a separate sourceUrl field.
+exec
+/bin/zsh -lc 'rg -n "sourceUrl" src .ai || true' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 51ms:
+.ai/CODEX/ORDERS/T-INT-010.md:49:   - HN/ブログ記事が元記事の URL を含む場合（sourceUrl が同じドメイン+パス）、重複として扱う
+src/reporter/index.ts:27:    sourceUrl: a.url,
+src/types.ts:80:  sourceUrl: string;
+src/reporter/markdown.ts:82:  lines.push(`- ソース: ${topic.sourceUrl} (${topic.sourceTier.replace("tier", "Tier ")})`);
+src/slack/blocks.ts:106:        `${emoji} *[${topic.relevance.toUpperCase()}] <${topic.sourceUrl}|${escapeSlack(topic.title)}>*（${date}）`,
+
+
+
+thinking
+**Clarifying URL normalization and sourceUrl logic**
+
+I've confirmed sourceUrl matches a.url, so "same domain+path" means normalized URLs ignoring protocol, www, trailing slashes, and parameters. The note suggests handling cases where HN/blog posts include the original article URL as a query param or link, so I'll extend normalization to catch these indirect references by comparing domain+path consistently despite these wrappers.
+thinking
+**Designing robust URL and title normalization for deduplication**
+
+I'm specifying detailed URL normalization that removes tracking params, www, fragments, default ports, and unifies trailing slashes to canonicalize URLs by domain+path keys. Also planning title normalization with punctuation replaced by spaces, stopwords removed, and word-level Jaccard similarity for fuzzy dedupe. The approach includes extracting possible embedded source URLs in query params to catch redirects. Deduplication will compare normalized URLs, extracted host+path keys, and title similarity together while respecting source tier priority to keep the best article per duplicate group.
+thinking
+**Drafting precise deduplication merging logic**
+
+I'm designing dedupe to find all duplicates per article by URL and title similarity, then select the best candidate by source tier preferring existing entries on ties, finally merging duplicates by removing matched entries and inserting the chosen best to preserve stable order. The approach uses normalized URLs (including embedded URLs), tokenized and stopword-filtered titles with Jaccard similarity > 0.5, and careful ordering logic to balance freshness and stability.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010/src/collector/index.ts
+@@ -69,18 +69,3 @@
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
+-
+-    return true;
+-  });
++  const deduped = dedupeArticles(allArticles);
+ 
+@@ -106,2 +91,169 @@
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+@@ -109,3 +261,5 @@
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+@@ -114,22 +268,120 @@
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
++
++  let intersection = 0;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
++  }
++
++  const union = tokensA.size + tokensB.size - intersection;
++  return union === 0 ? 0 : intersection / union;
++}
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
+ 
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
+ 
+-  let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
+-  return union === 0 ? 0 : intersection / union;
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
+ }
+apply_patch(auto_approved=true) exited 0 in 29ms:
+Success. Updated the following files:
+M src/collector/index.ts
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..1541de6e795dc468a8474e4992e73120e36b2bff
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -67,22 +67,7 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
+-
+-    return true;
+-  });
++  const deduped = dedupeArticles(allArticles);
+ 
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+@@ -104,32 +89,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
++
++  let intersection = 0;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
++  }
++
++  const union = tokensA.size + tokensB.size - intersection;
++  return union === 0 ? 0 : intersection / union;
++}
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
+ 
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
+ 
+-  let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
+-  return union === 0 ? 0 : intersection / union;
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
+ }
+
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..1541de6e795dc468a8474e4992e73120e36b2bff
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -67,22 +67,7 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
+-
+-    return true;
+-  });
++  const deduped = dedupeArticles(allArticles);
+ 
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+@@ -104,32 +89,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
++
++  let intersection = 0;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
++  }
++
++  const union = tokensA.size + tokensB.size - intersection;
++  return union === 0 ? 0 : intersection / union;
++}
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
+ 
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
+ 
+-  let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
+-  return union === 0 ? 0 : intersection / union;
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
+ }
+
+
+thinking
+**Adding missing type import**
+
+I'm updating the types import to include SourceTier, which is used but not yet imported.
+file update
+M /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010/src/collector/index.ts
+@@ -1,2 +1,7 @@
+-import type { CollectedArticle, Env, IntelConfig } from "../types.js";
++import type {
++  CollectedArticle,
++  Env,
++  IntelConfig,
++  SourceTier,
++} from "../types.js";
+ import { collectFromRss } from "./rss.js";
+apply_patch(auto_approved=true) exited 0 in 29ms:
+Success. Updated the following files:
+M src/collector/index.ts
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..07c2e8d63f1cc1e47c31fc84c5ce2e2b4414b08c
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -1,4 +1,9 @@
+-import type { CollectedArticle, Env, IntelConfig } from "../types.js";
++import type {
++  CollectedArticle,
++  Env,
++  IntelConfig,
++  SourceTier,
++} from "../types.js";
+ import { collectFromRss } from "./rss.js";
+ import { collectFromHackerNews } from "./hackernews.js";
+ import { collectFromGoogleSearch } from "./google-search.js";
+@@ -67,23 +72,8 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
++  const deduped = dedupeArticles(allArticles);
+ 
+-    return true;
+-  });
+-
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+ 
+@@ -104,32 +94,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
+-
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
+-
+   let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
++  const union = tokensA.size + tokensB.size - intersection;
+   return union === 0 ? 0 : intersection / union;
+ }
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
++
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
++
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
++
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
++  }
++
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
++}
+
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..07c2e8d63f1cc1e47c31fc84c5ce2e2b4414b08c
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -1,4 +1,9 @@
+-import type { CollectedArticle, Env, IntelConfig } from "../types.js";
++import type {
++  CollectedArticle,
++  Env,
++  IntelConfig,
++  SourceTier,
++} from "../types.js";
+ import { collectFromRss } from "./rss.js";
+ import { collectFromHackerNews } from "./hackernews.js";
+ import { collectFromGoogleSearch } from "./google-search.js";
+@@ -67,23 +72,8 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
++  const deduped = dedupeArticles(allArticles);
+ 
+-    return true;
+-  });
+-
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+ 
+@@ -104,32 +94,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
+-
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
+-
+   let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
++  const union = tokensA.size + tokensB.size - intersection;
+   return union === 0 ? 0 : intersection / union;
+ }
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
++
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
++
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
++
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
++  }
++
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
++}
+
+
+
+thinking
+**Reviewing token normalization and URL extraction nuances**
+
+I’m verifying duplicate stopwords and confirming tokenization expects normalized strings, ensuring empty tokens default to string equality checks. Also checking URL param handling for case and tracking removal, plus refining embedded URL extraction to safely decode nested encodings without over-decoding.
+thinking
+**Confirming token types and deduplication entry ordering**
+
+I’m ensuring `tokenizeTitle` consistently returns Sets and that deduplication keeps stable ordering by prioritizing the best existing entry and moving it to the earliest index, which is acceptable despite reordering. I’ll validate types and imports before compiling.
+exec
+/bin/zsh -lc 'npx tsc --noEmit' in /Users/youyokotani/Dev/Private/orgos-intelligence/.worktrees/T-INT-010 succeeded in 749ms:
+
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..07c2e8d63f1cc1e47c31fc84c5ce2e2b4414b08c
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -1,4 +1,9 @@
+-import type { CollectedArticle, Env, IntelConfig } from "../types.js";
++import type {
++  CollectedArticle,
++  Env,
++  IntelConfig,
++  SourceTier,
++} from "../types.js";
+ import { collectFromRss } from "./rss.js";
+ import { collectFromHackerNews } from "./hackernews.js";
+ import { collectFromGoogleSearch } from "./google-search.js";
+@@ -67,23 +72,8 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
++  const deduped = dedupeArticles(allArticles);
+ 
+-    return true;
+-  });
+-
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+ 
+@@ -104,32 +94,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
+-
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
+-
+   let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
++  const union = tokensA.size + tokensB.size - intersection;
+   return union === 0 ? 0 : intersection / union;
+ }
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
++
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
++
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
++
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
++  }
++
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
++}
+
+
+thinking
+**Summarizing dedupe improvements**
+
+Implemented dedupe enhancements including URL normalization, word-level Jaccard similarity with stopwords and a 0.5 threshold, tier priority handling, and embedded URL detection. Tests fully passed (`npx tsc --noEmit`). Noted that the design document `.ai/DESIGN/ORGOS_INTELLIGENCE.md` is missing but proceeded regardless.
+codex
+**Summary**
+- 強化した重複排除ロジックを実装しました。`src/collector/index.ts` に URL 正規化（utm 等除去・`www.` 除去・末尾スラッシュ統一・フラグメント除去）、単語ベース Jaccard（閾値 0.5 + ストップワード除去）、埋め込み URL の検出、Tier 優先ロジックを追加しました。
+- なお、参照指示の `.ai/DESIGN/ORGOS_INTELLIGENCE.md` はこのリポジトリ内に見つからなかったため、作業指示に従って実装しました。
+
+**Tests**
+- `npx tsc --noEmit`
+file update:
+diff --git a/src/collector/index.ts b/src/collector/index.ts
+index 123728b9d7876408928dc10575f36778a1bf5543..07c2e8d63f1cc1e47c31fc84c5ce2e2b4414b08c
+--- a/src/collector/index.ts
++++ b/src/collector/index.ts
+@@ -1,4 +1,9 @@
+-import type { CollectedArticle, Env, IntelConfig } from "../types.js";
++import type {
++  CollectedArticle,
++  Env,
++  IntelConfig,
++  SourceTier,
++} from "../types.js";
+ import { collectFromRss } from "./rss.js";
+ import { collectFromHackerNews } from "./hackernews.js";
+ import { collectFromGoogleSearch } from "./google-search.js";
+@@ -67,23 +72,8 @@
+   }
+ 
+   // 重複排除（URL ベース + タイトル類似度）
+-  const seen = new Set<string>();
+-  const seenTitles: string[] = [];
+-  const deduped = allArticles.filter((a) => {
+-    // URL 完全一致
+-    if (seen.has(a.url)) return false;
+-    seen.add(a.url);
+-
+-    // タイトル類似度（0.7 以上で重複とみなす）
+-    const norm = normalizeTitle(a.title);
+-    for (const existing of seenTitles) {
+-      if (titleSimilarity(norm, existing) > 0.7) return false;
+-    }
+-    seenTitles.push(norm);
++  const deduped = dedupeArticles(allArticles);
+ 
+-    return true;
+-  });
+-
+   // 最終収集日時を更新
+   await env.INTEL_KV.put(LAST_COLLECTED_KEY, new Date().toISOString());
+ 
+@@ -104,32 +94,299 @@
+ /**
+  * タイトルを正規化（大文字小文字、記号、空白を統一）
+  */
++type DedupEntry = {
++  article: CollectedArticle;
++  normTitle: string;
++  titleTokens: Set<string>;
++  urlFull?: string;
++  hostPath?: string;
++  embeddedHostPath?: string;
++};
++
++const TITLE_SIMILARITY_THRESHOLD = 0.5;
++
++const TITLE_STOPWORDS = new Set([
++  "a",
++  "an",
++  "the",
++  "and",
++  "or",
++  "but",
++  "if",
++  "than",
++  "of",
++  "to",
++  "for",
++  "in",
++  "on",
++  "with",
++  "from",
++  "by",
++  "about",
++  "into",
++  "over",
++  "under",
++  "is",
++  "are",
++  "was",
++  "were",
++  "be",
++  "been",
++  "being",
++  "this",
++  "that",
++  "these",
++  "those",
++  "its",
++  "its",
++  "our",
++  "your",
++  "their",
++  "new",
++  "introducing",
++  "introduce",
++  "announcing",
++  "announce",
++  "release",
++  "released",
++  "releases",
++  "update",
++  "updated",
++  "updates",
++  "launch",
++  "launched",
++  "now",
++  "today",
++  "how",
++  "why",
++  "what",
++  "when",
++  "where",
++]);
++
++const TRACKING_PARAMS = new Set([
++  "ref",
++  "source",
++  "utm",
++  "utm_source",
++  "utm_medium",
++  "utm_campaign",
++  "utm_term",
++  "utm_content",
++  "gclid",
++  "fbclid",
++  "igshid",
++  "mc_cid",
++  "mc_eid",
++  "mkt_tok",
++  "cmpid",
++  "msclkid",
++]);
++
++const EMBEDDED_URL_PARAMS = [
++  "url",
++  "u",
++  "target",
++  "dest",
++  "destination",
++  "redirect",
++  "redir",
++  "link",
++];
++
++const TIER_PRIORITY: Record<SourceTier, number> = {
++  tier1: 3,
++  tier2: 2,
++  tier3: 1,
++};
++
++function dedupeArticles(articles: CollectedArticle[]): CollectedArticle[] {
++  let dedupeEntries: DedupEntry[] = [];
++
++  for (const article of articles) {
++    const entry = buildDedupEntry(article);
++
++    const matches: { entry: DedupEntry; index: number }[] = [];
++    dedupeEntries.forEach((existing, index) => {
++      if (isDuplicate(entry, existing)) {
++        matches.push({ entry: existing, index });
++      }
++    });
++
++    if (matches.length === 0) {
++      dedupeEntries.push(entry);
++      continue;
++    }
++
++    const matchedIndexes = new Set(matches.map((m) => m.index));
++    const insertAt = Math.min(...matches.map((m) => m.index));
++
++    let bestEntry = entry;
++    let bestIsNew = true;
++    for (const match of matches) {
++      const current = match.entry;
++      const currentPriority = TIER_PRIORITY[current.article.source.tier] ?? 0;
++      const bestPriority = TIER_PRIORITY[bestEntry.article.source.tier] ?? 0;
++
++      if (currentPriority > bestPriority) {
++        bestEntry = current;
++        bestIsNew = false;
++      } else if (currentPriority === bestPriority && bestIsNew) {
++        bestEntry = current;
++        bestIsNew = false;
++      }
++    }
++
++    const next = dedupeEntries.filter((_, index) => !matchedIndexes.has(index));
++    next.splice(insertAt, 0, bestEntry);
++    dedupeEntries = next;
++  }
++
++  return dedupeEntries.map((entry) => entry.article);
++}
++
++function buildDedupEntry(article: CollectedArticle): DedupEntry {
++  const normTitle = normalizeTitle(article.title);
++  const titleTokens = tokenizeTitle(normTitle);
++  const urlInfo = normalizeUrl(article.url);
++  const embeddedInfo = extractEmbeddedUrl(article.url);
++
++  return {
++    article,
++    normTitle,
++    titleTokens,
++    urlFull: urlInfo?.full,
++    hostPath: urlInfo?.hostPath,
++    embeddedHostPath: embeddedInfo?.hostPath,
++  };
++}
++
+ function normalizeTitle(title: string): string {
+   return title
+     .toLowerCase()
+-    .replace(/[^\p{L}\p{N}\s]/gu, "")
++    .normalize("NFKC")
++    .replace(/['’]/g, "")
++    .replace(/[^\p{L}\p{N}]+/gu, " ")
+     .replace(/\s+/g, " ")
+     .trim();
+ }
+ 
++function tokenizeTitle(normalized: string): Set<string> {
++  if (!normalized) return new Set();
++  const tokens = normalized
++    .split(" ")
++    .filter((token) => token.length > 1 && !TITLE_STOPWORDS.has(token));
++  return new Set(tokens);
++}
++
+ /**
+- * 2つのタイトル間の類似度を計算（bigram ベース Jaccard 係数）
++ * 2つのタイトル間の類似度を計算（単語ベース Jaccard 係数）
+  */
+-function titleSimilarity(a: string, b: string): number {
+-  if (a === b) return 1;
+-  if (a.length < 2 || b.length < 2) return 0;
+-
+-  const bigramsA = new Set<string>();
+-  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.slice(i, i + 2));
++function titleSimilarity(
++  tokensA: Set<string>,
++  tokensB: Set<string>
++): number {
++  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+ 
+-  const bigramsB = new Set<string>();
+-  for (let i = 0; i < b.length - 1; i++) bigramsB.add(b.slice(i, i + 2));
+-
+   let intersection = 0;
+-  for (const bg of bigramsA) {
+-    if (bigramsB.has(bg)) intersection++;
++  for (const token of tokensA) {
++    if (tokensB.has(token)) intersection++;
+   }
+ 
+-  const union = bigramsA.size + bigramsB.size - intersection;
++  const union = tokensA.size + tokensB.size - intersection;
+   return union === 0 ? 0 : intersection / union;
+ }
++
++function isDuplicate(a: DedupEntry, b: DedupEntry): boolean {
++  if (a.urlFull && b.urlFull && a.urlFull === b.urlFull) return true;
++  if (a.hostPath && b.hostPath && a.hostPath === b.hostPath) return true;
++  if (a.embeddedHostPath && b.hostPath && a.embeddedHostPath === b.hostPath)
++    return true;
++  if (b.embeddedHostPath && a.hostPath && b.embeddedHostPath === a.hostPath)
++    return true;
++  if (
++    a.embeddedHostPath &&
++    b.embeddedHostPath &&
++    a.embeddedHostPath === b.embeddedHostPath
++  ) {
++    return true;
++  }
++
++  if (a.normTitle && b.normTitle && a.normTitle === b.normTitle) return true;
++
++  return (
++    titleSimilarity(a.titleTokens, b.titleTokens) >
++    TITLE_SIMILARITY_THRESHOLD
++  );
++}
++
++function normalizeUrl(
++  rawUrl: string
++): { full: string; hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    url.hash = "";
++    url.username = "";
++    url.password = "";
++
++    const hostname = url.hostname.toLowerCase().replace(/^www\./, "");
++    url.hostname = hostname;
++
++    if (
++      (url.protocol === "http:" && url.port === "80") ||
++      (url.protocol === "https:" && url.port === "443")
++    ) {
++      url.port = "";
++    }
++
++    const cleanedParams = [...url.searchParams.entries()]
++      .filter(([key]) => !isTrackingParam(key))
++      .sort(([aKey, aValue], [bKey, bValue]) =>
++        aKey === bKey ? aValue.localeCompare(bValue) : aKey.localeCompare(bKey)
++      );
++
++    const params = new URLSearchParams();
++    for (const [key, value] of cleanedParams) {
++      params.append(key, value);
++    }
++    url.search = params.toString() ? `?${params.toString()}` : "";
++
++    if (!url.pathname) url.pathname = "/";
++    url.pathname = url.pathname.replace(/\/{2,}/g, "/");
++    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
++      url.pathname = url.pathname.slice(0, -1);
++    }
++
++    const hostWithPort = url.port ? `${url.hostname}:${url.port}` : url.hostname;
++    const hostPath = `${hostWithPort}${url.pathname}`;
++    const full = `${hostWithPort}${url.pathname}${url.search}`;
++
++    return { full, hostPath };
++  } catch {
++    return null;
++  }
++}
++
++function extractEmbeddedUrl(
++  rawUrl: string
++): { hostPath: string } | null {
++  try {
++    const url = new URL(rawUrl);
++    for (const key of EMBEDDED_URL_PARAMS) {
++      const value = url.searchParams.get(key);
++      if (value && /^https?:\/\//i.test(value)) {
++        const normalized = normalizeUrl(value);
++        if (normalized) return { hostPath: normalized.hostPath };
++      }
++    }
++  } catch {
++    return null;
++  }
++
++  return null;
++}
++
++function isTrackingParam(param: string): boolean {
++  const key = param.toLowerCase();
++  return key.startsWith("utm_") || TRACKING_PARAMS.has(key);
++}
+
+tokens used
+40,037
+**Summary**
+- 強化した重複排除ロジックを実装しました。`src/collector/index.ts` に URL 正規化（utm 等除去・`www.` 除去・末尾スラッシュ統一・フラグメント除去）、単語ベース Jaccard（閾値 0.5 + ストップワード除去）、埋め込み URL の検出、Tier 優先ロジックを追加しました。
+- なお、参照指示の `.ai/DESIGN/ORGOS_INTELLIGENCE.md` はこのリポジトリ内に見つからなかったため、作業指示に従って実装しました。
+
+**Tests**
+- `npx tsc --noEmit`

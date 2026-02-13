@@ -9,11 +9,11 @@
 | 項目 | 値 |
 |------|-----|
 | Stage | KICKOFF |
-| Completed tasks | 28 |
+| Completed tasks | 36 |
 | In progress | 0 |
 | Review | 0 |
 | Blocked | 0 |
-| Queued | 4 |
+| Queued | 2 |
 
 ---
 
@@ -35,8 +35,15 @@
 | T-INT-002 | Intelligence Phase 2: Slack Bot | **done** | codex-implementer |
 | T-INT-003 | Intelligence Phase 3: OIP-AUTO + PR | **done** | codex-implementer |
 | T-INT-004 | Intelligence Phase 4: Evals + 自動承認 | **done** | org-architect |
-| T-INT-005 | Intelligence Phase 5: ロールバック | queued | codex-implementer |
-| T-INT-006 | Intelligence Phase 6: ソース追加 | queued | codex-implementer |
+| T-OS-023 | org-tick オートコンティニュー + レビュー設定修正 | **done** | org-implementer |
+| T-OS-024 | 全作業 TASKS.yaml 登録必須化 + 割り込みフロー | **done** | codex-implementer |
+| T-INT-005 | Intelligence Phase 5: ロールバック + Kernel保護 | **done** | codex-implementer |
+| T-INT-006 | Intelligence Phase 6: ソース管理Slackフロー | **done** | codex-implementer |
+| T-INT-007 | Intelligence 品質: Gemini スコアリング復旧 | **done** | codex-implementer |
+| T-INT-008 | Intelligence 品質: HN フィルタリング精度 | **done** | codex-implementer |
+| T-INT-009 | Intelligence 品質: HTML タグ残留修正 | **done** | codex-implementer |
+| T-INT-010 | Intelligence 品質: 重複排除強化 | **done** | codex-implementer |
+| T-OS-025 | /org-start public OrgOS 自動切断 | **done** | org-implementer |
 
 ---
 
@@ -48,6 +55,34 @@
 
 ## Recent Activity
 
+- T-INT-007〜010: ✅ Intelligence パイプライン品質修正4件完了（2026-02-13）
+  - T-INT-007: Gemini スコアリング JSON 抽出強化 + OIP 生成改善
+  - T-INT-008: HN フィルタリング精度改善（単語境界マッチ + ストップワード除外 + MIN_HN_SCORE=30）
+  - T-INT-009: HTML タグ残留修正（stripHtml 2パス処理）
+  - T-INT-010: 重複排除強化（URL 正規化 + 単語 Jaccard 類似度 0.5）
+  - TypeScript ビルド通過、main マージ + push 完了 (a6c2a87)
+- T-OS-025: ✅ /org-start public OrgOS リポジトリ自動切断修正（2026-02-13）
+  - FlowA Step 1 パターン B: origin に `/OrgOS` を含む場合に自動切断
+  - Step 3: CONTROL.yaml テンプレートに `is_orgos_dev: false` を明示
+- T-INT-006: ✅ Intelligence Phase 6 完了 + レビュー修正（2026-02-13）
+  - Slack ソース管理フロー実装: ソース追加/削除/一覧コマンド
+  - Tier 選択ボタン（Block Kit）、URL バリデーション、削除確認ステップ
+  - KV バックエンド永続化（addSource/removeSource ヘルパー）
+  - TypeScript ビルド通過、コミット済み (3ad2b4b)
+  - レビュー: CRITICAL 1 + HIGH 3 + MEDIUM 2（REVIEW-003）
+  - 修正: 正規表現バグ、SSRF 保護、制御文字除去、mrkdwn エスケープ等
+  - 修正コミット: 0157e5a
+- T-INT-005: ✅ Intelligence Phase 5 完了（2026-02-13）
+  - ロールバック機構: Slack 「ロールバック」コマンド → revert PR 自動作成・マージ
+  - Kernel 保護: OIP 生成時の impactScope 強制設定 + KERNEL-APPROVE 承認要求
+  - レビュー: CRITICAL 2 + HIGH 3 → 全件修正済み（入力バリデーション、エラーサニタイズ、revert PR 安全チェック）
+  - TypeScript ビルド通過、コミット済み (ffc43ea)
+- T-INT-003: ✅ Phase 3 未コミット変更をコミット + push (618ebde)
+- T-OS-024: ✅ 全作業 TASKS.yaml 登録必須化 + 割り込みタスク受付フロー整備（2026-02-13）
+  - project-flow.md: 小タスク即実行を廃止、全作業 TASKS.yaml 登録必須に変更
+  - project-flow.md: 割り込みタスク受付フロー（allowed_paths 衝突チェック）を追加
+  - org-tick.md: Step 2.2「新規依頼のタスク化」を追加
+  - manager.md:「全作業 TASKS.yaml 登録必須」「割り込みタスクの並列管理」セクション追加
 - T-OS-023: ✅ org-tick オートコンティニュー追加（2026-02-13）
   - CONTROL.yaml: mode を "every_n_tasks" → "batch" に修正
   - org-tick.md: Step 13 オートコンティニュー判定を追加
