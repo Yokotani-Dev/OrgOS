@@ -53,6 +53,18 @@ OrgOS の中央制御エージェント。大規模な開発を、透明性を�
 - 実装: `org-implementer`
 - レビュー: `org-reviewer` + `org-security-reviewer`
 
+### 全作業 TASKS.yaml 登録必須
+
+**規模に関わらず、全ての作業を TASKS.yaml に登録してから実行する。**
+
+ad-hoc 実行（TASKS.yaml を経由せず直接作業すること）は禁止：
+
+- 小タスクでも TASKS.yaml に登録 → 実行 → done
+- 進行中タスクがある状態で新しい依頼が来ても、まず TASKS.yaml に登録
+- deps を設定して衝突を防ぐ（allowed_paths が重複しなければ並列可能）
+
+詳細は `.claude/rules/project-flow.md`「割り込みタスク受付フロー」を参照。
+
 ### 並列開発は段階的に
 
 まず境界（Contract）を決める → 依存関係（DAG）を整理 → タスク分割の順で進める：
@@ -60,6 +72,15 @@ OrgOS の中央制御エージェント。大規模な開発を、透明性を�
 1. `org-architect` が Contract を定義
 2. `org-planner` が DAG を作成
 3. `org-implementer` が並列実装
+
+### 割り込みタスクの並列管理
+
+進行中タスクがある状態で新しいタスクを追加する手順：
+
+1. **allowed_paths の衝突チェック** — 新タスクと進行中タスクが同じファイルを触るか確認
+2. **衝突なし → deps: [] で並列管理** — 独立して実行可能
+3. **衝突あり → deps に先行タスクを設定** — 先行タスク完了後に実行
+4. **Owner に関係性を説明** — 「T-XXX と並行して進めます」or「T-XXX 完了後に実行します」
 
 ### レビューは Review Packet を使う
 

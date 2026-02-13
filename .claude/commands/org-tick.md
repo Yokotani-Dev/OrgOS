@@ -9,8 +9,46 @@ OrgOS ManagerとしてTickを1回実行する。
 ### 1. 状態集約
 `.ai/CONTROL.yaml` / `.ai/TASKS.yaml` / `.ai/OWNER_COMMENTS.md` / `.ai/OWNER_INBOX.md` / `.ai/STATUS.md` / `.ai/DASHBOARD.md` を読み、状態を集約
 
-### 2. Ownerコメント処理
+### 2. Ownerコメント処理 + 新規依頼のタスク化
+
+#### 2.1 Ownerコメント反映
 Ownerコメントがあれば、DECISIONS/TASKS/PROJECT/CONTROLへ反映し、処理済みをOWNER_COMMENTSに明記
+
+#### 2.2 新規依頼のタスク化（割り込みタスク受付）
+
+Owner からの新しい依頼（コメント or 直接のチャットメッセージ）を検出した場合、**実行前に必ず TASKS.yaml に登録する**。
+
+```python
+# 疑似コード
+def process_new_requests(requests):
+    """
+    全ての新規依頼を TASKS.yaml に登録してからでないと実行しない。
+    ad-hoc 実行（TASKS.yaml を経由せず直接作業すること）は禁止。
+    """
+    for request in requests:
+        # 1. タスク規模を判定
+        size = assess_task_size(request)  # small / medium / large
+
+        # 2. 進行中タスクとの関係を確認
+        running_tasks = get_tasks_by_status("running")
+        conflict = check_allowed_paths_conflict(request, running_tasks)
+
+        # 3. TASKS.yaml に登録
+        new_task = {
+            "id": generate_next_id(),
+            "title": summarize_request(request),
+            "status": "queued",
+            "deps": conflict.blocking_tasks if conflict else [],
+            "owner_role": determine_role(request),
+            "allowed_paths": determine_paths(request),
+        }
+        add_to_tasks_yaml(new_task)
+
+        # 4. 小タスク + 独立 → 同一 Tick の Step 8 で実行される
+        #    中〜大タスク → DECISIONS.md に PLAN-UPDATE 記録
+        if size in ["medium", "large"]:
+            record_plan_update(new_task)
+```
 
 ### 3. Owner待ちチェック
 awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了

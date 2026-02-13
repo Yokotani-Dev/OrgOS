@@ -95,6 +95,16 @@ project_scope: "OrgOS development only"  # OrgOS 開発ディレクトリの場�
 
 ## タスク規模の判定
 
+### 最重要ルール: 全作業 TASKS.yaml 登録必須
+
+**規模に関わらず、全ての作業を TASKS.yaml に登録してから実行する。**
+ad-hoc 実行（TASKS.yaml を経由せず直接作業すること）は禁止。
+
+```
+❌ 禁止: 依頼を受けてそのまま実行する
+✅ 必須: 依頼 → TASKS.yaml に登録 → 実行 → 完了記録
+```
+
 ### 依頼受付時の必須チェック（重要）
 
 依頼を受けたら、**以下を必ず実行:**
@@ -105,17 +115,18 @@ project_scope: "OrgOS development only"  # OrgOS 開発ディレクトリの場�
    - スコープ外なら Owner に確認（即実行禁止）
 
 2. ✅ タスク規模を判定
-   - 小: 1ファイル、5分以内、他に影響なし
+   - 小: 1ファイル、他に影響なし
    - 中: 複数ファイル、設計判断あり
    - 大: 新機能、アーキテクチャ変更
 
-3. ✅ 中〜大タスクは必ず TASKS.yaml に追加
-   ❌ 即実行してはいけない
-   ✅ TASKS.yaml に追加してから実行
+3. ✅ TASKS.yaml に登録（全規模共通）
+   - 小タスクでも必ず登録する
+   - deps を設定する（進行中タスクとの関係を明確化）
+   - 登録完了後に実行
 
 4. ✅ 台帳を更新
    - TASKS.yaml: タスク追加
-   - DECISIONS.md: PLAN-UPDATE-XXX として記録
+   - 中〜大: DECISIONS.md に PLAN-UPDATE-XXX として記録
    - STATUS.md / DASHBOARD.md: 更新
 ```
 
@@ -123,24 +134,25 @@ project_scope: "OrgOS development only"  # OrgOS 開発ディレクトリの場�
 
 | 規模 | 基準 | 対応 |
 |------|------|------|
-| 小 | 1ファイル以内、他タスクに影響なし | 即実行 + RUN_LOG記録 |
-| 中 | 複数ファイル or 設計判断あり | TASKS.yaml追加 → 次Tickで実行 |
+| 小 | 1ファイル以内、他タスクに影響なし | TASKS.yaml 登録 → 同一 Tick 内で実行 → done |
+| 中 | 複数ファイル or 設計判断あり | TASKS.yaml 登録 + DECISIONS.md 記録 → 次 Tick で実行 |
 | 大 | 新機能、アーキテクチャ変更 | PROJECT/BRIEF から計画 |
 
 ### 小タスクの処理
 
 ```
-1. その場で実行
-2. STATUS.md の RUN_LOG に記録
-   例: "ad-hoc: src/utils.ts にログ出力追加"
-3. 完了報告 + 次のステップ案内
+1. TASKS.yaml に登録（status: queued, deps 設定）
+2. 同一 Tick 内で実行
+3. TASKS.yaml を done に更新
+4. STATUS.md の RUN_LOG に記録
+5. 完了報告 + 次のステップ案内
 ```
 
 ### 中〜大タスクの処理
 
 ```
-1. 「これは設計変更を伴うので、計画に組み込みます」と説明
-2. TASKS.yaml に追加
+1. 「計画に組み込みます」と説明
+2. TASKS.yaml に追加（deps で他タスクとの関係を明示）
 3. DECISIONS.md に PLAN-UPDATE-XXX として記録
 4. /org-tick で実行を案内
 ```
@@ -151,8 +163,10 @@ project_scope: "OrgOS development only"  # OrgOS 開発ディレクトリの場�
 User: 「このファイルにログ出力追加して」
 
 Manager:
-  → 小タスクと判断、即実行
-  → STATUS.md に記録: "ad-hoc: src/utils.ts にログ出力追加"
+  → 小タスクと判定
+  → TASKS.yaml に T-FIX-XXX として登録（status: queued）
+  → 実行 → done に更新
+  → STATUS.md に記録
   → 完了報告 + 次のステップ案内
 ```
 
@@ -160,9 +174,71 @@ Manager:
 User: 「認証機能をJWTに変更して」
 
 Manager:
-  → 大タスクと判断
-  → 「これは設計変更を伴うので、計画に組み込みます」と説明
-  → TASKS.yaml に追加、または /org-brief から開始を案内
+  → 大タスクと判定
+  → 「計画に組み込みます」と説明
+  → TASKS.yaml に追加、deps で既存タスクとの関係を設定
+  → DECISIONS.md に PLAN-UPDATE-XXX 記録
+  → /org-tick で実行を案内
+```
+
+---
+
+## 割り込みタスク受付フロー
+
+**進行中のタスクがある状態で新しい依頼を受けた場合のフロー。**
+
+### 原則
+
+```
+新しい依頼は、進行中タスクを中断せずに並列管理する。
+TASKS.yaml の DAG で依存関係を明示し、衝突を防ぐ。
+```
+
+### フロー
+
+```
+1. 新しい依頼を受ける
+
+2. 既存タスクとの関係を判断
+   - 独立（同じファイルを触らない） → deps: [] で並列実行可能
+   - 依存あり（同じファイルを触る） → deps に既存タスクを設定
+   - 既存タスクの一部 → 既存タスクの notes に追記、または subtask として追加
+
+3. TASKS.yaml に登録
+   - 新しい ID を採番
+   - deps を正しく設定
+   - allowed_paths で衝突しないことを確認
+
+4. 実行タイミングを決定
+   - 小タスク + 独立 → 同一 Tick で即実行
+   - 中〜大タスク or 依存あり → 次の Tick で実行
+```
+
+### 衝突防止
+
+```
+allowed_paths が重複する場合:
+  → 後から来たタスクの deps に先行タスクを追加
+  → 「T-XXX 完了後に実行します」と Owner に説明
+
+allowed_paths が重複しない場合:
+  → 並列実行可能
+  → 「T-YYY と並行して進めます」と Owner に説明
+```
+
+### 例
+
+```
+状況: T-INT-005（ロールバック機構）が running
+
+User: 「org-tick のレビュー設定が効いてないんだけど」
+
+Manager:
+  → 新しい依頼を認識
+  → T-INT-005 と独立（allowed_paths が重複しない）
+  → TASKS.yaml に T-OS-XXX として登録（deps: []）
+  → 「T-INT-005 と並行して進めます」
+  → 同一 Tick 内で実行 → done
 ```
 
 ---
@@ -171,7 +247,7 @@ Manager:
 
 ### 原則
 
-**個別のプロンプトも OrgOS の制御下に取り込む。**
+**個別のプロンプトも OrgOS の制御下に取り込む。全ての作業を TASKS.yaml 経由で管理する。**
 
 ユーザーがスラッシュコマンドを使わずに依頼してきた場合：
 
@@ -182,15 +258,17 @@ Manager:
 2. **タスクとして認識する**
    - 「これは何をする依頼か」を明確にする
 
-3. **規模に応じて対応を選ぶ**
-   - **小さいタスク** → その場で実行し、RUN_LOGに記録
-   - **中〜大のタスク** → TASKS.yaml に追加して計画に組み込む
+3. **TASKS.yaml に登録する（規模問わず）**
+   - 小タスクでも必ず TASKS.yaml に登録
+   - 進行中タスクがあれば deps を設定（割り込みタスク受付フロー参照）
 
-4. **必ず記録を残す**
-   - 小さいタスクでも `STATUS.md` の RUN_LOG に記録
-   - これにより、何が行われたか追跡可能になる
+4. **実行する**
+   - 小タスク → 同一 Tick 内で実行可能
+   - 中〜大タスク → 次の Tick で実行
 
 5. **完了後は OrgOS フローに戻る**
+   - TASKS.yaml を done に更新
+   - STATUS.md の RUN_LOG に記録
    - 次に何をすべきか案内する
 
 ---
