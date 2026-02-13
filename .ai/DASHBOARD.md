@@ -104,9 +104,15 @@
 
 ## 📝 Recent Changes (last tick)
 
-- ad-hoc: Codex CLI 0.98.0→0.101.0 アップデート + デフォルトモデル gpt-5.3-codex-spark に更新（2026-02-13）
-  - agent-coordination.md, org-tick.md のモデル参照を更新
-- 前回: T-INT-000 完了、T-OS-019〜022 全完了、BUG-FIX-001 修正済み
+- Tick #24（2026-02-13）: T-INT-004 OS Evals 実装完了
+  - `.claude/evals/` ディレクトリ新設（7ファイル）
+  - org-tick に Step 9A（OIP PR 検出 + Eval 判定）を追加
+  - レビュー: CRITICAL 1 + HIGH 4 → 全件修正済み、全 Eval PASS
+  - TECH-DECISION-003: Level 判定は Worker 側メタデータ方式を採用
+  - T-INT-005（ロールバック機構）のブロック解除
+- Tick #22: T-INT-003 レビュー承認 → done
+- Tick #21: T-INT-003 レビュー修正（5ファイル、CRITICAL 1 + HIGH 6 修正）
+- Tick #20: T-INT-003 実装完了
 - ✅ T-OS-005 完了: プロジェクト引き継ぎ機能を実装
   - [CONTROL.yaml](.ai/CONTROL.yaml) に handoff セクション追加
   - [.ai/HANDOFF.md](.ai/HANDOFF.md) テンプレート作成

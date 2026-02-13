@@ -129,12 +129,12 @@ owner_review_policy:
   # every_n_tasks: Nタスクごとにレビュー（バランス型、デフォルト）
   # batch: 全タスク完了後にまとめてレビュー
   # manual: Ownerが明示的に依頼するまでレビューしない
-  mode: "every_n_tasks"
+  mode: "batch"
   every_n_tasks: 3                # mode=every_n_tasks の場合のタスク数
   on_stage_transition: true       # ステージ遷移時は常にレビュー
   always_before_merge_to_main: true
   always_before_release: true
-  tasks_since_last_review: 0      # カウンター（ランタイム）
+  tasks_since_last_review: 1      # カウンター（ランタイム）
 
 # Codex worker 設定 (OpenAI Codex CLI)
 codex:
@@ -195,4 +195,4 @@ eval_policy:
 # ランタイム設定
 runtime:
   max_parallel_tasks: 6  # 同時実行タスク数上限
-  tick_count: 16         # Tick カウンタ
+  tick_count: 24         # Tick カウンタ

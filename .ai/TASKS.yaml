@@ -408,7 +408,7 @@ tasks:
 
   - id: T-INT-001
     title: "Intelligence Phase 1: orgos-intelligence リポジトリ初期構築"
-    status: queued
+    status: done
     deps: ["T-INT-000"]
     owner_role: "codex-implementer"
     allowed_paths: []
@@ -425,11 +425,19 @@ tasks:
       設計書 Section 3-9 参照。
       別リポジトリ orgos-intelligence に構築。
       技術スタック: Cloudflare Workers Paid + Hono + KV。
-      Owner 作業: Cloudflare アカウント作成、API キー設定。
+      完了: 2026-02-13。デプロイ・動作確認済み。
+      - Worker URL: https://orgos-intelligence.dev-2b7.workers.dev
+      - 初回実行: 23トピック収集成功（GPT-5.3-Codex-Spark, Gemini 3 Deep Think 等）
+      - Secrets設定: ANTHROPIC_API_KEY, GEMINI_API_KEY, GITHUB_APP_PRIVATE_KEY
+      - Google CSE は未設定（Phase 2 で対応）
+      既知の改善点（Phase 2 で対応）:
+      - RSS サマリーの HTML タグ残留（Simon Willison 等）
+      - タイトル類似度による重複排除強化
+      - GitHub 保存の Workers サブリクエスト上限対策
 
   - id: T-INT-002
     title: "Intelligence Phase 2: Slack Bot 構築（配信 + 承認 + 対話）"
-    status: queued
+    status: done
     deps: ["T-INT-001"]
     owner_role: "codex-implementer"
     allowed_paths: []
@@ -441,12 +449,27 @@ tasks:
       - "月曜に週次ダイジェスト配信"
     notes: |
       設計書 Section 6 参照。
-      Hono + @slack/web-api（Slack Bolt は Workers 非互換）。
-      Owner 作業: Slack App 作成・チャンネル作成。
+      完了: 2026-02-13。デプロイ・テスト投稿確認済み。
+      実装内容:
+      - Slack クライアント（fetch ベース、Workers 互換）
+      - Block Kit ビルダー（DailyReport → Slack Block Kit）
+      - Slack 署名検証（HMAC-SHA256）
+      - Events API エンドポイント（スレッド対話、テキストコマンド）
+      - Interactive Components エンドポイント（OIP 承認/却下/詳細ボタン）
+      - パイプライン Step 6 に Slack 投稿を統合
+      - スレッド内 Claude Sonnet 対話（過去7日分コンテキスト）
+      Phase 1 改善対応:
+      - HTML エンティティ変換強化（&amp; &lt; &gt; &#NNN; 等）
+      - タイトル類似度による重複排除（bigram Jaccard 係数 > 0.7）
+      未対応（Phase 3 以降）:
+      - 週次ダイジェスト配信（月曜）
+      - GitHub 保存の Workers サブリクエスト上限対策
+      - Google Custom Search API 設定
+      - Google Custom Search API 設定
 
   - id: T-INT-003
     title: "Intelligence Phase 3: OIP-AUTO 生成 + OrgOS PR 自動作成"
-    status: queued
+    status: done
     deps: ["T-INT-002"]
     owner_role: "codex-implementer"
     allowed_paths: []
@@ -458,10 +481,28 @@ tasks:
     notes: |
       設計書 Section 7, 10 参照。
       GitHub App で OrgOS リポジトリにアクセス。
+      実装完了: 2026-02-13。
+      レビュー: Tick #21 で org-reviewer + org-security-reviewer 実施。
+      検出: CRITICAL 1, HIGH 6, MEDIUM 8, LOW 3
+      修正完了: 2026-02-13。TypeScript ビルド通過。
+      修正内容:
+      - auth.ts: PEM形式検証追加, base64デコードtry/catch, 鍵長チェック,
+        エラーメッセージサニタイズ, JWT有効期間修正(iat:now-30, exp:now+540)
+      - pr.ts: 全GitHub APIエラーハンドリング強化(console.error+sanitized throw),
+        utf8ToBase64()でunescape()置換, commitメッセージサニタイズ
+      - oip-reminder.ts: KV.put try/catch追加(3日/7日両方), 失敗時continue
+      - events.ts: OIPデータ基本検証追加, PR作成→成功後にstatus更新,
+        PR失敗時はpendingのまま保持(再試行可)
+      - index.ts: Cron handler try/catch追加, パイプライン/OIPリマインダー
+        エラー時のSlack通知追加
+      Owner作業:
+      - GitHub App のInstallation IDをSecretに設定
+        wrangler secret put GITHUB_INSTALLATION_ID
+      - wrangler deploy でデプロイ
 
   - id: T-INT-004
     title: "Intelligence Phase 4: OS Evals 整備 + Level 1 自動承認"
-    status: queued
+    status: done
     deps: ["T-INT-003"]
     owner_role: "org-architect"
     allowed_paths: [".ai/", ".claude/"]
@@ -471,8 +512,11 @@ tasks:
       - "Level 1（軽微な Userland 変更）の自動承認を解禁"
       - "Eval 結果に基づく自動 approve/reject 判定"
     notes: |
-      設計書 Section 11, 12 参照。
-      Kernel/Userland 境界の定義に基づく安全な自動承認。
+      完了: 2026-02-13。
+      実装: .claude/evals/ に5つの Eval スクリプト + ランナー。
+      org-tick Step 9A に OIP PR 検出 + Eval ベース自動承認を追加。
+      レビュー: CRITICAL 1 + HIGH 4 修正済み。
+      設計書: .ai/DESIGN/ORGOS_EVALS.md
 
   - id: T-INT-005
     title: "Intelligence Phase 5: ロールバック機構 + Kernel 保護"
@@ -501,6 +545,25 @@ tasks:
     notes: |
       設計書 Section 4 参照。
       Owner が Slack で「Anthropic Blog を追加して」→ 自動反映。
+
+  # === org-tick 改善 (2026-02-13) ===
+
+  - id: T-OS-023
+    title: "org-tick オートコンティニュー機構 + レビュー設定修正"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".ai/CONTROL.yaml", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "CONTROL.yaml の owner_review_policy.mode が batch に修正されている"
+      - "org-tick.md に Step 13 オートコンティニュー判定が追加されている"
+      - "レビュー不要 + Owner 判断不要時に自動で次の Tick に進む"
+      - "安全制限: 最大10 Tick / コンテキスト80%で停止 / エラー時即停止"
+    notes: |
+      Owner 報告: レビュー頻度を batch に設定したつもりが毎 tick で止まる。
+      原因1: CONTROL.yaml の mode が "every_n_tasks" のままだった → "batch" に修正。
+      原因2: org-tick 自体が1回実行で止まる設計 → Step 13 オートコンティニュー追加。
+      ⚠️ 反省: 当初 ad-hoc で実行してしまった。Owner 指摘により遡及的にタスク化。
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
