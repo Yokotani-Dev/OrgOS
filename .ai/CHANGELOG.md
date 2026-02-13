@@ -4,6 +4,23 @@
 
 ---
 
+## v0.18.0 (2026-02-13)
+
+### 追加
+- **OS Evals 基盤**: Level 1 自動評価スクリプト群を追加（`.claude/evals/`）
+  - `check-schema.sh`: YAML/manifest スキーマ検証
+  - `check-kernel-boundary.sh`: Kernel 境界チェック
+  - `check-agent-defs.sh`: エージェント定義整合性チェック
+  - `check-oip-format.sh`: OIP フォーマット検証
+  - `check-security.sh`: セキュリティスキャン
+  - `run-all.sh`: 全チェック一括実行
+- **Intelligence ディレクトリ**: 運用データ収集の基盤構造を追加（`.ai/INTELLIGENCE/`）
+
+### 修正
+- `/org-start` で public clone 時に OrgOS 開発検出が誤発動する問題を修正
+
+---
+
 ## v0.17.0 (2026-02-13)
 
 ### 改善

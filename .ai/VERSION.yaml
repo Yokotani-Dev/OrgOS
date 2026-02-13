@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.17.0"
+current: "0.18.0"
 released_at: "2026-02-13"
 
 history:
+  - version: "0.18.0"
+    date: "2026-02-13"
+    description: "OS Evals Level 1 automation, Intelligence directory, org-start fix"
   - version: "0.17.0"
     date: "2026-02-13"
     description: "Codex default model update to gpt-5.3-codex-spark, Intelligence design & task planning"

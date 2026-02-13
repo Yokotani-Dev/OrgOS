@@ -9,8 +9,46 @@ OrgOS ManagerとしてTickを1回実行する。
 ### 1. 状態集約
 `.ai/CONTROL.yaml` / `.ai/TASKS.yaml` / `.ai/OWNER_COMMENTS.md` / `.ai/OWNER_INBOX.md` / `.ai/STATUS.md` / `.ai/DASHBOARD.md` を読み、状態を集約
 
-### 2. Ownerコメント処理
+### 2. Ownerコメント処理 + 新規依頼のタスク化
+
+#### 2.1 Ownerコメント反映
 Ownerコメントがあれば、DECISIONS/TASKS/PROJECT/CONTROLへ反映し、処理済みをOWNER_COMMENTSに明記
+
+#### 2.2 新規依頼のタスク化（割り込みタスク受付）
+
+Owner からの新しい依頼（コメント or 直接のチャットメッセージ）を検出した場合、**実行前に必ず TASKS.yaml に登録する**。
+
+```python
+# 疑似コード
+def process_new_requests(requests):
+    """
+    全ての新規依頼を TASKS.yaml に登録してからでないと実行しない。
+    ad-hoc 実行（TASKS.yaml を経由せず直接作業すること）は禁止。
+    """
+    for request in requests:
+        # 1. タスク規模を判定
+        size = assess_task_size(request)  # small / medium / large
+
+        # 2. 進行中タスクとの関係を確認
+        running_tasks = get_tasks_by_status("running")
+        conflict = check_allowed_paths_conflict(request, running_tasks)
+
+        # 3. TASKS.yaml に登録
+        new_task = {
+            "id": generate_next_id(),
+            "title": summarize_request(request),
+            "status": "queued",
+            "deps": conflict.blocking_tasks if conflict else [],
+            "owner_role": determine_role(request),
+            "allowed_paths": determine_paths(request),
+        }
+        add_to_tasks_yaml(new_task)
+
+        # 4. 小タスク + 独立 → 同一 Tick の Step 8 で実行される
+        #    中〜大タスク → DECISIONS.md に PLAN-UPDATE 記録
+        if size in ["medium", "large"]:
+            record_plan_update(new_task)
+```
 
 ### 3. Owner待ちチェック
 awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
@@ -857,6 +895,101 @@ OWNER_COMMENTS.md に以下のようなキーワードがあれば、モード�
 - 各タスクの Review Packet を確認
 - `org-reviewer` + `org-security-reviewer` を実行
 
+### 9A. OIP-AUTO PR 検出と Eval ベース判定
+
+Intelligence Worker が作成した OIP-AUTO PR を検出し、OS Evals で安全性を検証する。
+
+#### 9A.1 OIP PR の検出
+
+```bash
+# oip-auto/ ブランチの PR を検出
+gh pr list --label "oip-auto" --state open --json number,title,headRefName,files 2>/dev/null || true
+```
+
+PR がない場合はこのステップをスキップ。
+
+#### 9A.2 Level 判定
+
+各 PR の OIP レベルを判定する。**Level は Intelligence Worker が OIP 生成時に決定し、PR description の HTML コメントに埋め込む。**
+
+| Level | 条件 | 処理 |
+|-------|------|------|
+| **Level 0** | 情報記録のみ（.ai/INTELLIGENCE/ 内のみ変更） | 自動マージ（Eval 不要） |
+| **Level 1** | Userland 軽微変更（Kernel ファイル未変更） | Eval 実行 → pass なら自動マージ |
+| **Level 2** | Userland 重要変更 | Owner 承認待ち |
+| **Level 3** | Kernel ファイル変更あり | Owner 明示的承認必須 |
+
+PR description のメタデータ形式:
+```
+<!-- oip-level: 1 -->
+```
+
+```python
+# 疑似コード
+def determine_oip_level(pr):
+    """
+    PR description から Level を取得。
+    Intelligence Worker が OIP-AUTO 生成時に Claude Sonnet で判定済み。
+    Kernel 境界チェックは Eval で二重検証する。
+    """
+    # PR description から Level を読み取り
+    level = parse_html_comment(pr.body, "oip-level")  # <!-- oip-level: N -->
+
+    if level is not None:
+        level = int(level)
+    else:
+        # metadata がない場合はフォールバック（安全側に倒す）
+        kernel_files = read_kernel_files_list()
+        if any(f in kernel_files for f in pr.changed_files):
+            level = 3
+        elif all(f.startswith(".ai/INTELLIGENCE/") for f in pr.changed_files):
+            level = 0
+        else:
+            level = 2  # 不明な場合は Owner 承認必須
+
+    # Kernel 境界の二重検証（Level 0-1 でも Kernel ファイルがあれば Level 3 に昇格）
+    if level <= 1:
+        kernel_files = read_kernel_files_list()
+        if any(f in kernel_files for f in pr.changed_files):
+            level = 3
+
+    return level
+```
+
+#### 9A.3 Eval 実行（Level 1 の場合）
+
+```bash
+# PR の変更ファイル一覧を取得
+FILES=$(gh pr view <PR_NUMBER> --json files -q '.files[].path')
+
+# OS Evals 実行
+.claude/evals/run-all.sh --changed-files $FILES --json
+```
+
+#### 9A.4 判定結果の処理
+
+| Eval 結果 | Level | 処理 |
+|-----------|-------|------|
+| **pass** | 0 | 自動マージ |
+| **pass** | 1 | 自動マージ + DECISIONS.md に記録 |
+| **fail** | 1 | Owner に通知（OWNER_INBOX.md に追加） |
+| - | 2 | Owner 承認待ち（OWNER_INBOX.md に追加） |
+| - | 3 | Owner 明示的承認必須（OWNER_INBOX.md + 影響分析添付） |
+
+自動マージ時:
+```bash
+gh pr merge <PR_NUMBER> --merge --delete-branch
+```
+
+DECISIONS.md に記録:
+```markdown
+## OIP-AUTO-XXX: [タイトル] (YYYY-MM-DD)
+- Level: 1 (自動承認)
+- Eval 結果: pass (5/5)
+- 変更ファイル: [リスト]
+- トリガー: [Intelligence レポートのトピック]
+```
+
 ### 10. 統合処理
 レビュー承認済みタスクがあれば：
 - org-integrator に統合を委任
@@ -874,6 +1007,71 @@ git branch -d task/<TASK_ID>-<slug>
 - `DASHBOARD.md` と `RUN_LOG.md` と `STATUS.md` を更新
 - CONTROL.yaml の runtime.tick_count を+1
 - 学習抽出の提案（セッション終了時）
+
+### 13. オートコンティニュー判定
+
+Tick 完了後、以下の **全条件** を満たす場合は **Owner に返さず即座に次の Tick（Step 1 に戻る）を開始する**。
+1回の `/org-tick` 呼び出しで複数 Tick を連続実行することで、Owner が毎回手動で tick を打つ手間をなくす。
+
+```python
+# 疑似コード
+def should_auto_continue():
+    """
+    全条件を満たせば True → Step 1 に戻って次の Tick を即実行
+    1つでも False → Owner に結果を返して停止
+    """
+
+    # 1. Owner の判断待ちではない
+    if control.awaiting_owner:
+        return False
+
+    # 2. レビューポリシーが「今すぐ Owner に見せる」を要求していない
+    #    - batch / manual: 基本的に止まらない
+    #    - every_n_tasks: カウンターが閾値未満なら止まらない
+    #    - every_tick: 常に止まる
+    policy = control.owner_review_policy
+    if policy.mode == "every_tick":
+        return False
+    if policy.mode == "every_n_tasks" and policy.tasks_since_last_review >= policy.every_n_tasks:
+        return False
+    # batch / manual / every_n_tasks(未到達) → 続行可能
+
+    # 3. OWNER_INBOX.md に未回答の質問がない
+    if has_pending_owner_questions():
+        return False
+
+    # 4. 実行可能なタスクがまだある（queued かつ deps 充足）
+    if not has_executable_tasks():
+        return False
+
+    # 5. セッション終了提案が出ていない（Step 5 で suggest=True だった場合は停止）
+    if session_end_suggested:
+        return False
+
+    return True
+```
+
+#### オートコンティニュー中の Owner 通知
+
+ループ中は各 Tick の要約を簡潔にバッファし、最終停止時にまとめて報告する：
+
+```markdown
+## Tick #N-#M 連続実行結果
+
+| Tick | 実行内容 | 結果 |
+|------|----------|------|
+| #N   | T-003 実装委任 | ✅ |
+| #N+1 | T-004 実装委任 | ✅ |
+| #M   | レビュー閾値到達 → 停止 | ⏸ |
+
+📌 次はこちら: ...
+```
+
+#### 安全制限
+
+- **1回の呼び出しで最大 10 Tick** まで（無限ループ防止）
+- コンテキスト使用率 80% 以上で強制停止
+- エラー発生時は即停止して報告
 
 ---
 
