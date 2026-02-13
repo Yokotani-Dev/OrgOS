@@ -22,8 +22,10 @@ description: OrgOSプロジェクト起動（初期化→キックオフ→質�
 .ai/CONTROL.yaml が存在しない
   → 新規プロジェクト（フローA）
 
-.ai/CONTROL.yaml に is_orgos_dev: true がある
+.ai/CONTROL.yaml に is_orgos_dev: true がある AND origin が OrgOS-Dev を含む
   → OrgOS開発用台帳（フローC: 特別処理）
+  ※ is_orgos_dev: true でも origin が OrgOS-Dev でない場合（public リポジトリからの clone 等）は
+    フローA（新規プロジェクト）として扱う。CONTROL.yaml はテンプレートで上書きされる。
 
 .ai/CONTROL.yaml の stage が "KICKOFF" 以外（REQUIREMENTS, DESIGN, IMPLEMENTATION, INTEGRATION, RELEASE）
   → 既存プロジェクト再開（フローB）
@@ -68,9 +70,26 @@ AskUserQuestion で確認：
 
 **フローC（OrgOS開発用台帳）と判定された場合:**
 
+**判定条件:** `is_orgos_dev: true` AND `git remote -v` の origin に `OrgOS-Dev` を含む
+
+```bash
+# フローC 判定
+is_orgos_dev=$(grep 'is_orgos_dev: true' .ai/CONTROL.yaml)
+origin_is_dev=$(git remote -v 2>/dev/null | grep origin | grep 'OrgOS-Dev')
+
+if [ -n "$is_orgos_dev" ] && [ -n "$origin_is_dev" ]; then
+  # フローC: OrgOS 開発環境
+else
+  # is_orgos_dev: true でも origin が OrgOS-Dev でない → フローA（新規プロジェクト）
+  # public リポジトリからの clone 等。CONTROL.yaml はテンプレートで上書き。
+fi
+```
+
+**フローC の場合:**
+
 ```
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️ OrgOS 開発用の台帳が検出されました
+OrgOS 開発用の台帳が検出されました
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 この .ai/ フォルダは OrgOS 自体の開発用です。
