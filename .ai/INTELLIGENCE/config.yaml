@@ -1,0 +1,47 @@
+# OrgOS Intelligence 監視設定
+# Intelligence Worker が参照する情報ソースとトピック定義
+
+watch_topics:
+  # AI エージェント
+  - AI agents / agentic patterns
+  - multi-agent systems
+  - agent evaluation / benchmarks
+
+  # Claude / Anthropic
+  - Claude Code / Claude API changes
+  - MCP (Model Context Protocol)
+  - Anthropic SDK updates
+
+  # LLM 全般
+  - prompt engineering
+  - LLM evaluation / evals
+  - coding assistants
+  - AI safety / alignment
+
+  # 開発手法
+  - AI-driven development
+  - AI code review
+  - AI testing
+
+sources:
+  tier1:
+    - url: "https://www.anthropic.com/blog/rss"
+      name: "Anthropic Blog"
+    - url: "https://openai.com/blog/rss.xml"
+      name: "OpenAI Blog"
+    - url: "https://deepmind.google/blog/rss.xml"
+      name: "Google DeepMind Blog"
+    - url: "https://github.com/anthropics/claude-code/releases.atom"
+      name: "Claude Code Releases"
+    - url: "https://github.com/anthropics/anthropic-sdk-python/releases.atom"
+      name: "Anthropic SDK Releases"
+
+  tier2:
+    - url: "https://hacker-news.firebaseio.com/v0/topstories.json"
+      name: "Hacker News"
+
+  tier3:
+    - url: "https://simonwillison.net/atom/everything/"
+      name: "Simon Willison's Blog"
+    - url: "https://www.latent.space/feed"
+      name: "Latent Space"

@@ -432,3 +432,138 @@ Owner との設計議論で OrgOS Intelligence の全要件が確定。
 
 ### トリガー
 Owner 指示（設計完了 → 実装フェーズへ移行）
+
+---
+
+## REVIEW-001: T-INT-003 コード・セキュリティレビュー (2026-02-13)
+
+### レビュー対象
+OrgOS Intelligence Phase 3 (OIP-AUTO + PR自動作成) の全新規・変更ファイル
+
+### レビュー結果
+
+| レベル | 件数 | 対応 |
+|--------|------|------|
+| CRITICAL | 1 | 全件修正済み |
+| HIGH | 6 | 全件修正済み |
+| MEDIUM | 8 | 主要な件は修正済み（console.log残留等は LOW として保留） |
+| LOW | 3 | 保留（次フェーズで対応） |
+
+### 主な修正内容
+
+1. **auth.ts**: PEM形式検証追加、base64デコードエラーハンドリング、鍵長チェック、JWT有効期間修正（11分→9.5分）、エラーメッセージサニタイズ
+2. **pr.ts**: GitHub APIエラーハンドリング強化（情報漏洩防止）、utf8ToBase64()で deprecated unescape() を置換、コミットメッセージサニタイズ
+3. **oip-reminder.ts**: KV.put try/catch追加（3日リマインド・7日Hold両方）、失敗時はSkip+continue
+4. **events.ts**: OIPデータ基本検証、PR作成後にstatus更新（ロールバック対応）、PR失敗時はpendingのまま保持
+5. **index.ts**: Cron handler try/catch追加、エラー時Slack通知
+
+### 判定
+全 CRITICAL/HIGH を修正済み。TypeScript ビルド通過。デプロイ可能状態。
+
+---
+
+## TECH-DECISION-002: Intelligence Phase 1 実装完了 (2026-02-13)
+
+### 判断内容
+- orgos-intelligence リポジトリを Cloudflare Workers + Hono + KV で構築
+- Phase 1（Slack Bot なし）として日次レポート生成パイプラインを実装
+
+### 実装内容
+- **情報収集**: RSS/Atom（Tier 1/3）, Hacker News（Tier 2）, Google Custom Search
+- **フィルタリング**: Gemini Flash（gemini-2.0-flash）でバッチスコアリング
+- **深掘り調査**: HIGH トピック × 最大3件/日
+- **OIP-AUTO 生成**: Claude Sonnet で OrgOS 改善提案を自動生成
+- **レポート生成**: Markdown 形式 → GitHub API で OrgOS リポジトリに commit
+- **KV namespace**: INTEL_KV（report cache, OIP counter, search count, config）
+
+### 技術選定
+- Hono: Cloudflare Workers ネイティブ、軽量
+- @google/generative-ai: Gemini Flash API
+- @anthropic-ai/sdk: Claude Sonnet API
+- GitHub API 直接呼出し（Phase 1 では PAT、Phase 3 で App 移行）
+
+### 残作業
+- API キー設定（wrangler secret put）
+- Workers デプロイ（wrangler deploy）
+- 動作確認（手動トリガーでレポート生成テスト）
+- Google Custom Search Engine ID 作成
+
+---
+
+## TECH-DECISION-003: OIP-AUTO Level 判定方式の決定 (2026-02-13)
+
+### 判断内容
+OIP-AUTO PR の Level（0〜3）を誰がどう判定するか。
+
+### 選択肢
+
+| 案 | 方式 | メリット | デメリット |
+|----|------|----------|------------|
+| A (採用) | Intelligence Worker が PR メタデータに Level を埋め込む | Worker 側の Claude Sonnet が変更内容を理解した上で判定可能。定性的判断が正確 | Worker 側の実装が必要 |
+| B | org-tick 側で定量ヒューリスティック（ファイル数・行数）で判定 | 実装が簡単 | 定性的判断ができない。Userland 内の重要度を区別不可 |
+
+### 決定
+**案A を採用**: Intelligence Worker が PR description に `<!-- oip-level: N -->` HTML コメントとして Level を埋め込む。
+
+### 安全策
+- メタデータがない場合 → Level 2（Owner 承認必須）にフォールバック
+- Kernel ファイルが変更に含まれる場合 → Level に関わらず Level 3 に昇格（二重検証）
+- org-tick 側の Eval スクリプト（check-kernel-boundary.sh）が最終防衛線として機能
+
+### 根拠
+レビューで CRITICAL 指摘: 定量ヒューリスティック（5ファイル / 100行の閾値）では、1ファイルでも security.md への変更のような重大な変更を Level 1 と誤判定するリスクがある。定性的判断は変更内容を理解できる Worker 側で行うべき。
+
+### 影響
+- T-INT-003（Intelligence Worker）に Level 埋め込み実装が必要（次の改修で対応）
+- T-INT-004（OS Evals）の org-tick 統合は完了済み
+
+---
+
+## PLAN-UPDATE-010: org-tick オートコンティニュー追加 (2026-02-13)
+
+### 変更内容
+- 追加: T-OS-023（org-tick オートコンティニュー機構 + レビュー設定修正）→ 即 done
+- 修正: CONTROL.yaml の owner_review_policy.mode を "every_n_tasks" → "batch" に変更
+- 追加: org-tick.md に Step 13 オートコンティニュー判定を追加
+
+### 理由
+Owner 報告: レビュー頻度を batch に設定したつもりが毎 tick で止まる。
+- 原因1: 設定値が batch ではなく every_n_tasks のままだった
+- 原因2: org-tick 自体が1回実行で止まる設計だった（batch でもレビューをスキップするだけで、次 tick は手動呼び出しが必要）
+
+### 反省
+当初 ad-hoc で直接修正してしまい、TASKS.yaml 登録も DECISIONS.md 記録もしなかった。
+Owner 指摘により遡及的にタスク化・記録。
+**今後はどんな小さな修正でも、先に TASKS.yaml に登録してから実行する。**
+
+### トリガー
+Owner バグ報告（2026-02-13）
+
+---
+
+## PLAN-UPDATE-009: T-INT-004 OS Evals 実装完了 (2026-02-13)
+
+### 変更内容
+- 完了: T-INT-004（OS Evals 整備 + Level 1 自動承認）→ done
+
+### 実装内容
+- `.claude/evals/` ディレクトリ新設（7ファイル）
+  - `KERNEL_FILES`: Kernel 保護対象ファイル一覧
+  - `run-all.sh`: Eval 一括実行スクリプト（--json / --changed-files 対応）
+  - `check-kernel-boundary.sh`: Kernel ファイル変更検出
+  - `check-schema.sh`: TASKS.yaml / CONTROL.yaml スキーマ検証
+  - `check-agent-defs.sh`: エージェント定義の必須フィールド検証
+  - `check-security.sh`: セキュリティルールの存在・一貫性検証
+  - `check-oip-format.sh`: OIP-AUTO 必須フィールド検証
+- `org-tick.md` に Step 9A 追加（OIP PR 検出 + Eval 判定）
+- `.ai/DESIGN/ORGOS_EVALS.md` 設計書作成
+
+### レビュー結果
+- CRITICAL 1 + HIGH 4 を全件修正済み
+- 全 5 Eval が現在の OrgOS 状態で PASS
+
+### 影響
+- T-INT-005（ロールバック機構）のブロック解除
+
+### トリガー
+Tick #23 での自動タスク選択
