@@ -41,22 +41,30 @@ fi
 
 ### 3. 一時ディレクトリでクローン
 
+**重要**: 変数やカレントディレクトリは Bash 呼び出し間で保持されないため、
+以下は **1つの Bash 呼び出し** で実行すること。
+
 ```bash
-WORK_DIR=$(mktemp -d)
-cd $WORK_DIR
-git clone --depth 1 --branch $VERSION https://github.com/Yokotani-Dev/OrgOS.git
+# 一時ディレクトリを作成し、そこにクローン（プロジェクト直下に OrgOS/ を作らない）
+WORK_DIR=$(mktemp -d) && git clone --depth 1 --branch $VERSION https://github.com/Yokotani-Dev/OrgOS.git "$WORK_DIR/OrgOS" && echo "WORK_DIR=$WORK_DIR"
 ```
+
+クローン先は `$WORK_DIR/OrgOS/` であり、プロジェクトディレクトリではない。
+`echo` で出力された `WORK_DIR` のパスを以降のステップで使用する。
 
 ### 4. ディレクトリ作成
 
 ```bash
-# プロジェクトディレクトリに戻り、必要なディレクトリを作成
+# プロジェクトディレクトリで必要なディレクトリを作成
 mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
   .ai/RESOURCES/designs .ai/RESOURCES/references \
   .ai/RESOURCES/code-samples .claude/commands .claude/agents
 ```
 
 ### 5. ファイルコピー
+
+**重要**: Step 3 で取得した `WORK_DIR` のパスを使い、`$WORK_DIR/OrgOS/` からファイルをコピーする。
+ファイルコピーは Step 3 の `WORK_DIR` パスを参照して **1つの Bash 呼び出し** で実行すること。
 
 `.orgos-manifest.yaml` の `core` セクションに定義されたファイルをコピー。
 
@@ -99,9 +107,6 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
 | `owner_review_policy.mode` | v0.6.0 | 既存の `every_n_tasks` から推測 |
 | `owner_review_policy.tasks_since_last_review` | v0.6.0 | `0` |
 | `owner_literacy_level` | v0.5.0 | `"intermediate"` |
-| `codex.auto_exec` | v0.14.0 | `true` |
-| `codex.sandbox` | v0.14.0 | `"workspace-write"` |
-| `codex.approval` | v0.14.0 | `"on-request"` |
 
 #### 6.2 マイグレーションロジック
 
@@ -149,8 +154,21 @@ def migrate_control_yaml(control):
 
 ### 7. クリーンアップ
 
+Step 3 で取得した `WORK_DIR` のパスを使って一時ディレクトリを削除する。
+
 ```bash
 rm -rf $WORK_DIR
+```
+
+**注意**: プロジェクトディレクトリ内に `OrgOS/` フォルダが残っていないか確認し、
+もし存在すれば削除する（過去バージョンの不具合で作成された可能性がある）。
+
+```bash
+# プロジェクト直下に OrgOS/ が残っていれば削除（過去の不具合対応）
+if [ -d "./OrgOS" ] && [ -d "./OrgOS/.git" ]; then
+  rm -rf ./OrgOS
+  echo "⚠️ プロジェクト直下の OrgOS/ フォルダを削除しました（過去バージョンの残留物）"
+fi
 ```
 
 ### 8. ユーザー影響の変更を抽出
@@ -237,18 +255,6 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 - owner_literacy_level: "intermediate"（新規追加）
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔧 Codex CLI セットアップ（v0.14.0〜）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-コーディング・レビューに Codex CLI を使用するようになりました。
-未セットアップの場合は以下を実行してください:
-
-  npm install -g @openai/codex
-  codex --login
-
-※ ChatGPT Plus/Pro/Team アカウントが必要です
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️  Claude Code の再起動が必要です
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -280,25 +286,6 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 - .ai/DASHBOARD.md
 - .ai/OWNER_INBOX.md
 - .ai/OWNER_COMMENTS.md
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🔧 Codex CLI セットアップ（コーディング・レビュー用）
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-OrgOS はコーディングとレビューに OpenAI Codex CLI を使用します。
-以下の手順でセットアップしてください:
-
-1. Codex CLI をインストール
-   npm install -g @openai/codex
-
-2. ChatGPT にログイン
-   codex --login
-
-   ※ ChatGPT Plus/Pro/Team アカウントが必要です
-   ※ ブラウザが開くので、ChatGPT アカウントでログインしてください
-
-3. 動作確認
-   codex exec "echo hello"
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ⚠️  Claude Code の再起動が必要です
