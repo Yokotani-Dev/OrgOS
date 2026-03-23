@@ -21,12 +21,13 @@ publish:
   - ".ai/TEMPLATES/DASHBOARD.md"
   - ".ai/TEMPLATES/OWNER_INBOX.md"
   - ".ai/TEMPLATES/OWNER_COMMENTS.md"
-  # コマンド（通常利用: 5コマンド）
+  # コマンド（通常利用: 6コマンド）
   - ".claude/commands/org-start.md"
   - ".claude/commands/org-tick.md"
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-import.md"
   - ".claude/commands/org-settings.md"
+  - ".claude/commands/issue.md"
   # コマンド（Dev環境: +3コマンド）
   - ".claude/commands/org-release.md"
   - ".claude/commands/org-publish.md"
