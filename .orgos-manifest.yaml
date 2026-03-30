@@ -37,13 +37,12 @@ publish:
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
   # エージェント（13エージェント）
-  - ".claude/agents/manager.md"
   - ".claude/agents/org-planner.md"
   - ".claude/agents/org-architect.md"
   - ".claude/agents/org-integrator.md"
   - ".claude/agents/org-scribe.md"
   - ".claude/agents/org-os-maintainer.md"
-  - ".claude/agents/CODEX_WORKER_GUIDE.md"
+  - ".claude/agents/org-implementer.md"
   - ".claude/agents/org-reviewer.md"
   - ".claude/agents/org-security-reviewer.md"
   - ".claude/agents/org-build-fixer.md"
@@ -92,8 +91,6 @@ publish:
   - ".claude/scripts/run-parallel.sh"
   # 設定
   - ".claude/settings.json"
-  # Hooks
-  - ".claude/hooks/SessionStart.sh"
   # Git hooks
   - ".githooks/pre-push"
   # GitHub Actions

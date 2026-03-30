@@ -235,3 +235,4 @@ graph TD
 - `.claude/skills/coding-standards.md` - コーディング規約
 - `.claude/skills/backend-patterns.md` - バックエンドパターン
 - `.claude/skills/frontend-patterns.md` - フロントエンドパターン
+- `.claude/rules/patterns.md` - 共通パターン

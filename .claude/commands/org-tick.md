@@ -232,8 +232,6 @@ def should_suggest_session_end(context):
 
 | チェック | 検出内容 | 対応 |
 |----------|----------|------|
-| **ad-hoc 作業** | TASKS.yaml にないファイル変更・コミット | TASKS.yaml に追加 or RUN_LOG に記録 |
-| **スコープ外作業** | project_scope 外の依頼を実行 | 警告を出して Owner に確認 |
 | **スコープ変更** | 新しい要件、取り下げられた要件 | PROJECT.md + TASKS.yaml を更新 |
 | **タスク追加** | 実装中に判明した追加作業 | TASKS.yaml に新タスク追加 |
 | **依存関係変更** | 前提が変わった、順序変更が必要 | TASKS.yaml の deps を修正 |
@@ -249,29 +247,6 @@ def should_suggest_session_end(context):
 # 疑似コード
 def check_plan_sync():
     updates_needed = []
-
-    # ad-hoc 作業の検出（OIP-001）
-    # STATUS.md の RUN_LOG に記録されているが TASKS.yaml にないタスク
-    adhoc_work = detect_adhoc_work()
-    if adhoc_work:
-        for work in adhoc_work:
-            if work.is_significant:  # 中〜大のタスクと判定
-                updates_needed.append({
-                    "type": "add_task",
-                    "task": create_task_from_adhoc(work),
-                    "warning": f"⚠️ ad-hoc 作業を検出: {work.description}"
-                })
-
-    # スコープ外作業の検出（OIP-001）
-    # project_scope と異なる作業が行われていないか
-    scope_violations = detect_scope_violations()
-    if scope_violations:
-        for violation in scope_violations:
-            updates_needed.append({
-                "type": "warning",
-                "message": f"⚠️ スコープ外作業: {violation.description}",
-                "action": "Owner に確認が必要"
-            })
 
     # 新しい課題が発生した
     if new_issues_detected():
@@ -341,252 +316,6 @@ def check_plan_sync():
 
 ---
 
-### 6A. ゴール達成確認・見直し提案
-
-`.ai/GOALS.yaml` を確認し、Milestone 達成時や定期的なタイミングでゴールの見直しを提案する。
-
-#### 6A.1 Milestone 達成確認
-
-Milestone の全タスクが完了したか確認：
-
-```python
-# 疑似コード
-def check_milestone_completion():
-    """
-    Milestone 達成確認
-
-    Returns:
-        {
-            "milestone_id": str | None,
-            "milestone_title": str | None,
-            "completed": bool,
-            "next_milestone": dict | None
-        }
-    """
-    goals = read_goals_yaml()
-
-    for milestone in goals.milestones:
-        if milestone.status != "active":
-            continue
-
-        # この Milestone に紐づく Project をすべて取得
-        projects = [p for p in goals.projects if p.milestone_id == milestone.id]
-
-        # 各 Project に紐づく Task をすべて取得
-        all_tasks = []
-        for project in projects:
-            tasks = [t for t in TASKS if t.project_id == project.id]
-            all_tasks.extend(tasks)
-
-        # すべて完了しているか確認
-        if all_tasks and all(t.status == "done" for t in all_tasks):
-            return {
-                "milestone_id": milestone.id,
-                "milestone_title": milestone.title,
-                "completed": True,
-                "next_milestone": get_next_milestone(milestone)
-            }
-
-    return {"completed": False}
-```
-
-#### 6A.2 Milestone 達成時の対応
-
-Milestone が完了していたら、Owner に確認：
-
-```markdown
-✅ マイルストーン達成: <Milestone Title>
-
-📊 全体の進捗:
-   Vision: <Vision Title>
-   [1] ✅ M-001: <Milestone 1> → 達成（<完了日>）
-   [2] 🔄 M-002: <Milestone 2> → 進行中
-   [3] ⏳ M-003: <Milestone 3> → 未着手
-
-📌 次のステップ:
-
-[A] このまま次のマイルストーン「<Next Milestone>」に進む（推奨）
-    → すでにタスクがあるので続行
-
-[B] 全体計画を見直す
-    → Vision や Milestone を再設定します
-
-どちらにしますか？
-```
-
-**[A] を選択した場合：**
-- GOALS.yaml を更新（完了した Milestone を completed に、次の Milestone を active に）
-- DECISIONS.md に記録
-- そのまま Tick を続行
-
-**[B] を選択した場合：**
-- `/org-goals review` を実行
-- 見直し後、Tick を再開
-
-#### 6A.3 定期的な見直し提案
-
-以下の条件で「ゴール見直し」を提案：
-
-```python
-# 疑似コード
-def should_suggest_goal_review():
-    """
-    ゴール見直しを提案すべきか判定
-
-    Returns:
-        {
-            "suggest": bool,
-            "reason": str,
-            "trigger": str
-        }
-    """
-
-    # トリガー1: 20タスク完了ごと
-    completed_tasks_count = len([t for t in TASKS if t.status == "done"])
-    if completed_tasks_count > 0 and completed_tasks_count % 20 == 0:
-        last_review = read_last_goal_review_date()
-        if not recently_reviewed(last_review, days=7):  # 直近7日以内に見直していない
-            return {
-                "suggest": True,
-                "reason": f"{completed_tasks_count} タスク完了",
-                "trigger": "20_tasks_completed"
-            }
-
-    # トリガー2: 新規依頼が既存ゴールと乖離
-    # （これは新規依頼を受けた時点で判断するので、ここでは検出不要）
-
-    # トリガー3: Owner の明示的依頼
-    if owner_requested_goal_review():
-        return {
-            "suggest": True,
-            "reason": "Owner からの依頼",
-            "trigger": "owner_request"
-        }
-
-    return {"suggest": False}
-```
-
-#### 6A.4 見直し提案の表示
-
-```markdown
-📊 定期チェック: 全体計画の見直し
-
-<completed_tasks_count> 個のタスクが完了しました。
-現在のゴール構造が適切か確認しませんか？
-
-現在の Vision: <Vision Title>
-現在の Milestone: <Active Milestone Title>
-
-[A] このまま続ける（推奨）
-    → 計画は現状のまま進めます
-
-[B] 全体計画を見直す
-    → Vision や Milestone を再設定します
-
-どちらにしますか？
-```
-
-**[A] を選択した場合：**
-- 見直し日時を記録
-- そのまま Tick を続行
-
-**[B] を選択した場合：**
-- `/org-goals review` を実行
-- 見直し後、Tick を再開
-
-#### 6A.5 新規依頼の位置づけ判断
-
-（新規依頼を受けたときに実行）
-
-OWNER_COMMENTS.md に新しい依頼があった場合、既存ゴールとの関連を判断：
-
-```python
-# 疑似コード
-def categorize_new_request(request):
-    """
-    新しい依頼を既存ゴール構造に位置づける
-
-    Returns:
-        {
-            "category": "task" | "project" | "milestone" | "vision",
-            "parent_id": str | None,
-            "needs_confirmation": bool,
-            "suggestion": str
-        }
-    """
-    goals = read_goals_yaml()
-
-    # AI で依頼内容を分析
-    analysis = analyze_request(request)
-
-    # Vision に関連するか？
-    if analysis.related_to_vision(goals.vision):
-        # Milestone に関連するか？
-        for milestone in goals.milestones:
-            if analysis.related_to_milestone(milestone):
-                # Project に関連するか？
-                for project in goals.projects:
-                    if analysis.related_to_project(project):
-                        return {
-                            "category": "task",
-                            "parent_id": project.id,
-                            "needs_confirmation": False,
-                            "suggestion": f"Project {project.title} のタスクとして追加"
-                        }
-
-                # 新しい Project
-                return {
-                    "category": "project",
-                    "parent_id": milestone.id,
-                    "needs_confirmation": False,
-                    "suggestion": f"Milestone {milestone.title} の新しい Project として追加"
-                }
-
-        # 新しい Milestone の可能性
-        return {
-            "category": "milestone",
-            "parent_id": goals.vision.id,
-            "needs_confirmation": True,  # Owner に確認
-            "suggestion": "新しい Milestone として追加しますか？"
-        }
-
-    # Vision 拡大の可能性
-    return {
-        "category": "vision",
-        "parent_id": None,
-        "needs_confirmation": True,  # Owner に確認
-        "suggestion": "Vision を拡大しますか？"
-    }
-```
-
-**needs_confirmation=True の場合:**
-
-```markdown
-📌 新しい依頼の位置づけを確認させてください
-
-依頼内容: 「<request>」
-
-判断:
-- 既存の Vision「<Vision Title>」に関連しますが、
-  既存の Milestone「<Active Milestone>」とは異なる方向性です。
-
-提案:
-[A] 新しい Milestone として追加（推奨）
-    → M-00X「<推定タイトル>」
-    → Vision は変更なし
-
-[B] Vision を拡大する
-    → 「<Old Vision>」→「<New Vision>」
-    → 既存 Milestone と新 Milestone を並列に配置
-
-[C] 別プロジェクトとして独立させる
-    → 現在の Vision とは別のプロジェクトとして管理
-
-どれにしますか？
-```
-
----
-
 ### 7. 状況診断とエージェント自動選択
 
 状況を分析し、必要なエージェントを自動的に選択・実行する。
@@ -629,24 +358,6 @@ def diagnose_and_select_agents():
         if has_unclear_requirements():
             agents_to_run.append("org-planner")
         if needs_architecture_decision():
-            agents_to_run.append("org-architect")
-
-    # P1.5: DESIGN ステージ特別処理（設計ドキュメント主体的生成）
-    # 参照: .claude/rules/design-documentation.md, .claude/skills/research-skill.md
-    if stage == "DESIGN":
-        # DESIGN 遷移直後: 設計タスクを自動バックログ
-        if not design_tasks_exist_in_tasks_yaml():
-            auto_generate_design_tasks()
-            # T-DESIGN-RESEARCH, T-DESIGN-ARCH, T-DESIGN-CONTRACT 等を TASKS.yaml に追加
-            # プロジェクト種別（BRIEF.md）に応じてタスクを選択
-
-        # リサーチ未完了なら最優先で実行（WebSearch で最新情報収集）
-        if not research_task_completed():
-            # BRIEF.md からキーワード抽出 → WebSearch → .ai/DESIGN/TECH_RESEARCH.md に保存
-            agents_to_run.insert(0, "org-architect")  # リサーチ込みで実行
-
-        # 設計ドキュメント未作成なら生成
-        elif not design_docs_completed():
             agents_to_run.append("org-architect")
 
     # P2: 実装フェーズ
@@ -728,59 +439,8 @@ to_run = executable[:slots]
 2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
 
 3. 実行方法を決定：
-   - **`codex.auto_exec: true`** → Manager が Bash 経由で自動実行（下記参照）
+   - **`codex.auto_exec: true`** → バックグラウンドで自動実行
    - **`codex.auto_exec: false`（デフォルト）** → Ownerに実行コマンドを提示
-
-#### 8.2.1 auto_exec: true の場合（Manager が自動実行）
-
-**実行前チェック（必須）：**
-
-Codex タスクを実行する前に、必ず以下を確認する：
-
-```bash
-# 1. インストール確認
-command -v codex || echo "NOT_INSTALLED"
-
-# 2. ログイン確認
-[ -f "$HOME/.codex/auth.json" ] || [ -f "$HOME/.config/codex/auth.json" ] || echo "NOT_LOGGED_IN"
-```
-
-- `NOT_INSTALLED` → Owner に `npm install -g @openai/codex` を案内し、タスクを blocked にする
-- `NOT_LOGGED_IN` → Owner に `codex --login` を案内し、タスクを blocked にする
-- 両方 OK → 実行に進む。**「Codex CLI で実行します」と明示する**
-
-Manager が Bash ツールで `codex exec` を直接呼び出す：
-
-```bash
-# 単体実行（バックグラウンド）
-# 重要: Work Order と CODEX_WORKER_GUIDE.md を worktree にコピーしてから実行
-# （git worktree は untracked files を共有しないため）
-mkdir -p .worktrees/<TASK_ID>/.ai/CODEX/ORDERS
-cp .ai/CODEX/ORDERS/<TASK_ID>.md .worktrees/<TASK_ID>/.ai/CODEX/ORDERS/
-mkdir -p .worktrees/<TASK_ID>/.claude/agents
-cp .claude/agents/CODEX_WORKER_GUIDE.md .worktrees/<TASK_ID>/.claude/agents/
-
-codex exec -s workspace-write -C .worktrees/<TASK_ID> \
-  "CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/<TASK_ID>.md の指示に従って実行せよ" \
-  2>&1 | tee .ai/CODEX/LOGS/<TASK_ID>.log
-```
-
-**実行フロー：**
-
-1. Worktree を作成（まだない場合）
-   ```bash
-   git worktree add .worktrees/<TASK_ID> -b task/<TASK_ID>
-   ```
-2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
-3. Work Order と CODEX_WORKER_GUIDE.md を worktree にコピー（untracked files は worktree 間で共有されないため）
-4. `codex exec` を Bash ツールで実行（`run_in_background: true`）
-4. 結果を回収（次の Tick、または TaskOutput で確認）
-5. タスクステータスを更新
-
-**注意:**
-- デフォルトモデルは `gpt-5.3-codex-spark`（ChatGPT 最上位プランで利用可能）
-- `-m` オプション不要（デフォルトで最上位モデルが使われる）
-- sandbox は CONTROL.yaml の `codex.sandbox` に従う
 
 **Claude subagent タスク：**
 - Task ツールで該当エージェントを起動
@@ -806,7 +466,7 @@ Ownerに以下を表示：
 ./.claude/scripts/run-parallel.sh T-003 T-004
 
 # または個別実行
-cd .worktrees/T-003 && codex exec "CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/T-003.md の指示に従って実行せよ"
+cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-003.md に従って実行"
 ```
 
 実行後、再度 `/org-tick` で結果を回収します。

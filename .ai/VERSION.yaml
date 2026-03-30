@@ -1,4 +1,4 @@
-# OrgOS Version (内部管理用)
+# OrgOS WebConsole Version
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
 current: "0.21.0"
@@ -75,12 +75,16 @@ history:
     date: "2025-01-19"
     description: "Add /org-release command"
   - version: "0.1.0"
-    date: "2025-01-19"
-    description: "Initial release with export/import support"
-    files_changed:
-      - ".ai/VERSION.yaml"
-      - ".ai/CHANGELOG.md"
-      - ".orgos-manifest.yaml"
-      - ".claude/commands/org-export.md"
-      - ".claude/commands/org-import.md"
-      - ".claude/commands/org-*.md"
+    date: "2026-01-23"
+    description: "Initial MVP release"
+    features:
+      - "GitHub OAuth authentication"
+      - "Repository registration and management"
+      - "OrgOS project dashboard viewing"
+      - "Owner question answering via OWNER_COMMENTS"
+      - "Task approval/rejection workflow"
+      - "Cross-project task priority management"
+      - "Slack webhook notifications"
+      - "Web Push notifications"
+      - "30-second auto-polling"
+      - "Responsive mobile UI"
