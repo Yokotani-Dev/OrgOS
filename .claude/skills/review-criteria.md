@@ -4,6 +4,15 @@
 
 ---
 
+## Iron Law
+
+> レビューの鉄則。例外なし。
+
+1. **Implementer の自己報告を信用しない** - 必ず自分で検証する
+2. **CRITICAL 指摘が1つでもあれば APPROVE しない** - 「他は全部良いから」は通らない
+
+---
+
 ## 重要度レベル
 
 | レベル | 意味 | 対応 |
@@ -179,6 +188,6 @@
 
 ## 参考資料
 
-- [.claude/rules/security.md](security.md) - セキュリティルール
-- [.claude/rules/testing.md](testing.md) - テストルール
+- [.claude/skills/security.md](security.md) - セキュリティルール
+- [.claude/skills/testing.md](testing.md) - テストルール
 - [.claude/skills/coding-standards.md](../skills/coding-standards.md) - コーディング規約

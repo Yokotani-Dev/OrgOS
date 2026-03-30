@@ -88,8 +88,7 @@ supervisor_review:
   # レビュードキュメント保存先
   review_docs_dir: ".ai/SUPERVISOR_REVIEW/"
 
-  # 最後のレビュー日時（ランタイム）
-  last_review_at: null
+  # 最後のレビュー日時（ランタイム） → RUNTIME.yaml の last_review_at を参照
 
 # Project Handoff（プロジェクト引き継ぎ）
 # 上司 → 部下、部下 → 上司などの引き継ぎ情報を記録
@@ -118,8 +117,7 @@ handoff:
   # 引き継ぎドキュメント
   handoff_doc: ".ai/HANDOFF.md"
 
-  # 最後の引き継ぎ日時（ランタイム）
-  last_handoff_at: null
+  # 最後の引き継ぎ日時（ランタイム） → RUNTIME.yaml の last_handoff_at を参照
 
 # Owner Review ポリシー
 # /org-start または /org-settings で設定
@@ -134,7 +132,7 @@ owner_review_policy:
   on_stage_transition: true       # ステージ遷移時は常にレビュー
   always_before_merge_to_main: true
   always_before_release: true
-  tasks_since_last_review: 1      # カウンター（ランタイム）
+  # tasks_since_last_review → RUNTIME.yaml を参照
 
 # Codex worker 設定 (OpenAI Codex CLI)
 codex:
@@ -188,11 +186,17 @@ eval_policy:
   # 評価結果の記録先
   record_to: "DECISIONS.md"
 
-  # 最後の評価タイムスタンプ（ランタイム）
-  last_eval_at: null
-  tasks_since_last_eval: 0
+  # 最後の評価タイムスタンプ・カウンター（ランタイム） → RUNTIME.yaml を参照
+
+# org-evolve スケジュール設定
+evolve:
+  enabled: true
+  schedule: "weekly"
+  cycles_per_run: 3
+  auto_push: true
+  slack_webhook: ""
 
 # ランタイム設定
 runtime:
   max_parallel_tasks: 6  # 同時実行タスク数上限
-  tick_count: 30         # Tick カウンタ
+  # tick_count → RUNTIME.yaml を参照

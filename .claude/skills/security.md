@@ -4,6 +4,15 @@
 
 ---
 
+## Iron Law
+
+> セキュリティの鉄則。例外なし。
+
+1. **シークレットをコードにハードコードしない** - 「テスト用だから」は言い訳
+2. **ユーザー入力は必ずバリデーションする** - 信頼できる入力は存在しない
+
+---
+
 ## 必須チェック（コミット前）
 
 | # | カテゴリ | チェック内容 |
@@ -227,6 +236,70 @@ module.exports = {
   },
 };
 ```
+
+---
+
+## 自動セキュリティスキャン
+
+> GitHub CodeQL スキルに基づくセキュリティ自動化パターン
+
+### GitHub Actions でのセキュリティスキャン
+
+```yaml
+# .github/workflows/security.yml
+name: Security Scan
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 9 * * 1' # 毎週月曜 9:00
+
+permissions:
+  security-events: write
+  contents: read
+
+jobs:
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript-typescript
+          queries: security-and-quality
+      - uses: github/codeql-action/analyze@v3
+
+  dependency-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm audit --audit-level=high
+      - run: npx audit-ci --high
+```
+
+### npm audit の定期実行
+
+```bash
+# 高リスクの脆弱性を確認
+npm audit --audit-level=high
+
+# 自動修正可能な脆弱性を修正
+npm audit fix
+
+# 破壊的変更を伴う修正（手動確認推奨）
+npm audit fix --force
+```
+
+### セキュリティスキャンの CI/CD 統合チェックリスト
+
+| チェック | ツール | タイミング |
+|---------|--------|-----------|
+| SAST（静的解析） | CodeQL / Semgrep | PR 作成時 |
+| 依存関係脆弱性 | npm audit / Dependabot | 毎日 |
+| シークレット検出 | git-secrets / TruffleHog | pre-commit |
+| ライセンス確認 | license-checker | PR 作成時 |
 
 ---
 

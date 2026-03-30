@@ -1,6 +1,9 @@
 # フロントエンドパターン
 
-> React / Next.js 開発のベストプラクティス
+> React / Next.js 開発のベストプラクティス（Next.js + TypeScript プロジェクト向け）
+
+> **注意**: このスキルは Next.js + TypeScript + Supabase プロジェクト向けです。
+> 別の技術スタックを使用する場合は、プロジェクトに合わせてカスタマイズしてください。
 
 ---
 
@@ -242,6 +245,146 @@ const useApp = () => {
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
 };
+```
+
+---
+
+## Next.js パフォーマンス最適化
+
+> Vercel react-best-practices (259K installs) に基づく Next.js 固有の最適化パターン
+
+### CRITICAL: Waterfall の排除
+
+データフェッチの連鎖（Waterfall）はパフォーマンスの最大の敵。
+
+```tsx
+// ❌ 悪い例: 直列フェッチ（Waterfall）
+async function Page() {
+  const user = await getUser();        // 200ms
+  const posts = await getPosts(user.id); // 300ms → 合計 500ms
+  return <Feed user={user} posts={posts} />;
+}
+
+// ✅ 良い例: 並列フェッチ
+async function Page() {
+  const userPromise = getUser();
+  const postsPromise = getPosts(); // user.id が不要なら並列化
+  const [user, posts] = await Promise.all([userPromise, postsPromise]);
+  return <Feed user={user} posts={posts} />;
+}
+
+// ✅ 良い例: Suspense で段階的表示
+async function Page() {
+  const user = await getUser();
+  return (
+    <>
+      <UserHeader user={user} />
+      <Suspense fallback={<PostsSkeleton />}>
+        <PostsList userId={user.id} />
+      </Suspense>
+    </>
+  );
+}
+```
+
+### CRITICAL: Bundle Size の最適化
+
+```tsx
+// ❌ 悪い例: barrel import（ツリーシェイキング不可）
+import { Button, Icon, Modal } from '@/components';
+
+// ✅ 良い例: 直接 import
+import { Button } from '@/components/Button';
+import { Icon } from '@/components/Icon';
+import { Modal } from '@/components/Modal';
+
+// ❌ 悪い例: 重いライブラリを同期 import
+import { format } from 'date-fns';
+import lodash from 'lodash';
+
+// ✅ 良い例: 動的 import + 軽量代替
+import { format } from 'date-fns/format'; // サブパス import
+// lodash の代わりにネイティブメソッド or 個別 import
+import groupBy from 'lodash/groupBy';
+
+// ✅ 良い例: サードパーティを動的ロード
+const HeavyChart = dynamic(() => import('@/components/Chart'), {
+  loading: () => <ChartSkeleton />,
+  ssr: false,
+});
+```
+
+### HIGH: サーバーサイドパフォーマンス
+
+```tsx
+// ✅ React.cache() でリクエスト内のデータ重複排除
+import { cache } from 'react';
+
+const getUser = cache(async (id: string) => {
+  return db.user.findUnique({ where: { id } });
+});
+
+// 同じリクエスト内で複数回呼んでも1回しか実行されない
+async function Layout() {
+  const user = await getUser(userId); // DB クエリ 1回目
+  return <Nav user={user}><Slot /></Nav>;
+}
+
+async function Page() {
+  const user = await getUser(userId); // キャッシュヒット（DB クエリなし）
+  return <Profile user={user} />;
+}
+
+// ✅ after() でレスポンス後に非同期処理
+import { after } from 'next/server';
+
+export async function POST(request: Request) {
+  const data = await request.json();
+  const result = await saveData(data);
+
+  after(async () => {
+    await logAnalytics(result); // レスポンス後に実行
+    await sendNotification(result);
+  });
+
+  return Response.json(result); // 先にレスポンスを返す
+}
+```
+
+### MEDIUM: Re-render の最適化
+
+```tsx
+// ❌ 悪い例: 派生値を state にする（無駄な re-render の原因）
+const [items, setItems] = useState<Item[]>([]);
+const [filteredItems, setFilteredItems] = useState<Item[]>([]);
+const [filter, setFilter] = useState('');
+
+useEffect(() => {
+  setFilteredItems(items.filter(item => item.name.includes(filter)));
+}, [items, filter]);
+
+// ✅ 良い例: useMemo で派生値を計算（state を減らす）
+const [items, setItems] = useState<Item[]>([]);
+const [filter, setFilter] = useState('');
+
+const filteredItems = useMemo(
+  () => items.filter(item => item.name.includes(filter)),
+  [items, filter],
+);
+
+// ✅ 良い例: 重い更新を useDeferredValue で遅延
+function SearchResults({ query }: { query: string }) {
+  const deferredQuery = useDeferredValue(query);
+  const results = useMemo(() => search(deferredQuery), [deferredQuery]);
+  return <List items={results} />;
+}
+
+// ✅ 良い例: startTransition で低優先度更新
+function handleTabChange(tab: string) {
+  startTransition(() => {
+    setActiveTab(tab); // UI のブロックなしに更新
+  });
+}
 ```
 
 ---
@@ -552,6 +695,40 @@ const Modal = ({ isOpen, onClose, children }: ModalProps) => {
     </div>
   );
 };
+```
+
+---
+
+## React 19 対応
+
+### forwardRef の廃止
+
+```tsx
+// ❌ React 18 以前: forwardRef が必要
+const Input = forwardRef<HTMLInputElement, InputProps>((props, ref) => (
+  <input ref={ref} {...props} />
+));
+
+// ✅ React 19: ref は通常の prop
+function Input({ ref, ...props }: InputProps & { ref?: React.Ref<HTMLInputElement> }) {
+  return <input ref={ref} {...props} />;
+}
+```
+
+### use() API
+
+```tsx
+// ❌ 以前: useContext() のみ
+const theme = useContext(ThemeContext);
+
+// ✅ React 19: use() は条件付きで使える
+function Component({ isLoggedIn }: { isLoggedIn: boolean }) {
+  if (isLoggedIn) {
+    const user = use(UserContext); // 条件分岐内で使用可能
+    return <Dashboard user={user} />;
+  }
+  return <LoginPage />;
+}
 ```
 
 ---

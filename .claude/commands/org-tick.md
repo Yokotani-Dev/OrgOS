@@ -1004,8 +1004,10 @@ git branch -d task/<TASK_ID>-<slug>
 ```
 
 ### 12. 台帳更新（org-scribe）
-- `DASHBOARD.md` と `RUN_LOG.md` と `STATUS.md` を更新
-- CONTROL.yaml の runtime.tick_count を+1
+- `RUN_LOG.md`: 実行ログを追記
+- `STATUS.md`: タスク集計・ブロッカーを更新（Manager/エージェント向け）
+- `DASHBOARD.md`: Owner 向け状況を更新（Stage / Next Action / Progress）
+- RUNTIME.yaml の tick_count を+1（tasks_since_last_review / tasks_since_last_eval も更新）
 - 学習抽出の提案（セッション終了時）
 
 ### 13. オートコンティニュー判定

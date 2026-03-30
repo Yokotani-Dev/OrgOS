@@ -1,0 +1,755 @@
+# Task Archive (SSOT)
+# done タスクのアーカイブ。TASKS.yaml の軽量化のため分離。
+# 検索用途で参照する。新規タスクは TASKS.yaml に登録すること。
+
+archived_tasks:
+
+  # === OrgOS 改善タスク ===
+
+  - id: T-OS-001
+    title: "セッション間メモリ永続化（Stop フック + sessions フォルダ）"
+    status: done
+    deps: []
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
+    allowed_paths: [".claude/hooks/", ".ai/sessions/", ".ai/LEARNED/"]
+    acceptance:
+      - "Stop フックがセッション学習を抽出・保存"
+      - ".ai/sessions/ に日次ログが生成される"
+      - "SessionStart で前回の学びをロード"
+    notes: "記事参照: PreCompact + Stop + SessionStart パターン"
+
+  - id: T-OS-002
+    title: "継続学習スキル（/org-learn コマンド）"
+    status: done
+    deps: ["T-OS-001"]
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
+    allowed_paths: [".claude/commands/", ".claude/skills/learned/"]
+    acceptance:
+      - "/org-learn コマンドが動作する"
+      - "パターンが .claude/skills/learned/ に保存される"
+      - "次回セッションで自動参照される"
+    notes: "記事参照: Continuous Learning Skill"
+
+  - id: T-OS-003
+    title: "評価ループ（CONTROL.yaml 拡張 + 評価ポリシー）"
+    status: done
+    deps: []
+    owner_role: "org-implementer"  # 歴史的記録（当時は org-implementer を使用）
+    allowed_paths: [".ai/CONTROL.yaml", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "CONTROL.yaml に eval_policy セクション追加"
+      - "チェックポイント評価が /org-tick で動作"
+      - "評価結果が DECISIONS.md に記録される"
+    notes: "記事参照: Verification Loops and Evals"
+
+  - id: T-OS-004
+    title: "上司レビューモード（スーパーバイザーレビュー機能）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "/org-start で「作業者」「上司レビュー要否」を質問"
+      - "CONTROL.yaml に supervisor_review セクション追加"
+      - "重要な判断時にレビュードキュメント自動生成（.ai/SUPERVISOR_REVIEW/）"
+      - "計画乖離を自動検知（BRIEF.md とのずれ）"
+      - "レビュー承認待ち状態で停止する仕組み"
+    notes: |
+      3つのモード:
+      1. 自分 + レビューあり（重要な判断で上司レビューをリマインド）
+      2. 自分のみ（上司レビューなし）
+      3. 部下 + スーパーバイザー（部下が作業、上司レビュー必須）
+
+  - id: T-OS-005
+    title: "プロジェクト引き継ぎ機能"
+    status: done
+    deps: ["T-OS-004"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/hooks/", "CLAUDE.md"]
+    acceptance:
+      - "CONTROL.yaml に handoff セクション追加"
+      - "引き継ぎドキュメント（.ai/HANDOFF.md）自動生成"
+      - "SessionStart フックで引き継ぎ検知"
+      - "引き継ぎ時の注意事項を表示"
+    notes: |
+      引き継ぎパターン:
+      - 上司が BRIEF → 要件定義 → git push
+      - 部下が git pull → /org-tick で続きから作業
+      - 引き継ぎ情報（誰から誰へ、どこまで完了、注意事項）を記録
+
+  - id: T-OS-006
+    title: "ゴール階層管理・動的計画再構築機能"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - ".ai/GOALS.yaml 新規作成（Vision/Milestone/Project 階層管理）"
+      - "/org-start で GOALS.yaml 自動生成（BRIEF.md から Vision 抽出）"
+      - "/org-tick で Milestone 達成確認・見直し提案"
+      - "/org-goals コマンド作成（ゴール可視化・編集）"
+      - "DASHBOARD.md に Vision/Milestone 表示"
+      - "新規依頼の位置づけ自動判断（Vision/Milestone/Project/Task）"
+      - "GOALS.yaml history にゴール変更履歴を記録"
+    notes: |
+      OIP-006 参照。
+      ユーザーの依頼に応じてゴールを再構造化し、全体整合のある計画を維持。
+      Vision → Milestone → Project → Task の4階層で管理。
+      Milestone 達成時・新規依頼が乖離時・20タスク完了ごとに見直し提案。
+
+  - id: T-OS-007
+    title: "成果物管理機能（outputs/ フォルダ構造 + 資料複製ルール）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["outputs/", ".gitignore", "CLAUDE.md", ".claude/agents/AGENTS.md", ".claude/rules/"]
+    acceptance:
+      - "outputs/ フォルダ構造の設計・実装（日付別 + タスクID別）"
+      - ".gitignore に outputs/ の扱いを追加"
+      - "CLAUDE.md に成果物管理ルールを追加"
+      - "AGENTS.md（Codex worker）に資料複製→outputs/ 配置のフローを追加"
+      - "outputs/README.md 作成（フォルダ説明）"
+    notes: |
+      Owner依頼: 成果物を資料（samplecode など）から分離して outputs/ に格納。
+      資料は直接編集せず、複製して outputs/ に配置。
+
+      構造例:
+      outputs/
+      ├── 2026-01-23/       # 日付別
+      │   ├── sample1.ts
+      │   └── README.md
+      └── T-OS-004/         # タスクID別
+          └── implementation.ts
+
+      .gitignore: outputs/ を管理対象にするか Owner に確認（デフォルト: 管理する）
+
+  # === 上司FB対応タスク (2026-01-28) ===
+
+  - id: T-OS-008
+    title: "/org-start で README.md をプロジェクト用に置換する仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["README.md", ".claude/commands/org-start.md", ".ai/TEMPLATES/"]
+    acceptance:
+      - "/org-start 実行時に README.md をプロジェクト用テンプレに置換"
+      - "OrgOS の README は ORGOS_README.md 等にリネーム保持"
+    notes: "上司FB#1: GitHub冒頭のREADMEがOrgOSのREADMEになっている"
+
+  - id: T-OS-009
+    title: "生成物フォルダ位置の安定化（outputs/ ルール強化）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/", "CLAUDE.md", "outputs/"]
+    acceptance:
+      - "生成物の配置先ルールを明確化（outputs/ 直下 or サブフォルダ）"
+      - "エージェントが生成物を正しい場所に配置する検証"
+    notes: "上司FB#2: 生成物のフォルダ位置が不安定"
+
+  - id: T-OS-010
+    title: "設計フェーズで自動的にドキュメント生成タスクをバックログする仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/rules/", ".claude/agents/"]
+    acceptance:
+      - "DESIGN ステージ遷移時に設計ドキュメント作成タスクを自動追加"
+      - "ドキュメント生成を主体的に進める org-tick ロジック"
+    notes: "上司FB#3: 設計のドキュメント作成をもっと主体的にバックログして進めてほしい"
+
+  - id: T-OS-011
+    title: "設計フェーズでの最新情報自動取得スキル（WebSearch/DeepResearch連携）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/skills/", ".claude/rules/", ".claude/agents/"]
+    acceptance:
+      - "設計フェーズ開始時に WebSearch で最新技術情報を自動収集"
+      - "収集結果を .ai/RESOURCES/ に保存"
+      - "設計判断時に最新情報を参照する仕組み"
+    notes: |
+      上司FB#4/#5: 最新情報を持っていない、設計時に情報が古い
+      DeepResearch を別途かけている現状を解消する
+      モデル選定にはベンチマークサイト参照も検討
+
+  - id: T-OS-012
+    title: "日付認識の強化（SessionStart での日付注入 + 制約ルール）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/hooks/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "SessionStart hook で現在日付を明示的に注入"
+      - "日付出力時に必ず現在日付を参照するルール追加"
+      - "2024年等の誤出力を防止"
+    notes: "上司FB#6: 今日がいつか分かっていない、24年と出してくる"
+
+  - id: T-OS-013
+    title: "git clone 時のフォルダ入れ子問題の改善"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["README.md", "ORGOS_QUICKSTART.md"]
+    acceptance:
+      - "clone コマンドの案内を改善（. 指定で中身だけ展開）"
+      - "セットアップスクリプト or 手順の明確化"
+    notes: |
+      上司FB#7: フォルダの中にOrgOSフォルダができて入れ子になる
+      git clone URL . で解決可能だが案内を改善
+
+  # === Codex CLI 統合 (OIP-008) ===
+
+  - id: T-OS-014
+    title: "Codex CLI 統合 Phase 1: 検証（codex exec での実装品質検証）"
+    status: done
+    deps: []
+    owner_role: "org-architect"
+    allowed_paths: [".claude/agents/", ".claude/rules/", ".ai/"]
+    acceptance:
+      - "codex exec で小タスクを実行し、品質を検証"
+      - "Work Order → codex exec のパイプラインが動作"
+      - "検証結果を DECISIONS.md に記録"
+    notes: |
+      OIP-008 Phase 1 完了（2026-01-28）
+      検証結果:
+      - read-only/workspace-write 両モード正常動作
+      - デフォルトモデル: gpt-5.2-codex（ChatGPT 最上位プランで利用可能）
+      - -m codex-5.2 / -m o3 は ChatGPT アカウントでは使用不可
+      - 日本語プロンプト正常動作
+      - Bash 経由で prompt を渡すパイプラインが動作確認済み
+
+  - id: T-OS-015
+    title: "Codex CLI 統合 Phase 2: org-implementer に Codex CLI 呼び出しを追加"
+    status: done
+    deps: ["T-OS-014"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/", ".claude/rules/", ".claude/commands/"]
+    acceptance:
+      - "org-implementer が Codex CLI を呼び出して実装を実行"
+      - "CONTROL.yaml の codex.auto_exec フラグで制御"
+      - "レビューフローと統合"
+    notes: |
+      OIP-008 Phase 2 完了（2026-01-28）
+      変更内容:
+      - org-tick.md Step 8.2.1: auto_exec: true 時の自動実行フロー追加
+      - agent-coordination.md: Codex CLI 実行パターン・役割分担表を追加
+      - run-parallel.sh: タスクID正規表現を ^T- に修正（T-OS-xxx 対応）
+      - Work Order テンプレート生成済み（.ai/CODEX/ORDERS/T-OS-015.md）
+
+  # === OrgOS 構成最適化 (2026-01-28) ===
+
+  - id: T-OS-016
+    title: "OrgOS 構成リファクタリング（冗長性削減 ~850行）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["CLAUDE.md", ".claude/rules/", ".claude/skills/", ".claude/agents/", ".claude/commands/", "AGENTS.md", "requirements.md"]
+    acceptance:
+      - "CLAUDE.md を 390行 → ~80行に圧縮（原則要約 + 参照リストのみ）"
+      - "patterns.md を廃止し skills/ に統合（または目次化）"
+      - "選択肢提示ルールを next-step-guidance.md に一元化"
+      - "コンテキスト使用率テーブルを session-management.md に一元化"
+      - "セキュリティコード例を security.md に一元化"
+      - "requirements.md に歴史的文書宣言を追加"
+      - "既存の動作が壊れないこと（全ルール・コマンドが正しく参照解決）"
+    notes: |
+      コードレビュー結果に基づくリファクタリング。
+      主な重複箇所:
+      1. CLAUDE.md ↔ manager.md / project-flow.md (~150行)
+      2. patterns.md ↔ skills/ (~300行)
+      3. ai-driven-development.md ↔ next-step-guidance.md (~80行)
+      4. コンテキスト使用率テーブル 3箇所 (~60行)
+      5. セキュリティコード例 3箇所 (~100行)
+      サブタスク分割は実行時に検討。
+
+  - id: T-OS-017
+    title: "Codex Worker が .claude/ ルール群を参照できる仕組み"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["AGENTS.md", ".claude/agents/AGENTS.md", ".ai/CODEX/"]
+    acceptance:
+      - "AGENTS.md に .claude/rules/ と .claude/skills/ の参照ガイドを追加"
+      - "Work Order テンプレートに参照すべきルール/スキルの明示セクションを強化"
+      - "Codex Worker が実装・レビュー時に適切なルールを参照できること"
+    notes: |
+      現状: AGENTS.md は review-criteria.md と security.md のみ参照。
+      追加すべき参照:
+      - .claude/rules/patterns.md（→ T-OS-016 後は skills/ を直接参照）
+      - .claude/skills/coding-standards.md
+      - .claude/skills/backend-patterns.md
+      - .claude/skills/frontend-patterns.md
+      - .claude/skills/tdd-workflow.md
+      - .claude/rules/testing.md
+      Work Order 生成時に、タスク種別に応じた参照ファイルリストを自動付与する。
+
+  # === 全体コードレビュー (2026-01-30) ===
+
+  - id: T-OS-018
+    title: "OrgOS 全体コードレビュー（品質改善）"
+    status: done
+    deps: []
+    owner_role: "org-reviewer"
+    allowed_paths: [".claude/", ".ai/"]
+    acceptance:
+      - ".claude/rules/ 全ファイルレビュー完了"
+      - ".claude/skills/ 全ファイルレビュー完了"
+      - ".claude/agents/ 全ファイルレビュー完了"
+      - ".claude/commands/ 全ファイルレビュー完了"
+      - ".ai/ 台帳・設定ファイルレビュー完了"
+      - "問題点を CRITICAL/HIGH/MEDIUM/LOW で分類"
+      - "改善提案を具体的に提示"
+    notes: |
+      BRIEF.md 参照。品質改善目的の全体レビュー。
+      修正は別タスクとして計画（このタスクでは修正しない）。
+
+  # === レビュー指摘修正タスク (2026-01-30) ===
+
+  - id: T-OS-019
+    title: "レビュー指摘修正 P0: 壊れた参照パス修正 + 関数サイズ基準統一"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/skills/"]
+    acceptance:
+      - "testing.md L232 の参照パスを修正"
+      - "関数サイズ基準を統一（coding-standards.md: 20行推奨 / review-criteria.md: 50行上限）"
+    notes: |
+      T-OS-018 レビュー結果: CRITICAL 1件 + HIGH 1件
+
+  - id: T-OS-020
+    title: "レビュー指摘修正 P1: rules/ 間の重複排除"
+    status: done
+    deps: ["T-OS-019"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/"]
+    acceptance:
+      - "モデル選択ガイダンスを agent-coordination.md に一元化"
+      - "コンテキスト管理を session-management.md に一元化"
+      - "応答末尾チェックリストを next-step-guidance.md に一元化"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 3件（重複排除）
+
+  - id: T-OS-021
+    title: "レビュー指摘修正 P2: エージェント定義の補完・整理"
+    status: done
+    deps: ["T-OS-019"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/"]
+    acceptance:
+      - "org-integrator.md を拡充（役割・手順・判断基準を追加）"
+      - "org-os-maintainer.md を拡充"
+      - "org-implementer.md を削除（DEPRECATED済み）"
+      - "AGENTS.md を CODEX_WORKER_GUIDE.md にリネーム"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 2件 + MEDIUM 2件
+
+  - id: T-OS-022
+    title: "レビュー指摘修正 P3: commands/ 重複集約 + 台帳整理"
+    status: done
+    deps: ["T-OS-020"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".ai/"]
+    acceptance:
+      - "org-tick.md の Codex CLI チェックを共通セクションに集約"
+      - "patterns.md を削除（CLAUDE.md から直接 skills/ を参照）"
+      - "DASHBOARD.md のゲート制御テーブルを実態と一致させる"
+      - "TASKS.yaml の deprecated org-implementer ロール参照を修正"
+    notes: |
+      T-OS-018 レビュー結果: HIGH 2件 + MEDIUM 6件
+
+  # === OrgOS Intelligence (2026-01-30) ===
+
+  - id: T-INT-000
+    title: "Intelligence Phase 0: 手動レポート生成で質を検証"
+    status: done
+    deps: []
+    owner_role: "org-architect"
+    allowed_paths: [".ai/DESIGN/", "outputs/"]
+    acceptance:
+      - "手動で1回分のレポートを生成し outputs/ に保存"
+      - "Owner がレポート品質を承認"
+      - "情報ソース・フィルタリング基準の妥当性を確認"
+    notes: |
+      設計書: .ai/DESIGN/ORGOS_INTELLIGENCE.md
+      Phase 0: 実装前にレポートの質を検証する。
+      完了: 2026-01-30。Owner承認済み。要件#23-31を設計書に反映。
+      成果物: outputs/2026-01-30/intelligence-report-2026-01-30.md
+
+  - id: T-INT-001
+    title: "Intelligence Phase 1: orgos-intelligence リポジトリ初期構築"
+    status: done
+    deps: ["T-INT-000"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "orgos-intelligence リポジトリ作成（別リポジトリ）"
+      - "Cloudflare Workers + Hono プロジェクト初期化"
+      - "Wrangler 設定（cron trigger 毎朝 0:00 UTC = 9:00 JST）"
+      - "Google Custom Search API 連携"
+      - "Gemini Flash API 連携（収集・要約）"
+      - "Claude Sonnet API 連携（分析・OIP生成）"
+      - "Cloudflare KV 設定（report-cache, oip-counter, config-cache, search-count）"
+      - "日次レポート生成パイプライン動作"
+    notes: |
+      設計書 Section 3-9 参照。
+      別リポジトリ orgos-intelligence に構築。
+      技術スタック: Cloudflare Workers Paid + Hono + KV。
+      完了: 2026-02-13。確認済み。
+      - Worker URL: https://orgos-intelligence.dev-2b7.workers.dev
+      - 初回実行: 23トピック収集成功（GPT-5.3-Codex-Spark, Gemini 3 Deep Think 等）
+      - Secrets設定: ANTHROPIC_API_KEY, GEMINI_API_KEY, GITHUB_APP_PRIVATE_KEY
+      - Google CSE は未設定（Phase 2 で対応）
+      既知の改善点（Phase 2 で対応）:
+      - RSS サマリーの HTML タグ残留（Simon Willison 等）
+      - タイトル類似度による重複排除強化
+      - GitHub 保存の Workers サブリクエスト上限対策
+
+  - id: T-INT-002
+    title: "Intelligence Phase 2: Slack Bot 構築（配信 + 承認 + 対話）"
+    status: done
+    deps: ["T-INT-001"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Slack App 作成（#orgos-intelligence チャンネル）"
+      - "毎朝 9:00 JST にレポート配信"
+      - "ボタン付き承認 UI（Approve / Hold / Reject）"
+      - "スレッド内対話（過去7日分コンテキスト）"
+      - "月曜に週次ダイジェスト配信"
+    notes: |
+      設計書 Section 6 参照。
+      完了: 2026-02-13。テスト投稿確認済み。
+      実装内容:
+      - Slack クライアント（fetch ベース、Workers 互換）
+      - Block Kit ビルダー（DailyReport → Slack Block Kit）
+      - Slack 署名検証（HMAC-SHA256）
+      - Events API エンドポイント（スレッド対話、テキストコマンド）
+      - Interactive Components エンドポイント（OIP 承認/却下/詳細ボタン）
+      - パイプライン Step 6 に Slack 投稿を統合
+      - スレッド内 Claude Sonnet 対話（過去7日分コンテキスト）
+      Phase 1 改善対応:
+      - HTML エンティティ変換強化（&amp; &lt; &gt; &#NNN; 等）
+      - タイトル類似度による重複排除（bigram Jaccard 係数 > 0.7）
+      未対応（Phase 3 以降）:
+      - 週次ダイジェスト配信（月曜）
+      - GitHub 保存の Workers サブリクエスト上限対策
+      - Google Custom Search API 設定
+
+  - id: T-INT-003
+    title: "Intelligence Phase 3: OIP-AUTO 生成 + OrgOS PR 自動作成"
+    status: done
+    deps: ["T-INT-002"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "レポートから OIP-AUTO を自動生成"
+      - "Owner が Slack で承認 → OrgOS リポジトリに PR 作成"
+      - "GitHub App 連携（最小権限、短命トークン）"
+      - "OIP 7日間未応答 → 自動 Hold"
+    notes: |
+      設計書 Section 7, 10 参照。
+      GitHub App で OrgOS リポジトリにアクセス。
+      実装完了: 2026-02-13。
+      レビュー: Tick #21 で org-reviewer + org-security-reviewer 実施。
+      検出: CRITICAL 1, HIGH 6, MEDIUM 8, LOW 3
+      修正完了: 2026-02-13。TypeScript ビルド通過。
+      修正内容:
+      - auth.ts: PEM形式検証追加, base64デコードtry/catch, 鍵長チェック,
+        エラーメッセージサニタイズ, JWT有効期間修正(iat:now-30, exp:now+540)
+      - pr.ts: 全GitHub APIエラーハンドリング強化(console.error+sanitized throw),
+        utf8ToBase64()でunescape()置換, commitメッセージサニタイズ
+      - oip-reminder.ts: KV.put try/catch追加(3日/7日両方), 失敗時continue
+      - events.ts: OIPデータ基本検証追加, PR作成→成功後にstatus更新,
+        PR失敗時はpendingのまま保持（再試行可）
+      - index.ts: Cron handler try/catch追加, パイプライン/OIPリマインダー
+        エラー時のSlack通知追加
+
+  - id: T-INT-004
+    title: "Intelligence Phase 4: OS Evals 整備 + Level 1 自動承認"
+    status: done
+    deps: ["T-INT-003"]
+    owner_role: "org-architect"
+    allowed_paths: [".ai/", ".claude/"]
+    acceptance:
+      - "OS Evals テストスイート構築（OrgOS 側）"
+      - "Level 0（情報提供のみ）は自動適用"
+      - "Level 1（軽微な Userland 変更）の自動承認を解禁"
+      - "Eval 結果に基づく自動 approve/reject 判定"
+    notes: |
+      完了: 2026-02-13。
+      実装: .claude/evals/ に5つの Eval スクリプト + ランナー。
+      org-tick Step 9A に OIP PR 検出 + Eval ベース自動承認を追加。
+      レビュー: CRITICAL 1 + HIGH 4 修正済み。
+      設計書: .ai/DESIGN/ORGOS_EVALS.md
+
+  - id: T-INT-005
+    title: "Intelligence Phase 5: ロールバック機構 + Kernel 保護"
+    status: done
+    deps: ["T-INT-004"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "自動適用した変更のロールバック機構"
+      - "Kernel 変更の自動検知・ブロック"
+      - "ロールバック時の Owner 通知"
+    notes: |
+      設計書 Section 12 参照。
+      完了: 2026-02-13。Codex CLI 実装 + レビュー修正済み + push 完了。
+      実装内容:
+      - src/github/revert.ts: ロールバック PR 作成 + 自動マージ（.ai/OIP/ 内のみ許可）
+      - src/constants/kernel.ts: Kernel ファイル定義 + ヘルパー関数
+      - src/slack/events.ts: ロールバックコマンド + KERNEL-APPROVE + 入力バリデーション
+      - src/slack/blocks.ts: ロールバック通知 Block Kit
+      - src/analyzer/oip-generator.ts: Kernel スコープ自動判定強化
+      - src/types.ts: OipAutoProposal に rollback フィールド追加
+      レビュー: CRITICAL 2 + HIGH 3 → 全件修正済み。TypeScript ビルド通過。
+
+  - id: T-INT-006
+    title: "Intelligence Phase 6: ソース追加の Slack 対話フロー"
+    status: done
+    deps: ["T-INT-002", "T-INT-005"]
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Slack から情報ソースの追加・削除が可能"
+      - "ソース設定が Cloudflare KV に保存"
+      - "追加ソースが次回収集から反映"
+    notes: |
+      設計書 Section 4 参照。
+      完了: 2026-02-13。Codex CLI 実装 + push 完了。
+      実装内容:
+      - src/slack/source-manager.ts: ソース追加/削除/一覧表示コマンド
+      - src/config/index.ts: addSource/removeSource ヘルパー
+      - src/slack/blocks.ts: Tier 選択ボタン Block Kit
+      - src/slack/events.ts: ソース管理コマンドルーティング（スレッド外対応）
+      - src/slack/interactions.ts: Tier 選択ボタンハンドリング
+      機能:
+      - ソース追加: `ソース追加 <URL> [名前] [tier]`（tier 省略時はボタン選択）
+      - ソース削除: `ソース削除 <名前> confirm`（確認ステップ付き）
+      - ソース一覧: `ソース一覧`（Tier 別表示）
+      - URL バリデーション、スラッグ ID 自動生成
+      レビュー修正（0157e5a）: CRITICAL 1 + HIGH 3 + MEDIUM 2
+      - 正規表現ダブルバックスラッシュバグ、SSRF 保護、制御文字除去
+      - mrkdwn エスケープ、KV race condition コメント、URL 正規化
+
+  # === org-tick 改善 (2026-02-13) ===
+
+  - id: T-OS-023
+    title: "org-tick オートコンティニュー機構 + レビュー設定修正"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".ai/CONTROL.yaml", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "CONTROL.yaml の owner_review_policy.mode が batch に修正されている"
+      - "org-tick.md に Step 13 オートコンティニュー判定が追加されている"
+      - "レビュー不要 + Owner 判断不要時に自動で次の Tick に進む"
+      - "安全制限: 最大10 Tick / コンテキスト80%で停止 / エラー時即停止"
+    notes: |
+      Owner 報告: レビュー頻度を batch に設定したつもりが毎 tick で止まる。
+      原因1: CONTROL.yaml の mode が "every_n_tasks" のままだった → "batch" に修正。
+      原因2: org-tick 自体が1回実行で止まる設計 → Step 13 オートコンティニュー追加。
+      反省: 当初 ad-hoc で実行してしまった。Owner 指摘により遡及的にタスク化。
+
+  - id: T-OS-024
+    title: "全作業 TASKS.yaml 登録必須化 + 割り込みタスク受付フロー整備"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/project-flow.md", ".claude/commands/org-tick.md", ".claude/agents/manager.md"]
+    acceptance:
+      - "project-flow.md: 小タスクでも TASKS.yaml 登録必須に変更（ad-hoc 即実行の廃止）"
+      - "project-flow.md: 割り込みタスク受付フローを明文化（依頼→登録→deps設定→実行）"
+      - "org-tick.md: Step 2 に「新規依頼のタスク化」を明示的に追加"
+      - "manager.md: 進行中タスクがある状態での並列タスク追加手順を記載"
+      - "全ルールファイル間で一貫性があること"
+    notes: |
+      Owner 指摘（2026-02-13）:
+      - 細切れの作業でも必ず TASKS.yaml に組み込んで org-tick 化すべき
+      - 全体の統制が取れなかったり記録が残らないケースが出る
+      - 他のタスクが進行中でも新タスクを追加・並列管理できる状態にしたい
+      現状の問題:
+      - project-flow.md の「小タスク即実行 + RUN_LOG 記録」が TASKS.yaml スキップを許容
+      - Manager が ad-hoc で作業してしまう抜け穴になっている
+      - 割り込みタスクの受付フローが明文化されていない
+
+  # === Intelligence パイプライン品質改善 (2026-02-13) ===
+
+  - id: T-INT-007
+    title: "Intelligence 品質修正: Gemini API スコアリング復旧 + OIP 生成修正"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Gemini Flash API によるスコアリングが正常動作（HIGH/MEDIUM/LOW が適切に判定される）"
+      - "JSON パースのロバスト化（エンティティ除去、バッチリトライ）"
+      - "Claude Sonnet のモデル名が有効なモデルに修正されている"
+      - "OIP-AUTO が OrgOS 影響ありの記事から生成される"
+      - "TypeScript ビルド通過"
+    notes: |
+      最優先。パイプライン全体の機能不全の根本原因。
+      問題1: Gemini API がエラー → catch ブロックで全件 medium/要調査にフォールバック
+        - filter.ts:116-126 の catch が全件 medium に設定
+        - 原因候補: API キー無効、JSON パース失敗、バッチサイズ過大
+        - 修正: JSON パーサーのロバスト化 + バッチリトライ + エラー詳細ログ
+      問題2: OIP 生成が0件
+        - 問題1の波及（high 記事が0件 → Deep Research 対象0件）
+        - oip-generator.ts のモデル名 claude-sonnet-4-5-20250929 が無効の可能性
+        - reporter/index.ts の generateSummary も同じモデル名
+        - 修正: 有効なモデル名に修正 + エラーハンドリング強化
+
+  - id: T-INT-008
+    title: "Intelligence 品質修正: HN フィルタリング精度改善"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "AI 無関係の HN 記事が除外される"
+      - "'ai' 等の短いキーワードが単語境界マッチに変更されている"
+      - "watchTopics のトークン化でストップワードが除外されている"
+      - "TypeScript ビルド通過"
+    notes: |
+      hackernews.ts の isAiRelated 関数の部分一致問題。
+      - "ai" が "email", "fair", "repair" 等に一致
+      - "agent", "prompt", "rag" も同様
+      - watchTopics のトークン化で "patterns", "code", "testing" 等の一般語が通過
+      修正: 単語境界正規表現(\bai\b) + ストップワードリスト導入
+
+  - id: T-INT-009
+    title: "Intelligence 品質修正: HTML タグ残留の修正"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "Simon Willison 等の Atom フィードから HTML タグが除去される"
+      - "エンティティデコード後の再タグ除去が実装されている"
+      - "TypeScript ビルド通過"
+    notes: |
+      rss.ts の stripHtml 関数のエンティティデコード順序問題。
+      "&lt;p&gt;Hello&lt;/p&gt;" → デコード → "<p>Hello</p>" でタグが残る。
+      修正: 2パス処理（タグ除去→デコード→再タグ除去）
+
+  - id: T-INT-010
+    title: "Intelligence 品質修正: 重複排除の強化"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: []
+    acceptance:
+      - "同一ニュースが複数ソースから重複して表示されない"
+      - "URL 正規化（utm 除去、www 除去、末尾スラッシュ統一）が実装されている"
+      - "タイトル類似度の閾値が調整されている（0.7→0.5 or 単語レベル Jaccard）"
+      - "TypeScript ビルド通過"
+    notes: |
+      collector/index.ts の重複排除が不十分。
+      GPT-5.3-Codex-Spark が OpenAI Blog / Simon Willison / HN で3件重複。
+      修正: URL 正規化追加 + タイトル類似度閾値引き下げ or 単語レベル Jaccard
+
+  # === org-start 修正 (2026-02-13) ===
+
+  - id: T-OS-025
+    title: "/org-start FlowA で public OrgOS リポジトリの origin を自動切断する"
+    status: done
+    deps: []
+    owner_role: "org-implementer"
+    allowed_paths: [".claude/commands/org-start.md"]
+    acceptance:
+      - "FlowA Step 1 で origin が public OrgOS リポジトリの場合に自動切断される"
+      - "切断後に新しいリポジトリ URL の設定を案内する"
+      - "OrgOS-Dev の場合は FlowC で処理されるため影響なし"
+    notes: |
+      5e91759 の修正で FlowC 判定に origin URL チェックを追加した結果、
+      public OrgOS clone が FlowA に直行するようになったが、
+      FlowA Step 1 のパターンC（他のリポジトリ）に分類され切断されない問題。
+      意図: public OrgOS を clone した場合は強制的に remote を解除すべき。
+
+  # === OrgOS 自律改善ループ: org-evolve (2026-03-24) ===
+
+  - id: T-OS-026
+    title: "org-evolve Phase 0: 設計 — スコープ・メトリクス・安全策の定義"
+    status: done
+    deps: []
+    owner_role: "org-architect"
+    allowed_paths: [".ai/DESIGN/"]
+    acceptance:
+      - ".ai/DESIGN/ORG_EVOLVE.md 作成"
+      - "改善対象カテゴリ定義（ルール整合性、重複、テスト、パターン更新等）"
+      - "メトリクス定義（機械的に検証可能な指標）"
+      - "安全策定義（自動ロールバック条件、禁止変更範囲、Owner承認ゲート）"
+      - "autoresearch の8フェーズを OrgOS に適応した設計"
+    notes: |
+      autoresearch (github.com/uditgoenka/autoresearch) の仕組みを模倣。
+      核心: Goal → Review → Pick → Make → Commit → Verify → Revert/Keep → Log → Repeat
+      OrgOS 固有の考慮:
+      - CONTROL.yaml の安全フラグとの統合
+      - 既存 eval_policy との連携
+      - org-os-maintainer (OIP) との棲み分け
+      - Intelligence パイプラインとの連携（外部情報 → 改善提案）
+
+  - id: T-OS-027
+    title: "org-evolve Phase 1: /org-evolve コマンド実装（手動実行）"
+    status: done
+    deps: ["T-OS-026"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/rules/", ".ai/"]
+    acceptance:
+      - "/org-evolve コマンドが動作する"
+      - "1回の実行で Review→Pick→Make→Commit→Verify→Evaluate→Log の1サイクルを完了"
+      - "Verify 失敗時に自動 git revert"
+      - ".ai/EVOLVE_LOG.md に結果記録"
+      - "改善なし検出時に自動停止"
+    notes: |
+      Phase 1 は手動トリガーのみ。
+      /org-evolve [N] で N 回繰り返し（デフォルト 1）。
+      Verify: ビルド成功 + ルール整合性チェック + 既存テスト通過。
+
+  - id: T-OS-028
+    title: "org-evolve Phase 2: eval スイート整備（改善メトリクスの機械的検証）"
+    status: done
+    deps: ["T-OS-027"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/evals/", ".claude/scripts/", ".ai/"]
+    acceptance:
+      - "ルール間整合性チェッカー（参照パス検証、重複検出）"
+      - "エージェント定義の完全性チェッカー"
+      - "TASKS.yaml / CONTROL.yaml のスキーマ検証"
+      - "eval スクリプトが /org-evolve の Verify ステップで自動実行される"
+    notes: |
+      autoresearch の「Mechanical Verification Only」原則。
+      主観的判断ではなく、機械的に pass/fail を判定する。
+
+  - id: T-OS-030
+    title: "OrgOS 全体設計レビュー（アーキテクチャ・ルール・エージェント・コマンド）"
+    status: done
+    deps: []
+    owner_role: "org-reviewer"
+    allowed_paths: [".claude/", ".ai/"]
+    acceptance:
+      - "アーキテクチャ全体の問題点・改善点を洗い出し"
+      - "ルール間の一貫性・冗長性を確認"
+      - "エージェント・コマンド設計の最適性を評価"
+      - "レビュー結果をOwnerに報告"
+    notes: |
+      完了: 2026-03-24。3視点で並列レビュー実施。
+      検出: CRITICAL 1件、HIGH 5件、MEDIUM 8件、LOW 4件。
+      主要課題: コンテキスト圧迫、TASKS.yaml肥大化、台帳間重複、ルール二重定義、エージェント責務重複。
+
+  - id: T-OS-033
+    title: "TASKS.yaml アーカイブ機構の導入"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/", ".claude/commands/org-tick.md", ".claude/rules/"]
+    acceptance:
+      - ".ai/TASKS_ARCHIVE.yaml を作成（done タスクの格納先）"
+      - "org-tick.md にアーカイブロジックを追加（done タスクを自動移動）"
+      - "TASKS.yaml は queued/running/blocked のみ保持"
+    notes: |
+      T-OS-030 指摘2。2026-03-24 完了。
+      TASKS_ARCHIVE.yaml 作成・done タスク40件移動済み。TASKS.yaml を240行に削減。
+      org-tick.md Step12 への1行追記のみ保留（pretool_policy で拒否）。

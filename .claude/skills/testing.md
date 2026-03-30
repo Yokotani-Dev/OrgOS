@@ -4,6 +4,15 @@
 
 ---
 
+## Iron Law
+
+> テストの鉄則。例外なし。
+
+1. **テストなしの本番コードは禁止** - 「後でテスト書く」は許されない
+2. **カバレッジ 80% 未満はマージ不可** - 例外なし
+
+---
+
 ## カバレッジ要件
 
 | メトリクス | 最低基準 | 目標 |
@@ -80,6 +89,82 @@ test('ユーザー登録からダッシュボード表示まで', async ({ page 
 
   await expect(page).toHaveURL('/dashboard');
   await expect(page.locator('h1')).toContainText('Welcome');
+});
+```
+
+---
+
+## Playwright E2E パターン
+
+> Anthropic webapp-testing スキルに基づく実践的なパターン
+
+### Reconnaissance-Then-Action パターン
+
+テストを書く前に、まず対象ページの DOM 構造を調査する。
+
+```typescript
+// Step 1: DOM の調査（Reconnaissance）
+test('ページ構造の確認', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.waitForLoadState('networkidle');
+
+  // セレクタを確認
+  const buttons = await page.locator('button').all();
+  for (const btn of buttons) {
+    console.log(await btn.textContent(), await btn.getAttribute('data-testid'));
+  }
+});
+
+// Step 2: 調査結果に基づいてテストを書く（Action）
+test('ダッシュボードでデータが表示される', async ({ page }) => {
+  await page.goto('/dashboard');
+  await page.waitForLoadState('networkidle');
+
+  // 調査で見つけたセレクタを使用
+  await expect(page.getByTestId('user-table')).toBeVisible();
+  await expect(page.getByRole('row')).toHaveCount(10);
+});
+```
+
+### セレクタ戦略（優先度順）
+
+| 優先度 | セレクタ | 例 | 理由 |
+|--------|---------|-----|------|
+| 1 | `getByRole` | `getByRole('button', { name: '送信' })` | アクセシビリティ準拠 |
+| 2 | `getByTestId` | `getByTestId('submit-btn')` | 実装から独立 |
+| 3 | `getByText` | `getByText('ログイン')` | ユーザー視点 |
+| 4 | `locator` | `locator('.submit-button')` | 最終手段 |
+
+### ネットワーク待機
+
+```typescript
+// ❌ 悪い例: 固定時間の待機
+await page.waitForTimeout(3000);
+
+// ✅ 良い例: networkidle を待機
+await page.waitForLoadState('networkidle');
+
+// ✅ 良い例: 特定のレスポンスを待機
+const responsePromise = page.waitForResponse('**/api/users');
+await page.click('button[type="submit"]');
+const response = await responsePromise;
+expect(response.status()).toBe(200);
+```
+
+### Flaky テスト対策
+
+```typescript
+// ✅ リトライ可能なアサーション（自動待機付き）
+await expect(page.getByText('保存しました')).toBeVisible({ timeout: 10000 });
+
+// ✅ 要素の状態を待ってからアクション
+await page.getByRole('button', { name: '送信' }).waitFor({ state: 'visible' });
+await page.getByRole('button', { name: '送信' }).click();
+
+// ✅ テスト間の独立性（各テストでクリーンな状態）
+test.beforeEach(async ({ page }) => {
+  await page.goto('/');
+  await page.evaluate(() => localStorage.clear());
 });
 ```
 

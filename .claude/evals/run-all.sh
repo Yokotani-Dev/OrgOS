@@ -90,6 +90,17 @@ run_eval "schema-validation" "$SCRIPT_DIR/check-schema.sh"
 run_eval "agent-definitions" "$SCRIPT_DIR/check-agent-defs.sh"
 run_eval "security-rules"    "$SCRIPT_DIR/check-security.sh"
 
+# org-evolve evals (reference integrity, duplicates, consistency)
+if [[ -f "$SCRIPT_DIR/check-refs.sh" ]]; then
+  run_eval "reference-paths"   "$SCRIPT_DIR/check-refs.sh"
+fi
+if [[ -f "$SCRIPT_DIR/check-duplicates.sh" ]]; then
+  run_eval "duplicate-content" "$SCRIPT_DIR/check-duplicates.sh"
+fi
+if [[ -f "$SCRIPT_DIR/check-consistency.sh" ]]; then
+  run_eval "consistency"       "$SCRIPT_DIR/check-consistency.sh"
+fi
+
 # Intelligence-specific evals (only if relevant files changed or no filter)
 if [[ ${#CHANGED_FILES[@]} -eq 0 ]] || echo "${CHANGED_FILES_STR}" | grep -q "INTELLIGENCE\|oip-auto"; then
   if [[ -f "$SCRIPT_DIR/check-oip-format.sh" ]]; then

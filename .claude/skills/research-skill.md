@@ -174,4 +174,4 @@ if stage == "DESIGN":
 ## 参考資料
 
 - [.claude/rules/design-documentation.md](../rules/design-documentation.md) - 設計ドキュメントルール
-- [.claude/rules/date-awareness.md](../rules/date-awareness.md) - 日付認識ルール
+- CLAUDE.md「日付出力」セクション - 日付認識ルール

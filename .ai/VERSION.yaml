@@ -1,10 +1,13 @@
 # OrgOS Version (内部管理用)
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.20.0"
-released_at: "2026-03-23"
+current: "0.21.0"
+released_at: "2026-03-30"
 
 history:
+  - version: "0.21.0"
+    date: "2026-03-30"
+    description: "Skills expansion (9 new), superpowers integration (rationalization prevention, two-stage review, Iron Law), Dashboard, org-evolve"
   - version: "0.20.0"
     date: "2026-03-23"
     description: "/issue command for reporting bugs/features/questions from any repository"

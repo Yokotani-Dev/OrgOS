@@ -4,12 +4,6 @@
 
 ---
 
-## モデル選択ガイダンス
-
-モデル選択（Haiku/Sonnet/Opus）の詳細は [.claude/rules/agent-coordination.md](agent-coordination.md) の「モデル選択ガイダンス」セクションを参照。
-
----
-
 ## コンテキストウィンドウの最適化
 
 コンテキスト使用率の監視・セッション終了提案の詳細は [.claude/rules/session-management.md](session-management.md) を参照。

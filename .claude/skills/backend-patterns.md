@@ -1,6 +1,9 @@
 # バックエンドパターン
 
-> Node.js / Express / Next.js API 開発のベストプラクティス
+> Node.js / Express / Next.js API 開発のベストプラクティス（Next.js + TypeScript プロジェクト向け）
+
+> **注意**: このスキルは Next.js + TypeScript + Supabase プロジェクト向けです。
+> 別の技術スタックを使用する場合は、プロジェクトに合わせてカスタマイズしてください。
 
 ---
 
@@ -274,6 +277,108 @@ const user = await cache.getOrSet(
   () => userRepo.findById(userId),
   3600  // 1時間キャッシュ
 );
+```
+
+---
+
+## SQL / データベース最適化
+
+> GitHub sql-optimization スキルに基づくクエリ最適化パターン
+
+### インデックス設計
+
+```sql
+-- ❌ 悪い例: インデックスなしの WHERE
+SELECT * FROM orders WHERE customer_id = 123 AND status = 'active';
+
+-- ✅ 良い例: 複合インデックス（選択性の高い列を先に）
+CREATE INDEX idx_orders_customer_status ON orders(customer_id, status);
+```
+
+```typescript
+// Prisma の場合
+// schema.prisma
+model Order {
+  // ...
+  @@index([customerId, status])
+}
+```
+
+### N+1 クエリの防止（詳細）
+
+```typescript
+// ❌ 悪い例: N+1（ユーザーごとにクエリ）
+const users = await db.user.findMany();
+for (const user of users) {
+  const posts = await db.post.findMany({ where: { authorId: user.id } });
+  // → N+1 回のクエリが発生
+}
+
+// ✅ 良い例: include で一括取得
+const users = await db.user.findMany({
+  include: { posts: true },
+});
+
+// ✅ 良い例: 手動 JOIN（複雑な条件の場合）
+const usersWithPosts = await db.$queryRaw`
+  SELECT u.*, json_agg(p.*) as posts
+  FROM users u
+  LEFT JOIN posts p ON p.author_id = u.id
+  WHERE u.created_at > ${since}
+  GROUP BY u.id
+`;
+```
+
+### ページネーション
+
+```typescript
+// ❌ 悪い例: OFFSET ページネーション（大量データで遅い）
+const page2 = await db.post.findMany({
+  skip: 1000,  // 1000行スキップ = 全行スキャン
+  take: 20,
+});
+
+// ✅ 良い例: カーソルベースページネーション
+const page2 = await db.post.findMany({
+  take: 20,
+  cursor: { id: lastPostId },
+  skip: 1,  // カーソル行をスキップ
+  orderBy: { id: 'asc' },
+});
+```
+
+### バッチ操作
+
+```typescript
+// ❌ 悪い例: 1件ずつ INSERT
+for (const item of items) {
+  await db.item.create({ data: item });
+}
+
+// ✅ 良い例: バッチ INSERT
+await db.item.createMany({
+  data: items,
+  skipDuplicates: true,
+});
+
+// ✅ 良い例: トランザクション内でバッチ処理
+await db.$transaction(async (tx) => {
+  await tx.order.update({ where: { id: orderId }, data: { status: 'paid' } });
+  await tx.payment.create({ data: paymentData });
+  await tx.inventory.updateMany({ where: { productId: { in: productIds } }, data: { /* ... */ } });
+});
+```
+
+### クエリパフォーマンス分析
+
+```sql
+-- PostgreSQL: 実行計画の確認
+EXPLAIN ANALYZE SELECT * FROM orders WHERE customer_id = 123;
+
+-- 注意すべき警告サイン:
+-- Seq Scan（大きなテーブルでのフルスキャン）
+-- Nested Loop（大量データでのループ結合）
+-- Sort（インデックスなしのソート）
 ```
 
 ---

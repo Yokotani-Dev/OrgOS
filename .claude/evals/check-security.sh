@@ -13,7 +13,7 @@ ERRORS=()
 WARNINGS=()
 
 # --- security.md ---
-SECURITY_FILE="$REPO_ROOT/.claude/rules/security.md"
+SECURITY_FILE="$REPO_ROOT/.claude/skills/security.md"
 if [[ -f "$SECURITY_FILE" ]]; then
   # Check for required sections
   for section in "OWASP" "シークレット管理" "認証" "入力"; do
@@ -26,7 +26,7 @@ else
 fi
 
 # --- review-criteria.md ---
-REVIEW_FILE="$REPO_ROOT/.claude/rules/review-criteria.md"
+REVIEW_FILE="$REPO_ROOT/.claude/skills/review-criteria.md"
 if [[ -f "$REVIEW_FILE" ]]; then
   # Check for severity levels
   for level in "CRITICAL" "HIGH" "MEDIUM" "LOW"; do

@@ -25,9 +25,6 @@ EnterPlanMode は使用しない（TASKS.yaml で永続管理）。
 | **AI主導** | `.claude/rules/ai-driven-development.md` | 技術判断は Manager、ビジネス判断は Owner |
 | **Owner最小化** | `.claude/rules/owner-task-minimization.md` | CLI/API で代行、手動作業を最小化 |
 | **リテラシー** | `.claude/rules/literacy-adaptation.md` | Owner レベルに応じた説明調整 |
-| **セキュリティ** | `.claude/rules/security.md` | OWASP Top 10、シークレット管理 |
-| **テスト** | `.claude/rules/testing.md` | カバレッジ 80%、TDD |
-| **レビュー** | `.claude/rules/review-criteria.md` | CRITICAL/HIGH/MEDIUM/LOW 判定 |
 | **コーディング** | `.claude/skills/coding-standards.md` | コーディング規約、命名規則 |
 | **バックエンド** | `.claude/skills/backend-patterns.md` | API パターン、リポジトリパターン |
 | **フロントエンド** | `.claude/skills/frontend-patterns.md` | カスタムフック、状態管理 |
@@ -35,18 +32,28 @@ EnterPlanMode は使用しない（TASKS.yaml で永続管理）。
 | **評価** | `.claude/rules/eval-loop.md` | Verification Loops |
 | **エージェント** | `.claude/rules/agent-coordination.md` | 並列実行、モデル選択、Codex CLI |
 | **出力管理** | `.claude/rules/output-management.md` | 生成物の配置ルール |
-| **日付** | `.claude/rules/date-awareness.md` | 日付認識・誤出力防止 |
-| **パフォーマンス** | `.claude/rules/performance.md` | モデル選択、コスト最適化 |
+| **パフォーマンス** | `.claude/rules/performance.md` | コンテキスト最適化、コスト最適化 |
+| **合理化防止** | `.claude/rules/rationalization-prevention.md` | Iron Law、言い訳テーブル、Red Flags |
 
 ### 技術スキル
+
+> **CSO 原則**: スキルの description には「いつ使うか」のみ記載する。ワークフローの要約を description に書くと、Agent がスキル本文を読まずに description だけで行動する（obra/superpowers の検証結果）。
 
 | ファイル | 概要 |
 |----------|------|
 | `.claude/skills/coding-standards.md` | コーディング規約 |
-| `.claude/skills/backend-patterns.md` | バックエンドパターン |
-| `.claude/skills/frontend-patterns.md` | フロントエンドパターン |
+| `.claude/skills/backend-patterns.md` | バックエンドパターン、SQL 最適化 |
+| `.claude/skills/frontend-patterns.md` | フロントエンドパターン、Next.js パフォーマンス最適化 |
+| `.claude/skills/web-design-guidelines.md` | Web デザイン、アクセシビリティ、i18n |
+| `.claude/skills/refactoring-patterns.md` | コードスメル検出、リファクタリング手法 |
+| `.claude/skills/requirements-specification.md` | 要件仕様書（REQ-ID、Given-When-Then） |
+| `.claude/skills/task-breakdown.md` | タスク分解（INVEST、見積もり、分解パターン） |
+| `.claude/skills/deployment-planning.md` | デプロイ計画（ロールアウト、ロールバック） |
 | `.claude/skills/tdd-workflow.md` | TDD ワークフロー |
 | `.claude/skills/research-skill.md` | リサーチスキル |
+| `.claude/skills/security.md` | セキュリティ（OWASP Top 10、CodeQL、自動スキャン） |
+| `.claude/skills/testing.md` | テスト（カバレッジ 80%、Playwright E2E パターン） |
+| `.claude/skills/review-criteria.md` | レビュー基準（CRITICAL/HIGH/MEDIUM/LOW 判定） |
 
 ---
 
@@ -66,6 +73,10 @@ Always respond in japanese. Use japanese for all explanations, comments, and com
 ### リテラシー適応
 
 `CONTROL.yaml` の `owner_literacy_level` に応じて説明の仕方を調整。詳細は `.claude/rules/literacy-adaptation.md` を参照。
+
+### 日付出力
+
+日付を含む出力時は `Today's date` 環境変数を参照し、推測しない。過去の年号（2024年、2025年）をデフォルトで使用しない。
 
 ### 次のステップ案内
 

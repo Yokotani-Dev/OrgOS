@@ -102,46 +102,18 @@
 
 ---
 
-## 📝 Recent Changes (last tick)
+## 📝 Recent Changes
 
-- Tick #29（2026-02-13）: T-INT-007〜010 統合 + T-OS-025 完了
-  - T-INT-007: Gemini スコアリング JSON 抽出強化 + OIP 生成改善
-  - T-INT-008: HN フィルタリング精度改善（単語境界マッチ + ストップワード除外）
-  - T-INT-009: HTML タグ残留修正（stripHtml 2パス処理）
-  - T-INT-010: 重複排除強化（URL 正規化 + 単語 Jaccard 0.5）
-  - 全4件 TypeScript ビルド通過、main マージ + push (a6c2a87)
-  - T-OS-025: /org-start FlowA で public OrgOS リポジトリの origin を自動切断
-  - Owner 作業: orgos-intelligence で `wrangler deploy` が必要（品質改善の反映）
-- Tick #26-28（2026-02-13）: T-INT-005 + T-INT-006 完了（Intelligence Phase 5-6）
-  - OrgOS Intelligence Phase 0-6 全完了
-- Tick #25（2026-02-13）: T-OS-024 全作業 TASKS.yaml 登録必須化
-- Tick #24（2026-02-13）: T-INT-004 OS Evals 実装完了
-- ✅ T-OS-005 完了: プロジェクト引き継ぎ機能を実装
-  - [CONTROL.yaml](.ai/CONTROL.yaml) に handoff セクション追加
-  - [.ai/HANDOFF.md](.ai/HANDOFF.md) テンプレート作成
-  - [.claude/hooks/SessionStart.sh](.claude/hooks/SessionStart.sh) に引き継ぎ検知機能を追加
-  - [CLAUDE.md](../CLAUDE.md) にプロジェクト引き継ぎのセクション追加
-  - 3つの引き継ぎパターン: 上司→部下 / 部下→上司（レビュー） / チームメンバー間
-- ✅ T-OS-004 完了: 上司レビューモード機能を実装
-  - [CONTROL.yaml](.ai/CONTROL.yaml) に supervisor_review セクション追加
-  - [.ai/SUPERVISOR_REVIEW/](.ai/SUPERVISOR_REVIEW/) フォルダ作成
-  - [CLAUDE.md](../CLAUDE.md) にスーパーバイザーレビューのセクション追加
-  - [/org-start](.claude/commands/org-start.md) に作業者・レビュー要否の質問追加
-  - 3つのモード: self_only（デフォルト） / self_with_reminder / subordinate_with_supervisor
-  - 計画乖離検知機能（30%以上乖離で警告）
-- ✅ T-OS-006 完了: ゴール階層管理機能を実装
-  - [.ai/GOALS.yaml.template](.ai/GOALS.yaml.template) を作成（Vision/Milestone/Project 階層管理）
-  - [/org-start](.claude/commands/org-start.md) に GOALS.yaml 初期化ロジック追加（Step 4-9）
-  - [/org-tick](.claude/commands/org-tick.md) に Milestone 達成確認・見直し提案追加（Step 6A）
-  - [/org-goals](.claude/commands/org-goals.md) コマンド作成（表示・追加・拡大・見直し・履歴）
-  - [CLAUDE.md](../CLAUDE.md) にゴール階層管理セクション追加
-  - DASHBOARD.md / PROJECT.md に Vision/Milestone セクション追加
-- ✅ T-OS-007 完了: 成果物管理機能を実装
-  - [outputs/](../outputs/) フォルダを作成（日付別・タスクID別）
-  - [outputs/README.md](../outputs/README.md) で使い方を説明
-  - [CLAUDE.md](../CLAUDE.md) に成果物管理ルールを追加
-  - [.claude/agents/AGENTS.md](.claude/agents/AGENTS.md) を新規作成（Codex worker ガイドライン）
-  - 資料（resources/）は直接編集せず、outputs/ にコピーしてから編集するフローを確立
+→ 詳細は [RUN_LOG.md](.ai/RUN_LOG.md) を参照
+
+直近:
+- 2026-03-30: T-OS-060〜062 OrgOS Dashboard（マルチプロジェクト統合 UI）
+  - T-OS-060: アーキテクチャ設計（Next.js 15 + shadcn/ui + SSE）
+  - T-OS-061: /org-dashboard コマンド追加
+  - T-OS-062: Dashboard リポジトリ MVP 実装（/Dev/Private/orgos-dashboard/）
+- 2026-03-30: T-OS-052〜053 superpowers リポジトリ調査 + 改善実装
+- 2026-03-29: T-OS-050〜051 skills.sh 調査 + スキル強化
+- 2026-03-25: T-OS-030 是正タスク全14件完了
 
 ---
 

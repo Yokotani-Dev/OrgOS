@@ -380,4 +380,4 @@ await page.route('**/api/stripe/**', route => {
 ## 参照資料
 
 - [Playwright 公式ドキュメント](https://playwright.dev/)
-- `.claude/rules/testing.md` - テストルール
+- `.claude/skills/testing.md` - テストルール

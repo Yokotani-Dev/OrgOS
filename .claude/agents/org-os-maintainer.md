@@ -2,7 +2,7 @@
 name: org-os-maintainer
 description: OrgOSの運用ログを読み、改善提案（OIP）を書く。適用はしない
 tools: Read, Write, Edit, Grep, Glob
-model: haiku
+model: sonnet
 permissionMode: acceptEdits
 ---
 

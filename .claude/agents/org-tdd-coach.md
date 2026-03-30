@@ -375,4 +375,4 @@ describe('useAuth', () => {
 ## 参照資料
 
 - `.claude/skills/tdd-workflow.md` - TDD 詳細ワークフロー
-- `.claude/rules/testing.md` - テストルール
+- `.claude/skills/testing.md` - テストルール

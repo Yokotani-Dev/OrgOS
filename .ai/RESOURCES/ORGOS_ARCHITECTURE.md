@@ -185,10 +185,10 @@ OrgOS の中核。以下を担当：
 
 | ファイル | 内容 |
 |----------|------|
-| `security.md` | セキュリティルール（OWASP Top 10） |
-| `testing.md` | テストルール（80% カバレッジ） |
-| `review-criteria.md` | レビュー基準 |
-| `patterns.md` | 共通パターン |
+| `security.md` | セキュリティルール（OWASP Top 10）※ skills/ に移動済み |
+| `testing.md` | テストルール（80% カバレッジ）※ skills/ に移動済み |
+| `review-criteria.md` | レビュー基準 ※ skills/ に移動済み |
+| `literacy-reference.md` | リテラシー適応リファレンス ※ skills/ |
 
 ---
 

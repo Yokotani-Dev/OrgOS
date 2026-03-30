@@ -4,6 +4,34 @@
 
 ---
 
+## v0.21.0 (2026-03-30)
+
+### 追加
+- **スキル 9ファイル新規作成**: web-design-guidelines, refactoring-patterns, requirements-specification, task-breakdown, deployment-planning, security(rules→skills移動), testing(同), review-criteria(同), literacy-reference
+- **合理化防止ルール**: `rationalization-prevention.md` - Iron Law（鉄則）、言い訳テーブル、Red Flags チェックリスト（obra/superpowers ベース）
+- **Eval 4スクリプト追加**: check-skill-compliance.sh, check-consistency.sh, check-duplicates.sh, check-refs.sh
+- **`/org-evolve` コマンド**: OrgOS 自律改善ループ
+- **`/org-dashboard` コマンド**: マルチプロジェクト Dashboard 連携（~/.orgos/projects.yaml 登録）
+- **`/org-goals` コマンド**: ゴール階層の表示・編集
+- **Dashboard 設計**: .ai/DESIGN/DASHBOARD_ARCHITECTURE.md
+
+### 改善
+- **二段階レビュー**: org-reviewer を Stage 1（仕様適合）→ Stage 2（設計品質）に再構築
+- **サブエージェント報告検証**: agent-coordination にレポート検証プロトコル追加（DONE/DONE_WITH_CONCERNS/NEEDS_CONTEXT/BLOCKED）
+- **Iron Law 追加**: testing, security, review-criteria, requirements-specification, task-breakdown の5スキルに Iron Law セクション追加
+- **CSO 原則**: CLAUDE.md にスキル description の記述ルール追加
+- **スキル強化**: frontend-patterns(+Next.js最適化,React19), backend-patterns(+SQL最適化), security(+CodeQL), testing(+Playwright E2E)
+- **コンテキスト最適化**: rules/ から skills/ へ3ファイル移動、CLAUDE.md圧縮、台帳統廃合（DASHBOARD/STATUS/RUN_LOG役割再定義）
+- **エージェント責務明確化**: reviewer（設計専任）, planner（architect委任）, scribe（doc-updater委任トリガー）
+- **ルール二重定義解消**: performance, ai-driven, next-step, plan-sync, date-awareness の重複排除
+- **manifest 更新**: 新規スキル・ルール・eval を publish 対象に追加
+
+### 内部
+- **RUNTIME.yaml 新設**: CONTROL.yaml からランタイム状態を分離
+- **TASKS_ARCHIVE.yaml 新設**: done タスクのアーカイブ先
+
+---
+
 ## v0.20.0 (2026-03-23)
 
 ### 追加

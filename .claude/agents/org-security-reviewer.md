@@ -226,8 +226,8 @@ npm audit 結果:
 
 ## 参照ルール
 
-- `.claude/rules/security.md` - セキュリティルール
-- `.claude/rules/review-criteria.md` - レビュー基準
+- `.claude/skills/security.md` - セキュリティルール
+- `.claude/skills/review-criteria.md` - レビュー基準
 
 ---
 

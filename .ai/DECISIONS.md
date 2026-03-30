@@ -35,6 +35,19 @@
 
 ## Decided
 
+- ID: D-SKILLS-001
+  Title: skills.sh 調査に基づくスキル強化
+  Decision: Anthropic/Vercel/GitHub 公式スキルを精査し、7つのギャップを特定。新規2ファイル作成 + 既存4ファイル強化を実施
+  Decided by: Manager (Owner依頼)
+  Date: 2026-03-29
+  Rationale: |
+    外部スキル（90K+件中、公式17+7+260件を精査）とOrgOS既存スキルを比較。
+    品質の高い Tier S/A スキルのみを選定し、OrgOS 形式に統合。
+    新規: web-design-guidelines.md (Vercel 209K installs), refactoring-patterns.md (GitHub 11K installs)
+    強化: frontend-patterns.md (+Next.js perf, +React 19), testing.md (+Playwright E2E),
+          security.md (+CodeQL/SAST), backend-patterns.md (+SQL最適化)
+    調査詳細: .ai/RESOURCES/SKILLS_SH_RESEARCH.md
+
 - ID: D-001
   Title: 成果物格納ディレクトリの標準化
   Decision: `.ai/ARTIFACTS/` を新設し、サブディレクトリで分類
@@ -699,3 +712,85 @@ Owner による稼働状況確認（2026-02-13）
 
 ### トリガー
 Tick #26 での自動タスク選択
+
+---
+
+## PLAN-UPDATE-014: OrgOS 自律改善ループ (org-evolve) タスク追加 (2026-03-24)
+
+### 変更内容
+- 追加: T-OS-026（org-evolve Phase 0: 設計）
+- 追加: T-OS-027（org-evolve Phase 1: /org-evolve コマンド実装）
+- 追加: T-OS-028（org-evolve Phase 2: eval スイート整備）
+- 追加: T-OS-029（org-evolve Phase 3: スケジュール実行）
+
+### 理由
+autoresearch (github.com/uditgoenka/autoresearch) の自律改善ループを OrgOS に適用。
+OrgOS 自身のルール・スキル・エージェント定義を定期的に自動改善する仕組みを構築する。
+
+核心コンセプト:
+- **アトミック変更**: 1サイクル1変更で因果関係を明確化
+- **機械的検証**: メトリクス駆動で主観排除（ビルド、ルール整合性、テスト）
+- **自動ロールバック**: 検証失敗 → 即座に git revert
+- **Git = メモリ**: 全実験（成功/失敗）を履歴として保存
+
+### 影響
+- 既存タスクへの影響なし（独立した改善系列）
+- Intelligence パイプライン（T-INT-*）と Phase 3 で連携予定
+- eval_policy（CONTROL.yaml）を Phase 2 で拡張予定
+
+### トリガー
+Owner 依頼（autoresearch を模倣した自動改善の仕組み構築）
+
+## PLAN-UPDATE-015: OrgOS Dashboard マルチプロジェクト統合 UI (2026-03-30)
+
+### 変更内容
+- 追加: T-OS-060（設計: Dashboard アーキテクチャ）
+- 追加: T-OS-061（/org-dashboard コマンド追加 ※元は /org-publish で計画したが、既存コマンドと衝突するため変更）
+- 追加: T-OS-062（Dashboard リポジトリ作成 + MVP 実装）
+
+### 理由
+複数リポジトリで OrgOS を運用していると、各プロジェクトの進捗が把握しづらい。
+独立した Web ダッシュボードで全プロジェクトの状態を一覧表示する。
+
+### Owner 決定事項
+- 独立リポジトリとして作成（各プロジェクトは別フォルダ/リポジトリのため）
+- OrgOS 側に /org-dashboard コマンドを追加し、実行でダッシュボードに登録
+- データ連携はファイル直接読み取り方式（~/.orgos/projects.yaml にパス登録）
+- Phase 1: 閲覧のみ、Phase 2: UI からの指示機能
+
+### 影響
+- 既存タスクへの影響なし（独立した新機能系列）
+- /org-dashboard を OrgOS 側の新スラッシュコマンドとして追加（/org-publish は既存の公開同期用コマンド）
+
+### トリガー
+Owner 依頼（複数プロジェクトの進捗一元管理）
+
+---
+
+## D-SUPERPOWERS-001: superpowers リポジトリからの改善取り込み (2026-03-30)
+
+### 判断内容
+obra/superpowers リポジトリの6つの改善を OrgOS に統合。
+
+### 取り込んだ改善
+
+| # | 改善 | 適用先 |
+|---|------|--------|
+| 1 | 合理化防止システム（Iron Law、言い訳テーブル、Red Flags） | `.claude/rules/rationalization-prevention.md` |
+| 2 | 二段階レビュー（Stage 1: 仕様適合 → Stage 2: 設計品質） | `.claude/agents/org-reviewer.md` |
+| 3 | サブエージェント報告検証プロトコル | `.claude/rules/agent-coordination.md` |
+| 4 | 計画粒度の具体化（acceptance 品質基準） | `.claude/skills/task-breakdown.md` |
+| 5 | CSO（Claude Search Optimization）原則 | `CLAUDE.md` |
+| 6 | 重要スキルへの Iron Law 追加 | 5つのスキルファイル |
+
+### 理由
+- Owner 指示: 「OrgOS を過大評価せず、いいところをどんどん取り入れて」
+- superpowers の「AI は知っているのに従わない」問題への対策は OrgOS に欠けていた
+- 二段階レビュー・報告検証は品質保証の強化に直結
+
+### 取り込まなかったもの
+- Git worktree ベースの並列実行（OrgOS は TASKS.yaml + Codex CLI で対応済み）
+- AGENTS.md 形式のスキル定義（OrgOS は skills/ + agents/ で分離済み）
+
+### トリガー
+Owner 依頼（superpowers リポジトリ調査）
