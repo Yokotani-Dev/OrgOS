@@ -2,8 +2,8 @@
 # 毎Tickで更新される値。CONTROL.yaml（設定値）とは分離。
 # .gitignore に追加してもよいが、セッション間の継続性のため git 管理を推奨。
 
-tick_count: 41
-tasks_since_last_review: 4
+tick_count: 42
+tasks_since_last_review: 5
 tasks_since_last_eval: 0
 last_eval_at: null
 last_review_at: null

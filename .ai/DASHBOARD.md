@@ -107,13 +107,11 @@
 → 詳細は [RUN_LOG.md](.ai/RUN_LOG.md) を参照
 
 直近:
+- 2026-03-30: Tick 42 - 全タスク完了確認。T-001/T-002 テンプレートを archived。重複 RemoteTrigger を整理。
+- 2026-03-30: v0.21.0 リリース（superpowers 改善、Iron Law、CSO 原則）
 - 2026-03-30: T-OS-060〜062 OrgOS Dashboard（マルチプロジェクト統合 UI）
-  - T-OS-060: アーキテクチャ設計（Next.js 15 + shadcn/ui + SSE）
-  - T-OS-061: /org-dashboard コマンド追加
-  - T-OS-062: Dashboard リポジトリ MVP 実装（/Dev/Private/orgos-dashboard/）
 - 2026-03-30: T-OS-052〜053 superpowers リポジトリ調査 + 改善実装
 - 2026-03-29: T-OS-050〜051 skills.sh 調査 + スキル強化
-- 2026-03-25: T-OS-030 是正タスク全14件完了
 
 ---
 

@@ -15,30 +15,30 @@
 tasks:
   - id: T-001
     title: "Kickoff: collect requirements"
-    status: queued
+    status: done
     deps: []
     owner_role: "org-planner"
     allowed_paths: [".ai/"]
     acceptance:
       - "PROJECT.md populated"
       - "DECISIONS.md has pending list"
-    notes: ""
+    notes: "OrgOS-Dev テンプレート。一般プロジェクト用のため archived 扱い。"
 
   - id: T-002
     title: "Design: define contracts (API/schema)"
-    status: queued
+    status: done
     deps: ["T-001"]
     owner_role: "org-architect"
     allowed_paths: ["docs/", "src/"]
     acceptance:
       - "contracts documented"
-    notes: ""
+    notes: "OrgOS-Dev テンプレート。一般プロジェクト用のため archived 扱い。"
 
   # === OrgOS 自律改善ループ: org-evolve (2026-03-24) ===
 
   - id: T-OS-029
     title: "org-evolve Phase 3: スケジュール実行（定期自動改善）"
-    status: queued
+    status: done
     deps: []
     owner_role: "codex-implementer"
     allowed_paths: [".claude/", ".ai/"]
@@ -325,6 +325,141 @@ tasks:
     notes: |
       Phase 1 MVP。閲覧のみ。
       技術スタックは T-OS-060 の設計で決定。
+
+  # === OrgOS 自律駆動化: Manager主導→人間は最小介入 (2026-03-31) ===
+
+  - id: T-OS-070
+    title: "OrgOS 自律駆動化: Manager が主導し、人間は最小限の介入のみ"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/manager.md", "CLAUDE.md"]
+    acceptance:
+      - "session-management.md: セッション終了提案を大幅削減。OrgOSは自動で台帳更新して継続。95%超の強制終了のみ残す"
+      - "next-step-guidance.md: 選択肢提示パターンを削減。デフォルトは「次これやります」報告型に変更"
+      - "ai-driven-development.md: タスク優先度判断もManager自律に。人間に聞くのは「OrgOSでは判断不可能な情報」のみ"
+      - "manager.md ミッション更新: 「Owner に次のアクションを提示」→「自律的に推進し、必要な情報だけ人間に聞く」"
+      - "CLAUDE.md: 全体方針を「OrgOS主導、人間は最小介入」に更新"
+      - "project-flow.md: 確認フローを簡素化"
+    notes: |
+      Owner フィードバック: 「OrgOSが人間を巻き込んでやっていく、みたいなスタンスが欲しい」
+      「これだけ教えてくれたらあとは自分でタスクにして推進します」
+
+      方針転換:
+      - Before: Manager = ナビゲーター、Owner = ドライバー
+      - After: Manager = ドライバー、Owner = 必要な時だけ助言するアドバイザー
+
+      具体的変更:
+      1. セッション終了提案: ほぼ廃止（95%超の強制終了のみ）
+      2. 選択肢提示: 「やります」報告に変更。ビジネス判断のみ例外
+      3. 確認フロー: 「進めてOK？」→ 進めて報告する
+      4. タスク計画: 人間が考えなくてもOrgOSが自動分解・優先度設定
+      5. 人間への質問: 「OrgOSが持っていない情報」だけ
+
+  - id: T-OS-071
+    title: "並列タスクのファイル衝突防止: ロック機構とチェック強化"
+    status: done
+    deps: ["T-OS-070"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/manager.md", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "manager.md: 並列タスク起動前にallowed_pathsの衝突を必ず検出し、重複があればシリアル実行に切り替えるロジックを明記"
+      - "agent-coordination.md: ファイル衝突検出の具体的な手順を追加（globパターンの比較ルール）"
+      - "org-tick.md: Step 3（タスク選択）で衝突チェックを必須ステップとして追加"
+      - "allowed_pathsが未設定のタスクは並列実行禁止とするルールを追加"
+    notes: |
+      問題: 同じファイルを複数のCodex workerが同時編集してデグレが発生。
+      allowed_pathsの衝突チェックが「推奨」レベルだったが「必須」に格上げ。
+      ファイルパスのglob比較で重複を検出し、重複があればdepsを自動追加。
+
+  - id: T-OS-072
+    title: "Runbook機構: プロジェクトのルーティンワークを手順化・再利用可能にする"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/manager.md", ".claude/commands/", ".ai/"]
+    acceptance:
+      - ".ai/RUNBOOKS/ ディレクトリの仕組みを定義（RUNBOOK_SPEC.md）"
+      - "Runbook テンプレート作成（手順・前提条件・検証手順・ロールバック手順を含む）"
+      - "manager.md: ルーティンワーク検出時にRunbook参照を必須化"
+      - "org-tick.md: 既存Runbookがある作業は自動でRunbookに従って実行するロジック追加"
+      - "project-flow.md: 2回以上実行した作業はRunbook化を自動提案するルール追加"
+    notes: |
+      問題: デプロイ等のルーティンワークが毎回ゼロから検討されるため品質が不安定。
+      解決: 初回実行時に手順を .ai/RUNBOOKS/deploy.md 等に記録し、
+      2回目以降は同じ手順を機械的に再実行する。
+      手順の改善も Runbook を更新する形で蓄積される。
+
+      Runbookの例:
+      - deploy.md: デプロイ手順
+      - release.md: リリース手順
+      - rollback.md: ロールバック手順
+      - db-migration.md: DBマイグレーション手順
+      - env-setup.md: 環境セットアップ手順
+
+  # === 成果物の実用性向上 (2026-04-01) ===
+
+  - id: T-OS-080
+    title: "ヒアリング強化: /org-brief にビジネス文脈・参照・ペルソナ質問を追加"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/org-brief.md"]
+    acceptance:
+      - "「誰が使うか（ペルソナ）」の質問を必須化"
+      - "「今はどうやっているか（既存の代替手段）」の質問を追加"
+      - "「参照サイト/プロダクト」の質問を追加（こういう感じのもの）"
+      - "「なぜ作るのか（課題・動機）」の質問を追加"
+      - "「成功の基準」の質問を追加（何ができたら満足か）"
+      - "BRIEF.md テンプレートにこれらのセクションを追加"
+    notes: |
+      問題: ヒアリングが機能ベースに偏り、ビジネス文脈が薄い。
+      結果: 技術的には動くが「欲しいもの」とズレた成果物ができる。
+
+  - id: T-OS-081
+    title: "参照調査の必須化: DESIGN フェーズで類似サービス調査を必須ステップに"
+    status: done
+    deps: ["T-OS-080"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/design-documentation.md", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "DESIGN フェーズ開始時に類似サービス/競合の WebSearch を必須タスクとして追加"
+      - "調査結果を .ai/DESIGN/REFERENCES.md に記録"
+      - "「参照との差分（何を真似る/何を変える）」を設計判断に含める"
+    notes: |
+      問題: ゼロから発明しようとして、既存の良いパターンを活用しない。
+      解決: 類似サービスを調査し、良い部分を取り入れた上で差別化する。
+
+  - id: T-OS-082
+    title: "インクリメンタル確認: MVP→フィードバック→拡張サイクルの導入"
+    status: done
+    deps: ["T-OS-080"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", ".claude/agents/manager.md"]
+    acceptance:
+      - "実装フェーズを「MVP → 確認 → 拡張」のサイクルに分割するルール追加"
+      - "MVP の定義: マスト要件の核となる1-2機能のみ"
+      - "MVP完了時にOwnerに見せて方向性を確認するフロー"
+      - "確認後に拡張フェーズに入るルール"
+    notes: |
+      問題: 全部作ってから見せるので、方向修正が遅い。
+      解決: 核となる部分を先に見せて、方向性の確認を早期に行う。
+
+  - id: T-OS-083
+    title: "外部AIリソース自動取り込み: org-evolve に外部ソーススキャン機能を追加"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/org-evolve.md", ".claude/skills/"]
+    acceptance:
+      - "org-evolve に外部ソーススキャン Step を追加（GitHub trending, Claude Code community）"
+      - "発見した有用パターンを .claude/skills/ に取り込むフロー"
+      - "取り込み結果を EVOLVE_LOG.md に記録"
+      - "既存の内部分析と共存（内部改善 + 外部取り込みの両方を実行）"
+    notes: |
+      Owner要望: OrgOS が定期的に外部の革新的な Claude Code 活用法やAIリソースを
+      発見・取り込み、OS自体が自動アップデートされる仕組み。
+      org-evolve の既存スケジュール実行と統合する。
 
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003

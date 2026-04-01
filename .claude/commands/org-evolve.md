@@ -107,9 +107,34 @@ warn/fail があれば改善候補に追加。
 inconsistencies = []
 ```
 
-#### 1.6 改善候補リスト作成
+#### 1.6 外部AIリソーススキャン
 
-検出した問題を優先度順にリスト化:
+外部ソースから革新的なパターンやベストプラクティスを収集する。
+
+```
+1. WebSearch で外部リソースを検索
+   - "Claude Code best practices 2026"
+   - "Claude Code CLAUDE.md examples"
+   - "AI coding agent workflow patterns"
+   - "github claude code stars:>100"
+   - "anthropic claude code tips"
+
+2. 発見したリソースを評価
+   - OrgOS に取り込む価値があるか
+   - 既に OrgOS が対応済みか
+   - 取り込みの難易度（低/中/高）
+
+3. 取り込み候補をリスト化
+   - カテゴリ: external-pattern
+   - 出典 URL を記録
+   - 取り込み方法の概要
+```
+
+**スキャン頻度**: メインループの1サイクル目で実行。候補があれば内部改善と合わせて PICK する。
+
+#### 1.7 改善候補リスト作成
+
+検出した問題と外部リソースを優先度順にリスト化:
 
 | 優先度 | カテゴリ | 対象 |
 |--------|----------|------|
@@ -118,6 +143,7 @@ inconsistencies = []
 | P1 | consistency | 数値基準の不整合 |
 | P2 | deduplicate | 重複コンテンツ |
 | P2 | completeness | エージェント定義の warn |
+| P2 | external-pattern | 外部リソースから取り込むべきパターン |
 | P3 | optimize | その他の改善 |
 
 ---
@@ -186,6 +212,7 @@ git log --oneline --grep="experiment(evolve)" -20 2>/dev/null || true
 | `consistency` | 数値基準を CLAUDE.md / rules の正とする方に統一 |
 | `completeness` | エージェント定義の欠落フィールドを追加 |
 | `optimize` | 冗長な記述を簡潔化（意味を変えない） |
+| `external-pattern` | 外部リソースのパターンを `.claude/skills/` に追記、または既存ルールに統合 |
 
 ---
 
@@ -287,6 +314,7 @@ consecutive_reverts += 1
 | 結果 | KEEP / REVERT |
 | コミット | <hash> |
 | Eval | pass / fail / skip |
+| 出典 | <URL or "internal"> |
 
 ### 詳細
 <何をなぜ変更したか、1-3行で>

@@ -9,11 +9,11 @@
 | 項目 | 値 |
 |------|-----|
 | Stage | KICKOFF |
-| Completed tasks | 48 |
+| Completed tasks | 51 |
 | In progress | 0 |
 | Review | 0 |
 | Blocked | 0 |
-| Queued | 1 |
+| Queued | 0 |
 
 ---
 
@@ -21,8 +21,8 @@
 
 | ID | Title | Status | Owner |
 |----|-------|--------|-------|
-| T-001 | Kickoff: collect requirements | queued | org-planner |
-| T-002 | Design: define contracts | queued | org-architect |
+| T-001 | Kickoff: collect requirements | **done** | org-planner |
+| T-002 | Design: define contracts | **done** | org-architect |
 | T-OS-004 | 上司レビューモード | **done** | codex-implementer |
 | T-OS-005 | 引き継ぎ機能 | **done** | codex-implementer |
 | T-OS-006 | ゴール階層管理 | **done** | codex-implementer |

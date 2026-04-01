@@ -78,7 +78,27 @@ Task({
 - タスク間に依存関係がある
 - 同じファイルを変更する
 - 前のタスクの結果が次の入力になる
+- allowed_paths が未設定のタスクがある
 ```
+
+### ファイル衝突検出（Iron Law）
+
+> **鉄則: allowed_paths が重複するタスクは絶対に並列実行しない。**
+
+並列実行前に以下の手順で衝突を検出する:
+
+1. **TASKS.yaml から running タスクの allowed_paths を取得**
+2. **新タスクの allowed_paths と比較**
+3. **衝突判定ルール**:
+   - 完全一致: `src/auth/` == `src/auth/` → 衝突
+   - 包含関係: `src/` contains `src/auth/` → 衝突
+   - ファイル vs ディレクトリ: `src/auth/login.ts` in `src/auth/` → 衝突
+4. **allowed_paths 未設定 → 他の全タスクと衝突とみなす**
+
+衝突を検出したら:
+1. 新タスクの deps に衝突タスクを自動追加
+2. TASKS.yaml を更新
+3. 台帳に記録（Owner への報告は不要、自動で処理）
 
 ### 並列実行の例
 
