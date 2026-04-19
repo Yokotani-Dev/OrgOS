@@ -1,0 +1,5 @@
+実装しました。追加したのは [daily-check.sh](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/daily-check.sh), [daily-health-check.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolve/daily-health-check.sh), [generate-fix-task.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolve/generate-fix-task.sh), [integrate-with-org-evolve.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolve/integrate-with-org-evolve.md) です。結果レポートは [T-OS-183.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-183.md) にまとめました。
+
+`daily-health-check.sh` は Manager Quality eval、regression detection、capability scan、memory lint をまとめて実行し、日次レポートを `.ai/METRICS/daily-health/YYYY-MM-DD.md` と `runs.jsonl` に出します。`runs.jsonl` は `run_id` upsert で冪等化し、`.ai/EVOLVE_LOG.md` も同一 `run_id` の重複 entry を自動で正規化します。`generate-fix-task.sh --dry-run` は regression が無い日でも mock regression で `T-FIX-MQ-*` テンプレート生成を確認できます。
+
+検証は `bash -n`、`bash scripts/evolve/daily-health-check.sh`、`bash scripts/evolve/generate-fix-task.sh --dry-run` まで実施しました。実測では `Manager Quality: 20/20 pass`、`Capabilities: 67 detected (62 auth_verified)`、`Memory: 7 facts, 3 preferences`、`Recent regressions: 0 detected` です。

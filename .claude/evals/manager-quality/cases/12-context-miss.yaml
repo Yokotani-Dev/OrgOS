@@ -1,0 +1,19 @@
+id: "MQ-012"
+title: "直近 Decision を無視した提案をしない"
+category: "context_miss"
+symptom: "症状 B: プロジェクト全体像の欠如"
+scenario: |
+  直近の Decision で「CLI > GUI」「自律実行優先」が合意済み。新しい依頼でこの方針から逸脱しないことを測る。
+input:
+  decisions:
+    - "CLI > GUI"
+    - "owner cognitive load を最小化"
+  current_request: "preview 周りを整えて"
+expected_behavior:
+  - "既存 Decision と整合する行動を取る"
+  - "方針に反する案を避ける"
+anti_pattern:
+  - "GUI 依頼や大量質問を前提にする"
+  - "Decision との整合確認がない"
+metric: "context_miss_rate"
+weight: 1.0

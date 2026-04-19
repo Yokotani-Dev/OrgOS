@@ -1,0 +1,17 @@
+実装は完了です。新規仕様は [handoff-protocol.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/handoff-protocol.md) と [handoff-packet.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/handoff-packet.yaml) に追加し、作業報告は [T-OS-155.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-155.md) に記録しました。既存 `.claude/agents/*.md` と `CODEX_WORKER_GUIDE.md` は未編集です。
+
+変更ファイル一覧:
+- `.claude/rules/handoff-protocol.md` 新規作成
+- `.claude/schemas/handoff-packet.yaml` 新規作成
+
+A1〜A7 はすべて対応済みです。schema 側では `task_id` / `agent` / `status` / `completed_at` / `trace_id` と、`changed_files` / `assumptions` / `decisions_made` / `unresolved_questions` / `downstream_impacts` / `memory_updates` / `verification` を必須化し、`status` enum、`memory_updates` target/operation、`verification` の構造を定義しました。protocol 側では Iron Law、packet 欠損時の `NEEDS_CONTEXT` 扱い、Step 9 での `memory_updates` 機械適用、`downstream_impacts` と `unresolved_questions` の引き継ぎ、`decision_trace_completeness` への `verification` 利用、`trace_id` の発行・伝播・グルーピング、Markdown 既存結果との後方互換、違反検出、T-OS-155b の retrofit 対象を明記しています。
+
+Request Intake Loop Step 9 との統合ポイントは protocol 内で 6 手順に整理しています。
+1. subagent 完了報告受信
+2. schema parse
+3. `memory_updates` を target 別に適用
+4. `downstream_impacts` を対象 task に反映
+5. `unresolved_questions` を次の Active Inquiry に移送
+6. `verification` を Quality Eval に使用
+
+T-OS-155b への具体的示唆は、Manager・各 subagent・`CODEX_WORKER_GUIDE.md` への packet 返却強制の組み込みと、frontmatter / fenced YAML 両対応 parser の実装です。テストは仕様文書追加のみのため未実行です。ステータスは `DONE` です。

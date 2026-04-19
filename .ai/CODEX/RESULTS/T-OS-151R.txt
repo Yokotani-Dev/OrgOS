@@ -1,0 +1,3 @@
+総合判定は `△ (要修正)`、ステータスは `CHANGES_REQUESTED` です。レビュー結果は [T-OS-151R.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-151R.md) に記録しました。
+
+CRITICAL はありません。HIGH は 3 件です。`.claude/evals/manager-quality/report.py:65` の judge がまだ固定 mock で、`USER_PROFILE` を実際には評価していません。`.claude/schemas/user-profile.yaml:133` と `:177` 以降で secrets / preferences に provenance・expiry・privacy の共通メタデータが欠け、Pro SSOT の追跡性要件を満たしていません。`.claude/schemas/user-profile.yaml:41` 以降で `transferability` が未実装で、誤転移防止が `scope` のみ依存です。

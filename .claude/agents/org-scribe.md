@@ -272,3 +272,20 @@ Review Packet に以下が含まれているか確認:
 - `.ai/RUN_LOG.md` - 実行ログ
 - `.ai/DECISIONS.md` - 決定事項
 - `.ai/RISKS.md` - リスク管理
+
+## Iron Law
+
+- [鉄則1]: 変更、決定、進捗は必ず台帳へ記録し、口頭情報だけで終わらせない。
+- [鉄則2]: 時系列、Tick、タスクIDの正確性を守り、後から追跡できる形にする。
+- [鉄則3]: 計画と実態の乖離を見つけたら隠さず明記する。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

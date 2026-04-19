@@ -1,0 +1,45 @@
+T-OS-171 completed.
+
+Implemented under `scripts/authority/`:
+
+- `common.sh`: shared authority input loading, protocol parsing, audit logging
+- `os-mutation-check.sh`: OS Mutation Protocol decision engine
+- `dry-run.sh`: patch dry-run, YAML/JSON syntax checks, markdown link checks, large diff warnings
+- `backup.sh`: `.ai/BACKUPS/YYYY-MM-DD/<filename>.bak`, with `--tar-gz`
+- `rollback.sh`: restore from backup, with pre-restore backup
+- `apply.sh`: check -> backup -> dry-run -> `git apply`, with approval-required/reject handling
+
+Report written to:
+
+- [.ai/CODEX/RESULTS/T-OS-171.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-171.md)
+
+Verification run:
+
+```bash
+scripts/authority/os-mutation-check.sh --operation new_file_in_claude_rules --target .claude/rules/test.md
+```
+
+Result: `allowed=true`, `autonomy_level=execute_with_report`, `next_step=proceed`
+
+```bash
+scripts/authority/os-mutation-check.sh --operation edit_claude_md --target CLAUDE.md
+```
+
+Result: `allowed=false`, `approval_required=true`, `next_step=request_approval`
+
+```bash
+scripts/authority/os-mutation-check.sh --operation edit_env --target .env
+```
+
+Result: `allowed=false`, `autonomy_level=owner_only`, `next_step=reject`
+
+Also ran:
+
+```bash
+bash -n scripts/authority/*.sh
+scripts/authority/dry-run.sh --target scripts/authority/t-os-171-fixture.json --patch /tmp/t-os-171-new-json.patch
+```
+
+Both passed.
+
+A8 audit logging is active and produced `.ai/AUDIT/os-mutation-2026-04-19.log` as a runtime artifact from the verification commands. I did not edit `.ai/DECISIONS.md`, `.ai/TASKS.yaml`, `CLAUDE.md`, `.claude/**`, `AGENTS.md`, or `OWNER_INBOX`. `apply.sh` deliberately does not write `OWNER_INBOX`; it returns structured approval-required JSON for T-OS-173 to consume.

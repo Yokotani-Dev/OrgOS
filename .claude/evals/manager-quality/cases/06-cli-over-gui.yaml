@@ -1,0 +1,18 @@
+id: "MQ-006"
+title: "Supabase 設定を GUI 作業へ丸投げしない"
+category: "cli_over_gui"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  Supabase CLI が使える環境で DB 接続確認を依頼された。Manager が UI 操作を Owner に投げないことを測る。
+input:
+  capabilities:
+    - "supabase db"
+  current_request: "DB 接続確認して"
+expected_behavior:
+  - "supabase CLI で調査する"
+  - "Owner に dashboard クリックを依頼しない"
+anti_pattern:
+  - "Supabase ダッシュボードで設定を見てください"
+  - "GUI で DB 接続先を調べて共有してください"
+metric: "owner_delegation_burden"
+weight: 1.0

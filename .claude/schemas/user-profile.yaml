@@ -1,0 +1,325 @@
+# USER_PROFILE.yaml schema
+schema:
+  type: object
+  additional_properties: false
+  required:
+    - owner
+    - facts
+    - secrets
+    - preferences
+
+common_memory_metadata:
+  description: Shared provenance / validity / privacy metadata applied to facts, secrets, and preferences.
+  required:
+    - source_ref
+    - valid_from
+    - expires_at
+    - last_verified_at
+    - transferability
+  optional:
+    - pii_level
+  fields:
+    source_ref:
+      type: string
+      min_length: 1
+    valid_from:
+      type: date
+    expires_at:
+      type: date_or_null
+    pii_level:
+      type: enum
+      values:
+        - none
+        - low
+        - medium
+        - high
+    last_verified_at:
+      type: date
+    transferability:
+      type: enum
+      default: none
+      values:
+        - none
+        - project_to_domain
+        - domain_to_global
+        - explicit_only
+
+owner:
+  type: object
+  additional_properties: false
+  required:
+    - name
+    - literacy_level
+    - response_preference
+    - timezone
+  fields:
+    name:
+      type: string
+      min_length: 1
+    literacy_level:
+      type: enum
+      values:
+        - beginner
+        - intermediate
+        - advanced
+    response_preference:
+      type: string
+      min_length: 1
+    timezone:
+      type: string
+      min_length: 1
+
+facts:
+  type: array
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - type
+      - value_ref
+      - scope
+      - source
+      - source_ref
+      - confidence
+      - valid_from
+      - expires_at
+      - pii_level
+      - last_verified_at
+      - transferability
+      - secret
+    fields:
+      id:
+        type: string
+        pattern: "^fact_[a-z0-9_]+$"
+      type:
+        type: enum
+        values:
+          - project_resource
+          - personal_info
+          - preference
+          - environment
+          - relationship
+      value_ref:
+        type: any
+        note: Plain strings are allowed, but high-PII data must be redacted or represented as a pointer.
+      scope:
+        type: string
+        pattern: "^(global|project:[a-z0-9._-]+|domain:[a-z0-9._-]+)$"
+      source:
+        type: enum
+        values:
+          - owner_confirmed
+          - inferred
+          - auto_detected
+          - external
+      source_ref:
+        type: string
+        min_length: 1
+        examples:
+          - "past_qa:2026-03-15"
+          - "file:.ai/CONTROL.yaml#L42"
+      confidence:
+        type: float
+        min: 0.0
+        max: 1.0
+      valid_from:
+        type: date
+      expires_at:
+        type: date_or_null
+      pii_level:
+        type: enum
+        values:
+          - none
+          - low
+          - medium
+          - high
+      last_verified_at:
+        type: date
+      transferability:
+        type: enum
+        default: none
+        values:
+          - none
+          - project_to_domain
+          - domain_to_global
+          - explicit_only
+      secret:
+        type: boolean
+        note: true の場合、実体は facts に置かず、対応する secret_* entry を secrets に必ず持つこと。
+    variants:
+      past_qa_fact:
+        description: past_qa は独立コレクションを持たず、fact として表現する。
+        type_constraints:
+          type:
+            allowed:
+              - personal_info
+              - project_resource
+        value_ref:
+          type: object
+          additional_properties: false
+          required:
+            - question
+            - asked_at
+            - context
+          fields:
+            question:
+              type: string
+            answer:
+              type: string
+              note: 非機密の回答のみ。`pii_level` は `none` または `low` に限る。
+            answer_redacted:
+              type: string
+              note: "`[redacted: see secrets.<id>]` のような参照用文字列。"
+            secret_ref:
+              type: string
+              pattern: "^secret_[a-z0-9_]+$"
+            asked_at:
+              type: date
+            context:
+              type: string
+
+secrets:
+  type: array
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - service
+      - scope
+      - source_ref
+      - valid_from
+      - expires_at
+      - pii_level
+      - storage
+      - materialized
+      - last_verified_at
+      - transferability
+      - rotation_policy
+    fields:
+      id:
+        type: string
+        pattern: "^secret_[a-z0-9_]+$"
+      service:
+        type: string
+        min_length: 1
+      scope:
+        type: string
+        pattern: "^(global|project:[a-z0-9._-]+|domain:[a-z0-9._-]+)$"
+      source_ref:
+        type: string
+        min_length: 1
+      valid_from:
+        type: date
+      expires_at:
+        type: date_or_null
+      pii_level:
+        type: enum
+        values:
+          - none
+          - low
+          - medium
+          - high
+      storage:
+        type: string
+        pattern: "^[a-z0-9+.-]+://.+$"
+        examples:
+          - "1password://OrgOS/Supabase abc123"
+          - "keychain://orgos/github"
+          - "sops://ops/prod/db"
+          - "env://SUPABASE_ACCESS_TOKEN"
+      materialized:
+        type: boolean
+        note: false が標準。USER_PROFILE に secret 実体を保存しない。
+      last_verified_at:
+        type: date
+      transferability:
+        type: enum
+        default: none
+        values:
+          - none
+          - project_to_domain
+          - domain_to_global
+          - explicit_only
+      rotation_policy:
+        type: enum
+        values:
+          - manual
+          - auto_monthly
+          - auto_quarterly
+          - never
+
+preferences:
+  type: array
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - statement
+      - scope
+      - source
+      - source_ref
+      - confidence
+      - valid_from
+      - expires_at
+      - last_verified_at
+      - transferability
+      - overridable
+      - learned_at
+    fields:
+      id:
+        type: string
+        pattern: "^pref_[a-z0-9_]+$"
+      statement:
+        type: string
+        min_length: 1
+      scope:
+        type: string
+        pattern: "^(global|project:[a-z0-9._-]+|domain:[a-z0-9._-]+)$"
+      source:
+        type: enum
+        values:
+          - owner_confirmed
+          - inferred
+      source_ref:
+        type: string
+        min_length: 1
+      confidence:
+        type: float
+        min: 0.0
+        max: 1.0
+      valid_from:
+        type: date
+      expires_at:
+        type: date_or_null
+      pii_level:
+        type: enum
+        values:
+          - none
+          - low
+          - medium
+          - high
+      last_verified_at:
+        type: date
+      transferability:
+        type: enum
+        default: none
+        values:
+          - none
+          - project_to_domain
+          - domain_to_global
+          - explicit_only
+      overridable:
+        type: boolean
+      learned_at:
+        type: date
+
+invariants:
+  - "facts[].secret = true の場合、対応する secrets[].id を持ち、fact.value_ref に secret 実体を保存してはならない。"
+  - "expires_at が valid_from より前であってはならない。"
+  - "confidence < 0.5 の fact/preference は validate 時に Owner 確認対象。"
+  - "scope は global / project:<id> / domain:<name> のみを許可する。"
+  - "past_qa_fact.value_ref は `answer` / `answer_redacted` / `secret_ref` のいずれかちょうど 1 つを持つ。"
+  - "past_qa_fact.value_ref.answer を使う場合、facts[].pii_level は `none` または `low` に限る。"

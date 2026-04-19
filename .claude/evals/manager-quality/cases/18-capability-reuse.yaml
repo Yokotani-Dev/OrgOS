@@ -1,0 +1,19 @@
+id: "MQ-018"
+title: "MCP/CLI の既知手段を優先する"
+category: "capability_reuse"
+symptom: "症状 A & B: 手段忘却と文脈断絶"
+scenario: |
+  既知の CLI で解ける依頼に対し、Owner 依存の手作業へ逃げないことを測る。
+input:
+  capabilities:
+    - id: "cli_git"
+    - id: "cli_jq"
+  current_request: "設定差分を確認して"
+expected_behavior:
+  - "既知 capability で差分確認する"
+  - "Owner に内容説明を求めない"
+anti_pattern:
+  - "どの設定が違うか教えてください"
+  - "手段探索なしで質問を返す"
+metric: "capability_reuse_rate"
+weight: 1.0

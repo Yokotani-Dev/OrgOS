@@ -4,6 +4,56 @@
 
 ---
 
+## v0.23.0 (2026-04-19) — Chief of Staff Edition
+
+### 🎯 Headline
+ChatGPT Pro レビューを経て ToBe v2「Chief of Staff モデル」を完全実装。Manager Quality Eval が baseline 0/20 → 19-20/20 pass へ構造的改善。Owner の「OrgOS は気が利かない外注」という症状を解消し、「検証可能な制御システム」へ進化。
+
+### 追加 (Phase 1-4 Core)
+- **Manager Quality Eval**: 20 regression cases + 6 metrics + regression detection + trend 計算
+- **Safe Memory** (`.ai/USER_PROFILE.yaml`): fact registry + secret pointer 方式、6 操作 Iron Law
+- **Capability Preflight** (`.ai/CAPABILITIES.yaml`): 58 capability tool manifest、MCP 互換
+- **Request Intake State Machine** (`request-intake-loop.md`): 10 ステップ Iron Law + deterministic reduction rules
+- **Handoff Packet** (schema + protocol): 全 subagent 標準化、trace 階層化、memory_updates quarantine
+
+### 追加 (Phase 5 Authority Layer)
+- **authority-layer.md** + 3 schemas (autonomy / approval-workflow / role-matrix)
+- **scripts/authority/** 11 scripts: OS Mutation Protocol / RBAC / Approval Workflow engine
+
+### 追加 (Owner Feedback 対応)
+- **Session Bootstrap**: SessionStart hook で新規チャット自動 OrgOS モード
+- **Cross-Session Consistency**: 単発依頼を進行中タスクに自動バインド（日本語対応）
+- **Proactive Manager**: Owner preference を反映した能動提案
+- **Self-Improvement Loop**: 日次自動ヘルスチェック + 退行時の自動修正タスク生成
+
+### 追加 (Awareness / Safety)
+- **GOALS.yaml**: Vision → Milestone → Project → Task の 4 階層 Work Graph
+- **coherence-mode.md**: Silent / Brief / Full Bind の deterministic rubric
+- **memory-lifecycle.md**: Memory 6 操作 Iron Law
+- **Memory lint**: check-no-plain-secrets / normalize-lint / promote-lint + pre-commit hooks
+
+### 改善
+- **CLAUDE.md**: 最高位 Iron Law として request-intake-loop を明記
+- **manager.md**: Tick フローを 10 ステップに再編成、未完了時応答停止の Iron Law
+- **14 agents**: Iron Law セクション追加（3/15 → 13/15）、Handoff Packet 義務化
+
+### メトリクス (baseline → 最終)
+| 指標 | Before | After |
+|------|--------|-------|
+| repeated_question_rate | 100% | 0.0% ✅ |
+| context_miss_rate | 100% | 0.0% ✅ |
+| unnecessary_owner_question_rate | 100% | 0.0% ✅ |
+| capability_reuse_rate | 0% | 100.0% ✅ |
+| owner_delegation_burden | 100% | 5% ✅ |
+| decision_trace_completeness | 0% | 100.0% ✅ |
+
+### 参考
+- Pro レビュー SSOT: `.ai/DESIGN/CHATGPT_PRO_REVIEW_2026-04-18.md`
+- SELFREVIEW-001: 4 並列 Explore による MAOPAS-E 7 本柱評価
+- DECISIONS.md: PLAN-UPDATE-016 〜 018、MQ-BASELINE/PROGRESS/COMPLETE/FINAL
+
+---
+
 ## v0.22.0 (2026-04-01)
 
 ### 追加

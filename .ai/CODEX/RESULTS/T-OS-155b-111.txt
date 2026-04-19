@@ -1,0 +1,53 @@
+完了しました。結果レポートは [.ai/CODEX/RESULTS/T-OS-155b-111.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-155b-111.md) に作成済みで、`handoff_packet` を YAML frontmatter に埋め込んでいます。
+
+**Status**
+- `completed`
+- `manager.md` は本タスクでは編集していません。作業開始時点から既存の未コミット差分はありました。
+- commit / push はしていません。
+
+**Edited Agents**
+- `org-architect`
+- `org-build-fixer`
+- `org-doc-updater`
+- `org-e2e-runner`
+- `org-implementer`
+- `org-integrator`
+- `org-os-maintainer`
+- `org-planner`
+- `org-refactor-cleaner`
+- `org-reviewer`
+- `org-scribe`
+- `org-security-reviewer`
+- `org-tdd-coach`
+
+**Guide**
+- [.claude/agents/CODEX_WORKER_GUIDE.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/agents/CODEX_WORKER_GUIDE.md) を更新し、Handoff Packet 必須化と `.ai/CODEX/RESULTS/<TASK_ID>.md` の `handoff_packet` frontmatter 推奨形式を追加しました。
+
+**Backups**
+- 保存先: [.ai/BACKUPS/agents/](/Users/youyokotani/Dev/Private/OrgOS/.ai/BACKUPS/agents)
+- 作成数: 14
+- 対象: `CODEX_WORKER_GUIDE.md` + `org-*.md`
+- 形式: `*.md.2026-04-19.bak`
+
+**Iron Law 要約**
+- `org-planner`: 要件曖昧なまま進めず、PROJECT と台帳を source of truth にする。
+- `org-architect`: Contract 未定義で着手せず、依存グラフと境界を明示する。
+- `org-reviewer`: 自己報告を信用せず、CRITICAL は即 fail。
+- `org-scribe`: 変更と決定を台帳に残し、時系列の正確性を守る。
+- `org-integrator`: スコープ外マージをせず、整合性確認を省略しない。
+- `org-build-fixer`: 最小差分で直し、既存機能を壊さない。
+- `org-refactor-cleaner`: 挙動を変えず、テスト全パス前提で進める。
+- `org-tdd-coach`: テストなしで実装せず、Red-Green-Refactor を守る。
+- `org-e2e-runner`: フレーキーテストを skip せず、根本原因を記録する。
+- `org-doc-updater`: dead link とバージョン不整合を作らない。
+- `org-security-reviewer`: OWASP Top 10 と secret 検出を必須にする。
+- `org-os-maintainer`: OS 本体変更は Owner 承認下のみ、OIP として記録する。
+- `org-implementer`: deprecated として codex-implementer を参照する。
+
+**Verification**
+- `org-*.md` 全 13 件の YAML frontmatter parse: pass
+- `## Iron Law` / `## Handoff Packet (必須)` の件数検証: pass
+- `.ai/CODEX/RESULTS/T-OS-155b-111.md` frontmatter parse: pass
+- `bash .claude/evals/run-all.sh`: pass
+  - `manager-quality`: pass
+  - `duplicate-content`: warn 1 件、fail なし

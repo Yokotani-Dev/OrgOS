@@ -1,0 +1,5 @@
+`cross-session` bind ルールと実行スクリプトを追加しました。[.claude/rules/cross-session-consistency.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/cross-session-consistency.md:1) で `request-intake-loop` Step 3 の実装詳細として Iron Law を定義し、`【文脈】...` の応答冒頭明示、3分類、`context_miss_rate` との連動、`T-OS-180b` での bootstrap 参照統合方針まで固定しています。
+
+[bind-request.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/bind-request.sh:1) は `stdin` / `--request` 両対応で、`TASKS.yaml` の `running/review/queued`、`GOALS.yaml` の active milestone/project、`DECISIONS.md` の直近 20 件を突き合わせて JSON を返します。スコアはキーワード overlap、簡易 Jaccard、phrase 一致、ID 直指定ブーストで計算し、`0.7` 以上を `task_continuation`、`0.3` 以上を `sub_task_of_active_project` としました。結果レポートは [.ai/CODEX/RESULTS/T-OS-181.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-181.md:1) にあります。
+
+検証は `bash -n scripts/session/bind-request.sh` と、指定の 3 ケース実行で確認済みです。`"T-OS-180 の設計を確認したい"` は `task_continuation`、他 2 ケースは現状データでは `new_project` になりました。

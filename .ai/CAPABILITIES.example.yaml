@@ -1,0 +1,194 @@
+capabilities:
+  - id: cli_codex
+    kind: cli
+    name: Codex CLI
+    command: codex
+    path: /opt/homebrew/bin/codex
+    version: 0.0.0
+    status: available
+    auth_status: not_required
+    verified_at: 2026-04-18T00:00:00Z
+    risk_level: low
+    supports_dry_run: true
+    owner_approval_required_for: []
+    common_operations:
+      - name: run_noninteractive_task
+        description: Execute a bounded Codex task from the terminal.
+        command_template: codex exec --skip-git-repo-check "${prompt}"
+        required_inputs:
+          - name: prompt
+            type: string
+        risk_level: low
+        supports_dry_run: true
+        owner_approval_required_for: []
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+    mcp_compat:
+      resource_type: cli/codex
+      tool_schema:
+        type: object
+        properties:
+          prompt:
+            type: string
+        required:
+          - prompt
+
+  - id: cli_gh
+    kind: cli
+    name: GitHub CLI
+    command: gh
+    path: /opt/homebrew/bin/gh
+    version: 2.x
+    status: available
+    auth_status: verified
+    verified_at: 2026-04-18T00:00:00Z
+    risk_level: medium
+    supports_dry_run: false
+    owner_approval_required_for:
+      - operation: repo_delete
+        reason: repository deletion is destructive and irreversible
+    common_operations:
+      - name: view_pr
+        description: Inspect a pull request from the terminal.
+        command_template: gh pr view ${pr_number} --json number,title,state,url
+        required_inputs:
+          - name: pr_number
+            type: integer
+        risk_level: low
+        supports_dry_run: false
+        owner_approval_required_for: []
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+    mcp_compat:
+      resource_type: cli/github
+      tool_schema:
+        type: object
+        properties:
+          pr_number:
+            type: integer
+        required:
+          - pr_number
+
+  - id: cli_supabase
+    kind: cli
+    name: Supabase CLI
+    command: supabase
+    path: /opt/homebrew/bin/supabase
+    version: 1.x
+    status: available
+    auth_status: verified
+    verified_at: 2026-04-18T00:00:00Z
+    risk_level: high
+    supports_dry_run: false
+    owner_approval_required_for:
+      - operation: db_reset
+        reason: database reset is destructive
+      - operation: billing
+        reason: billing-affecting changes require owner approval
+    common_operations:
+      - name: get_project_api_keys
+        description: Fetch API keys for a known project ref.
+        command_template: supabase projects api-keys --project-ref ${project_ref}
+        required_inputs:
+          - name: project_ref
+            type: string
+        risk_level: low
+        supports_dry_run: false
+        owner_approval_required_for: []
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+      - name: db_reset
+        description: Reset a linked database environment.
+        command_template: supabase db reset
+        required_inputs: []
+        risk_level: critical
+        supports_dry_run: false
+        owner_approval_required_for:
+          - destructive
+          - owner
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+    mcp_compat:
+      resource_type: cli/supabase
+      tool_schema:
+        type: object
+        properties:
+          project_ref:
+            type: string
+        required:
+          - project_ref
+
+  - id: internal_skill_research
+    kind: internal_skill
+    name: research-skill
+    command: null
+    path: .claude/skills/research-skill.md
+    version: null
+    status: available
+    auth_status: not_required
+    verified_at: 2026-04-18T00:00:00Z
+    risk_level: low
+    supports_dry_run: true
+    owner_approval_required_for: []
+    common_operations:
+      - name: synthesize_research
+        description: Use the internal research skill for bounded investigation.
+        command_template: skill://research-skill
+        required_inputs: []
+        risk_level: low
+        supports_dry_run: true
+        owner_approval_required_for: []
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+    mcp_compat:
+      resource_type: internal/skill
+      tool_schema: null
+
+  - id: mcp_filesystem
+    kind: mcp
+    name: filesystem
+    command: null
+    path: null
+    version: null
+    status: available
+    auth_status: not_required
+    verified_at: 2026-04-18T00:00:00Z
+    risk_level: medium
+    supports_dry_run: true
+    owner_approval_required_for:
+      - operation: delete
+        reason: filesystem writes can be destructive
+    common_operations:
+      - name: read_workspace_file
+        description: Read a file through the filesystem MCP server.
+        command_template: mcp://filesystem/read?path=${path}
+        required_inputs:
+          - name: path
+            type: string
+        risk_level: medium
+        supports_dry_run: true
+        owner_approval_required_for:
+          - destructive
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+    mcp_compat:
+      resource_type: mcp/server
+      tool_schema:
+        type: object
+        properties:
+          path:
+            type: string
+        required:
+          - path

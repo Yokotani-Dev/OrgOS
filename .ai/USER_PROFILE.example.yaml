@@ -1,0 +1,170 @@
+# Safe Memory template for OrgOS.
+# Usage: cp .ai/USER_PROFILE.example.yaml .ai/USER_PROFILE.yaml
+# Do not store secret material in this file. Use secret pointers only:
+#   1password://..., keychain://..., sops://..., env://VAR_NAME
+
+owner:
+  name: "Yu Yokotani"
+  literacy_level: "intermediate"
+  response_preference: "terse_japanese"
+  timezone: "Asia/Tokyo"
+
+facts:
+  - id: fact_owner_name
+    type: personal_info
+    value_ref: "Yu Yokotani"
+    scope: "global"
+    source: owner_confirmed
+    source_ref: "file:.ai/DESIGN/ORGOS_TOBE.md#L200"
+    confidence: 1.0
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: low
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    secret: false
+
+  - id: fact_owner_literacy_level
+    type: personal_info
+    value_ref: "intermediate"
+    scope: "global"
+    source: auto_detected
+    source_ref: "file:.ai/CONTROL.yaml#L42"
+    confidence: 1.0
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: none
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    secret: false
+
+  - id: fact_orgos_dev_scope
+    type: environment
+    value_ref: "OrgOS development only"
+    scope: "project:orgos"
+    source: auto_detected
+    source_ref: "file:.ai/CONTROL.yaml#L11"
+    confidence: 1.0
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: none
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    secret: false
+
+  - id: fact_qa_supabase_project_ref
+    type: project_resource
+    value_ref:
+      question: "Supabase project_ref は？"
+      answer: "abc123"
+      asked_at: "2026-03-15"
+      context: "initial setup"
+    scope: "project:orgos"
+    source: owner_confirmed
+    source_ref: "past_qa:2026-03-15"
+    confidence: 1.0
+    valid_from: "2026-03-15"
+    expires_at: null
+    pii_level: low
+    last_verified_at: "2026-03-15"
+    transferability: "project_to_domain"
+    secret: false
+
+  - id: fact_qa_github_org
+    type: project_resource
+    value_ref:
+      question: "GitHub org は？"
+      answer: "orgos-dev"
+      asked_at: "2026-04-01"
+      context: "release workflow setup"
+    scope: "domain:github"
+    source: owner_confirmed
+    source_ref: "past_qa:2026-04-01"
+    confidence: 1.0
+    valid_from: "2026-04-01"
+    expires_at: null
+    pii_level: low
+    last_verified_at: "2026-04-01"
+    transferability: "domain_to_global"
+    secret: false
+
+  - id: fact_qa_vercel_team_slug
+    type: project_resource
+    value_ref:
+      question: "Vercel team slug は？"
+      answer: "orgos-web"
+      asked_at: "2026-03-22"
+      context: "preview environment onboarding"
+    scope: "domain:vercel"
+    source: owner_confirmed
+    source_ref: "past_qa:2026-03-22"
+    confidence: 1.0
+    valid_from: "2026-03-22"
+    expires_at: null
+    pii_level: low
+    last_verified_at: "2026-03-22"
+    transferability: "domain_to_global"
+    secret: false
+
+  - id: fact_qa_deploy_flow
+    type: project_resource
+    value_ref:
+      question: "deploy は preview 経由でよい？"
+      answer: "preview -> manual promote"
+      asked_at: "2026-04-10"
+      context: "deploy runbook confirmation"
+    scope: "project:orgos"
+    source: owner_confirmed
+    source_ref: "past_qa:2026-04-10"
+    confidence: 1.0
+    valid_from: "2026-04-10"
+    expires_at: null
+    pii_level: low
+    last_verified_at: "2026-04-10"
+    transferability: "explicit_only"
+    secret: false
+
+secrets: []
+
+preferences:
+  - id: pref_cli_over_gui
+    statement: "CLI > GUI"
+    scope: "global"
+    source: owner_confirmed
+    source_ref: "owner_message:2026-04-18"
+    confidence: 0.95
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: none
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    overridable: true
+    learned_at: "2026-04-18"
+
+  - id: pref_autonomous_execution_over_options
+    statement: "自律実行 > 選択肢提示"
+    scope: "global"
+    source: owner_confirmed
+    source_ref: "owner_message:2026-04-18"
+    confidence: 0.95
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: none
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    overridable: true
+    learned_at: "2026-04-18"
+
+  - id: pref_session_end_only_at_95pct
+    statement: "セッション終了提案は 95%+ のみ"
+    scope: "global"
+    source: owner_confirmed
+    source_ref: "owner_message:2026-04-18"
+    confidence: 0.95
+    valid_from: "2026-04-18"
+    expires_at: null
+    pii_level: none
+    last_verified_at: "2026-04-18"
+    transferability: "none"
+    overridable: false
+    learned_at: "2026-04-18"

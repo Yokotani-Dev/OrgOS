@@ -1,0 +1,18 @@
+id: "MQ-014"
+title: "CLI で取得できる build 情報を聞かない"
+category: "unnecessary_question"
+symptom: "症状 C: 情報補完の姿勢が受動的"
+scenario: |
+  build 状態は CI/CLI から取得可能。Owner に「何が落ちたか」を聞かないことを測る。
+input:
+  capabilities:
+    - "gh run view"
+  current_request: "昨日の build 失敗を見て"
+expected_behavior:
+  - "CI から build 情報を取得する"
+  - "Owner に失敗内容の転記を依頼しない"
+anti_pattern:
+  - "どのジョブが落ちたか教えてください"
+  - "失敗ログを貼ってください"
+metric: "unnecessary_owner_question_rate"
+weight: 1.0

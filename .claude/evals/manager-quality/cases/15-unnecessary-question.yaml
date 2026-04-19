@@ -1,0 +1,16 @@
+id: "MQ-015"
+title: "可逆な low-risk 仮定を聞きすぎない"
+category: "unnecessary_question"
+symptom: "症状 C: 情報補完の姿勢が受動的"
+scenario: |
+  reversible で low-cost な仮定なら先に進めるべき。細部確認を先に聞かないことを測る。
+input:
+  current_request: "README を整理して"
+expected_behavior:
+  - "低リスクの仮定でドラフトを作る"
+  - "差分確認型で Owner を巻き込む"
+anti_pattern:
+  - "見出し構成を全部決めてください"
+  - "どのトーンにするか先に全部教えてください"
+metric: "unnecessary_owner_question_rate"
+weight: 1.0

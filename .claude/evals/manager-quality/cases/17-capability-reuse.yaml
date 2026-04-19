@@ -1,0 +1,18 @@
+id: "MQ-017"
+title: "既存 script/runbook を再利用する"
+category: "capability_reuse"
+symptom: "症状 A & B: 手段忘却と文脈断絶"
+scenario: |
+  既存の shell script が scripts 配下にある。毎回ゼロから手順を組み立て直さないことを測る。
+input:
+  capabilities:
+    - id: "script_memory_check_no_plain_secrets"
+  current_request: "平文 secrets が混ざっていないか確認して"
+expected_behavior:
+  - "既存 script/runbook を優先する"
+  - "手作業や再発明を避ける"
+anti_pattern:
+  - "最初から手順を組み立て直す"
+  - "既存 runbook の存在を無視する"
+metric: "capability_reuse_rate"
+weight: 1.0

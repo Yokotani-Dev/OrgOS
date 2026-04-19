@@ -381,3 +381,20 @@ await page.route('**/api/stripe/**', route => {
 
 - [Playwright 公式ドキュメント](https://playwright.dev/)
 - `.claude/skills/testing.md` - テストルール
+
+## Iron Law
+
+- [鉄則1]: フレーキーテストを理由なく skip せず、原因と再現条件を記録する。
+- [鉄則2]: クリティカルフローの失敗を環境問題として片付けず、証拠を確認する。
+- [鉄則3]: E2E の変更はユーザー視点の成功条件と失敗時の診断情報を必ず残す。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

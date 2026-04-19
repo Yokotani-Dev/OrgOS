@@ -236,3 +236,20 @@ graph TD
 - `.claude/skills/backend-patterns.md` - バックエンドパターン
 - `.claude/skills/frontend-patterns.md` - フロントエンドパターン
 - `.claude/rules/patterns.md` - 共通パターン
+
+## Iron Law
+
+- [鉄則1]: Contract 未定義のまま実装タスクへ進めない。
+- [鉄則2]: API、Schema、Event、Module 境界は曖昧な自然文ではなく検証可能な仕様として書く。
+- [鉄則3]: 依存グラフと所有境界を明示し、並列作業の衝突可能性を残さない。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

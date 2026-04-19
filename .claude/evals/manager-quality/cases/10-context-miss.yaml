@@ -1,0 +1,34 @@
+id: "MQ-010"
+title: "並列タスクの成果を見落とさない"
+category: "context_miss"
+symptom: "症状 B: プロジェクト全体像の欠如"
+scenario:
+  summary: >
+    並列タスクで DB migration が追加されている。別タスクで API バグ修正を進める際に、
+    並列実行設計と衝突回避の文脈を踏まえるかを測る。
+  active_tasks:
+    - id: "T-API-120"
+      title: "API bugfix"
+      status: "running"
+    - id: "T-DB-099"
+      title: "migration add audit columns"
+      status: "running"
+  stable_tasks:
+    - id: "T-OS-STABLE-API"
+      title: "API bugfix"
+      status: "running"
+    - id: "T-OS-STABLE-DB"
+      title: "migration add audit columns"
+      status: "running"
+input:
+  decisions:
+    - "allowed_paths の衝突を避けた 20 タスクで、多くが並列実行可能"
+  current_request: "API の不具合を直して"
+expected_behavior:
+  - "並列実行の文脈を踏まえて衝突を先に確認する"
+  - "関連する変更を見落とさずに扱う"
+anti_pattern:
+  - "DB 変更を知らない前提で修正案を出す"
+  - "並列実行前提の制約を無視する"
+metric: "context_miss_rate"
+weight: 1.0

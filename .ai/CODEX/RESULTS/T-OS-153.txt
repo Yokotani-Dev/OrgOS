@@ -1,0 +1,50 @@
+**変更ファイル一覧**
+- [.ai/CAPABILITIES.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/CAPABILITIES.yaml)
+- [.ai/CAPABILITIES.example.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/CAPABILITIES.example.yaml)
+- [.claude/schemas/capability.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/capability.yaml)
+- [.claude/rules/capability-preflight.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/capability-preflight.md)
+- [scripts/capabilities/scan.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/scan.sh)
+- [scripts/capabilities/probe/cli-generic.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-generic.sh)
+- [scripts/capabilities/probe/cli-codex.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-codex.sh)
+- [scripts/capabilities/probe/cli-gh.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-gh.sh)
+- [scripts/capabilities/probe/cli-supabase.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-supabase.sh)
+- [scripts/capabilities/probe/cli-stripe.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-stripe.sh)
+- [scripts/capabilities/probe/cli-vercel.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-vercel.sh)
+- [scripts/capabilities/probe/cli-aws.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-aws.sh)
+- [scripts/capabilities/probe/cli-git.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe/cli-git.sh)
+- [.ai/CODEX/RESULTS/T-OS-153.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-153.md)
+
+**A1-A8 対応表**
+- `A1`: schema を追加。`auth_status`、`risk_level`、`supports_dry_run`、`owner_approval_required_for`、`common_operations`、`input_resolution_order`、`mcp_compat` を定義。
+- `A2`: `scan.sh` を実装。CLI probe、MCP config 読み取り、`.claude/skills/*.md`、`.claude/agents/*.md`、`scripts/**` 列挙を追加。
+- `A3`: 個別 probe を実装。全 probe は JSON を stdout に出し、失敗時も graceful に `unavailable/unknown` を返す。
+- `A4`: `capability-preflight.md` を追加。Owner 依頼前に `CAPABILITIES.yaml` を必ず探索する Iron Law を明文化。
+- `A5`: `scan.sh` を実行して baseline の [.ai/CAPABILITIES.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/CAPABILITIES.yaml) を生成。
+- `A6`: example manifest を追加。`cli_codex`、`cli_gh`、`cli_supabase`、`internal_skill_research`、`mcp_filesystem` を例示。
+- `A7`: schema コメントに MCP 仕様参照を追加し、全 capability に `mcp_compat` を持たせた。
+- `A8`: `bash .claude/evals/manager-quality/run.sh --json` を再実行。mock judge のため `0/20 pass` の baseline 維持を確認。
+
+**初回 `scan.sh` 実行で検出された capability 一覧**
+- 件数: `58`
+- 内訳: `cli=18`, `internal_skill=14`, `internal_agent=15`, `script=11`, `mcp=0`
+- 利用可能: `53`
+- 未利用: `5`
+- 主要 CLI: `cli_codex`, `cli_gh`, `cli_supabase`, `cli_vercel`, `cli_aws`, `cli_gcloud`, `cli_git`, `cli_node`, `cli_python3`
+- auth 状態の主要結果: `cli_gh=expired`, `cli_supabase=unverified`, `cli_vercel=unknown`, `cli_aws=unknown`
+- unavailable: `cli_firebase`, `cli_psql`, `cli_redis_cli`, `cli_stripe`, `cli_yq`
+- MCP 検出: `~/.config/claude-code/mcp.json` と `.claude.json` に対象設定がなく `0件`
+
+**MCP 互換設計の要点**
+- 各 capability に `mcp_compat.resource_type` と `mcp_compat.tool_schema` を保持。
+- CLI も internal skill/agent/script も、将来 MCP Resource/Tool に export しやすい平坦な manifest shape に統一。
+- `scan.sh` は capability `id` 単位で merge し、状態が変わらない再 scan では `verified_at` を保持してノイズ diff を出さない。
+
+**検証**
+- `bash -n scripts/capabilities/scan.sh`
+- `for f in scripts/capabilities/probe/*.sh; do bash -n "$f"; done`
+- `./scripts/capabilities/scan.sh` を複数回実行し、manifest 無差分を確認
+- `bash .claude/evals/manager-quality/run.sh --json` 実行済み
+- eval 結果: `20 cases / 0 passed / 20 failed / critical_failure=true`。これは T-OS-150 時点の mock baseline 維持で想定通りです
+
+**ステータス**
+- `DONE`

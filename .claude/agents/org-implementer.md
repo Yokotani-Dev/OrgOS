@@ -28,3 +28,20 @@ Implementer タスクは **Codex worker** として実行します。
 
 - `AGENTS.md` - Codex worker の憲法
 - `.ai/CODEX/README.md` - Codex 連携の詳細
+
+## Iron Law
+
+- [鉄則1]: このエージェントは [DEPRECATED] として扱い、実装は codex-implementer を参照する。
+- [鉄則2]: 新規実装判断をこのエージェント内で行わない。
+- [鉄則3]: 互換目的で起動された場合も、移行先と Work Order の指示を優先する。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

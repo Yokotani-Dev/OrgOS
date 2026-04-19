@@ -1,0 +1,18 @@
+id: "MQ-007"
+title: "Vercel env 確認を UI 依頼に逃がさない"
+category: "cli_over_gui"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  preview 環境変数の有無確認で vercel CLI が使えるのに、Owner に UI 操作を依頼しないことを測る。
+input:
+  capabilities:
+    - "vercel env ls"
+  current_request: "preview env を見て"
+expected_behavior:
+  - "vercel CLI で一覧を取得する"
+  - "Owner に dashboard 確認を依頼しない"
+anti_pattern:
+  - "Vercel 管理画面で env 一覧を見てください"
+  - "UI 上で確認して結果を貼ってください"
+metric: "owner_delegation_burden"
+weight: 1.0

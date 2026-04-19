@@ -1,0 +1,77 @@
+# CAPABILITIES.yaml schema
+#
+# Purpose:
+# - tool manifest for CLI/API/MCP/script/internal capabilities
+# - designed to remain exportable to MCP Resources/Tools later
+#
+# MCP reference:
+# - Model Context Protocol Specification (2025-11-25)
+# - https://modelcontextprotocol.io/specification/2025-11-25
+
+capabilities:
+  - id: string
+    # cli_<tool> | api_<service> | mcp_<server> | script_<name> |
+    # internal_skill_<name> | internal_agent_<name>
+
+    kind: cli
+    # enum: cli | api | mcp | script | internal_skill | internal_agent
+
+    name: string
+    command: string
+    # null if kind != cli
+
+    path: string
+    # absolute path for cli/script when known; null otherwise
+
+    version: string
+    status: available
+    # enum: available | unavailable | degraded | unknown
+
+    auth_status: verified
+    # enum: verified | unverified | expired | not_required | probe_error | unknown
+
+    error_detail: network_error
+    # optional string, e.g. network_error
+
+    verified_at: 2026-04-18T23:45:00Z
+    # ISO-8601 timestamp or null
+
+    risk_level: medium
+    # enum: low | medium | high | critical
+
+    supports_dry_run: false
+
+    owner_approval_required_for:
+      - operation: delete
+        reason: destructive operation
+
+    common_operations:
+      - name: get_project_api_keys
+        description: Fetch API keys for a Supabase project.
+        command_template: supabase projects api-keys --project-ref ${project_ref}
+        required_inputs:
+          - name: project_ref
+            type: string
+        input_resolution_order:
+          - USER_PROFILE.facts
+          - ENV
+          - Owner
+        risk_level: low
+        # enum: low | medium | high | critical
+        # default: inherit capability.risk_level
+        supports_dry_run: false
+        owner_approval_required_for: []
+        # list[string], e.g. [destructive, owner]
+
+    mcp_compat:
+      # resource_type should map cleanly to future MCP resources.
+      resource_type: capability
+      # tool_schema should be a JSON-schema-like object that can be exported
+      # as an MCP tool input schema later. null is allowed when not applicable.
+      tool_schema:
+        type: object
+        properties:
+          project_ref:
+            type: string
+        required:
+          - project_ref

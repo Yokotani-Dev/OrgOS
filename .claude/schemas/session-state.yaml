@@ -1,0 +1,196 @@
+# session-state.yaml schema
+#
+# Purpose:
+# - runtime snapshot created immediately after session bootstrap
+# - provides a stable reference for Manager responses during the session
+
+schema:
+  type: object
+  additional_properties: false
+  required:
+    - bootstrapped_at
+    - bootstrap_status
+    - loaded_ledgers
+    - active_tasks
+    - active_goals
+    - owner_literacy_level
+
+bootstrapped_at:
+  type: datetime
+  note: ISO-8601 timestamp for the latest successful or attempted bootstrap.
+
+bootstrap_status:
+  type: enum
+  values:
+    - pending
+    - ok
+    - warning
+    - failed
+  note: warning は必須台帳の一部欠落、failed は bootstrap 自体が成立していない状態。
+
+loaded_ledgers:
+  type: array
+  min_items: 1
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - path
+      - kind
+      - status
+    fields:
+      id:
+        type: string
+        pattern: "^(control|dashboard|user_profile|capabilities|goals|tasks|recent_decisions|request_intake_loop)$"
+      path:
+        type: string
+        min_length: 1
+      kind:
+        type: enum
+        values:
+          - yaml
+          - markdown
+          - rule
+      status:
+        type: enum
+        values:
+          - loaded
+          - missing
+          - skipped
+      summary:
+        type: string
+        required: false
+
+active_tasks:
+  type: array
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - title
+      - status
+    fields:
+      id:
+        type: string
+        pattern: "^T-[A-Z0-9-]+$"
+      title:
+        type: string
+        min_length: 1
+      status:
+        type: enum
+        values:
+          - running
+          - blocked
+          - queued
+          - review
+          - done
+
+active_goals:
+  type: object
+  additional_properties: false
+  required:
+    - vision_id
+    - active_milestones
+    - active_projects
+  fields:
+    vision_id:
+      type: string
+      pattern: "^V-[A-Z0-9-]+$"
+    active_milestones:
+      type: array
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - id
+          - title
+          - status
+        fields:
+          id:
+            type: string
+            pattern: "^M-[A-Z0-9-]+$"
+          title:
+            type: string
+          status:
+            type: enum
+            values:
+              - active
+              - achieved
+              - paused
+              - cancelled
+    active_projects:
+      type: array
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - id
+          - title
+          - status
+          - priority
+        fields:
+          id:
+            type: string
+            pattern: "^(P-[A-Z0-9-]+|T-OS-[0-9]+)$"
+          title:
+            type: string
+          status:
+            type: enum
+            values:
+              - backlog
+              - active
+              - blocked
+              - done
+              - archived
+          priority:
+            type: enum
+            values:
+              - P0
+              - P1
+              - P2
+              - P3
+
+owner_literacy_level:
+  type: enum
+  values:
+    - beginner
+    - intermediate
+    - advanced
+  note: Response adaptation baseline loaded from USER_PROFILE or CONTROL.
+
+coherence_mode:
+  type: enum
+  required: false
+  values:
+    - silent
+    - brief
+    - full
+  note: Current reporting mode chosen after bind and risk classification.
+
+warnings:
+  type: array
+  required: false
+  item:
+    type: string
+
+verification:
+  type: object
+  required: false
+  additional_properties: false
+  fields:
+    bootstrap_command:
+      type: string
+    bootstrap_exit_code:
+      type: integer
+    load_ledger_checks:
+      type: array
+      item:
+        type: string
+
+constraints:
+  - bootstrap_status != ok の場合、通常応答前に warning or failed の理由を説明する
+  - loaded_ledgers には control, user_profile, capabilities, goals, tasks を最低限含める
+  - active_tasks は TASKS.yaml の status と整合していなければならない
+  - active_goals.active_projects は GOALS.yaml の active project と整合していなければならない

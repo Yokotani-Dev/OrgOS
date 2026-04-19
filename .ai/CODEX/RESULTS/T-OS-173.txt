@@ -1,0 +1,17 @@
+T-OS-173 実装完了です。
+
+変更内容:
+- [request-approval.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/request-approval.sh): 承認YAML作成、OWNER_INBOX追記、UUID出力、audit記録
+- [check-approval.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/check-approval.sh): OWNER_COMMENTSの`approve/reject <UUID>`検出、status更新、expired/applied_and_failed対応
+- [approval-workflow.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/approval-workflow.sh): request/check統合、`--wait`ポーリング対応
+- [apply.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/apply.sh): `next_step: request_approval`時に`approval-workflow.sh --wait`へ接続
+- [.ai/CODEX/RESULTS/T-OS-173.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-173.md): 実装・検証レポート
+
+検証:
+- `bash -n`は4スクリプトすべて通過
+- `request-approval.sh`でUUID作成、`.ai/APPROVALS/<UUID>.yaml`作成、`.ai/OWNER_INBOX.md`追記、`.ai/AUDIT/approval-2026-04-19.log`記録を確認
+- `check-approval.sh`のpending出力を確認
+- `approval-workflow.sh`非waitモードのUUID返却を確認
+- 24時間超過リクエストを作って`expired`遷移を確認
+
+一点だけ、擬似承認のための `echo "approve <UUID>" >> .ai/OWNER_COMMENTS.md` は実行していません。AGENTS.md上、`.ai/OWNER_COMMENTS.md`はOwner入力領域でCodexの直接編集禁止に該当するためです。承認/拒否検出ロジック自体は [check-approval.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/check-approval.sh) に実装済みです。

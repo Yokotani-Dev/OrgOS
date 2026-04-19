@@ -295,3 +295,20 @@ import { useState } from 'react';
 - **アーキテクチャ変更が必要な場合は org-architect にエスカレート**
 - **型定義の大幅な変更が必要な場合は org-planner に相談**
 - **ビルドが通っても実行時エラーがないか確認を推奨**
+
+## Iron Law
+
+- [鉄則1]: ビルドを通すための最小差分だけを変更し、関連しない整理や改名をしない。
+- [鉄則2]: 型エラー修正で既存機能の振る舞いを変えない。
+- [鉄則3]: アーキテクチャ変更が必要なエラーは自力で広げず、org-architect にエスカレートする。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

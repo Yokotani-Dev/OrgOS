@@ -461,6 +461,757 @@ tasks:
       発見・取り込み、OS自体が自動アップデートされる仕組み。
       org-evolve の既存スケジュール実行と統合する。
 
+  # === Codex CLI 最新化対応 (2026-04-18) ===
+
+  - id: T-OS-090
+    title: "調査: Codex CLI 0.77 → 0.121 の変更点を抽出し OrgOS 反映候補を特定"
+    status: done
+    deps: []
+    owner_role: "org-planner"
+    allowed_paths: [".ai/RESOURCES/"]
+    acceptance:
+      - "0.77.0 以降の安定リリースノートを走査"
+      - "OrgOS に影響する項目（CLI フラグ/設定/sandbox/approval/MCP/exec/resume/JSON 出力/marketplace/memory 等）を抽出"
+      - ".ai/RESOURCES/CODEX_CLI_UPGRADE_2026-04.md に差分サマリと反映候補を記録"
+    notes: |
+      Owner 指示: 最新 CLI の変更を OrgOS ドキュメントに反映。
+      影響先候補: .claude/agents/CODEX_WORKER_GUIDE.md, .ai/CONTROL.yaml(codex:), .claude/agents/manager.md, .claude/rules/agent-coordination.md。
+
+  - id: T-OS-091
+    title: "反映: Codex CLI 0.121 仕様を OrgOS ドキュメント/設定に反映"
+    status: done
+    deps: ["T-OS-090"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/", ".claude/rules/", ".ai/CONTROL.yaml", ".ai/DECISIONS.md"]
+    acceptance:
+      - "CODEX_WORKER_GUIDE.md を 0.121 仕様に更新（新フラグ/コマンド/出力形式の追記）"
+      - "CONTROL.yaml codex セクションに新オプション（必要なら）と注記を追加"
+      - "agent-coordination.md の Codex 連携記述を最新化"
+      - "DECISIONS.md に PLAN-UPDATE として反映根拠を記録"
+    notes: "T-OS-090 の調査結果に基づく反映。"
+
+  # === aitmpl.com 連携: OrgOS をエコシステム接続 (2026-04-18) ===
+  # 参照: https://aitmpl.com/ — Claude Code Templates (1000+ コンポーネント集約)
+  # 出典: Owner 紹介ポスト (dani_avila7)
+  # 思想: OrgOS は孤立した OS ではなく、コミュニティコンポーネントと相互運用するハブとなる。
+  # 関連: T-OS-083 (外部AIリソース自動取り込み) の具体化実装
+
+  - id: T-OS-100
+    title: "aitmpl.com 徹底調査: カタログ構造・取得手段・取り込み可能性の精査"
+    status: queued
+    deps: []
+    owner_role: "org-planner"
+    allowed_paths: [".ai/RESOURCES/"]
+    acceptance:
+      - ".ai/RESOURCES/AITMPL_RESEARCH.md に調査結果を記録"
+      - "カテゴリ別（agents/skills/commands/MCP/hooks/plugins）のコンポーネント数・品質分布を把握"
+      - "取得手段を特定: HTML スクレイピング / 背後 GitHub リポジトリ (davila7 系) / API 有無"
+      - "OrgOS 既存コンポーネント（.claude/agents, skills, commands）との重複マッピング"
+      - "Tier S/A（取り込むべき）候補リスト作成（Top 30）"
+      - "フォーマット差分（YAML frontmatter, ディレクトリ構造）を記録"
+      - "ライセンス・著作権・引用ルールの確認"
+    notes: |
+      aitmpl.com は Claude Code Templates プラットフォーム。
+      主な特徴: 1000+ コンポーネント / Stack Builder / ⌘K 検索 / Trending /
+      パートナー統合 (BrainGrid, Bright Data, TinyFish, ClaudeKit) /
+      Vercel・Neon・Claude OSS プログラム支援。
+
+      調査観点:
+        - トップ 100 コンポーネントを取得し品質評価（star/DL 数 or 相当指標）
+        - OrgOS 既存スキル・エージェントと重複するものを特定
+        - 「スキル」「エージェント」カテゴリの Iron Law 適合性確認
+
+  - id: T-OS-101
+    title: "Phase 1: org-evolve に aitmpl.com データソース統合（入力パス）"
+    status: queued
+    deps: ["T-OS-100"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/org-evolve.md", ".claude/skills/", ".ai/"]
+    acceptance:
+      - "org-evolve.md Step 1.6 を拡張: aitmpl.com 構造化取得を WebSearch と並列実行"
+      - "取り込み候補を EVOLVE_LOG.md に出典 URL 付きで記録"
+      - "重複検出: OrgOS 既存と 80% 以上類似は統合候補として扱う"
+      - "KEEP/REVERT サイクルで品質担保（既存の安全策 3ファイル/50行制約を踏襲）"
+      - "週次スケジュール実行で自動取り込み（RemoteTrigger 経由）"
+      - "EVOLVE_LOG に 'external-pattern (aitmpl)' カテゴリで分類記録"
+    notes: |
+      現 Step 1.6 は WebSearch による非構造化取得のみ。
+      aitmpl.com の構造化データを使うことで取り込み精度が飛躍的に向上する。
+      T-OS-083 の抽象実装を具体化する本番実装。
+
+  - id: T-OS-102
+    title: "Phase 2: /org-stack コマンド — BRIEF.md から必要コンポーネントを自律選定"
+    status: queued
+    deps: ["T-OS-101"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/rules/", "CLAUDE.md"]
+    acceptance:
+      - "/org-stack 実行で BRIEF.md を読み必要な agents/skills/commands/MCP を自律選定"
+      - "候補ソース: OrgOS 組み込み + aitmpl.com キャッシュ（T-OS-101 経由で取得済み）"
+      - "選定理由を DECISIONS.md に TECH-DECISION として記録"
+      - "Owner に選ばせず自律決定（feedback_autonomous_stance 準拠）"
+      - "/org-start Step 5 の内部で自動呼び出し"
+      - "--dry-run で選定結果のみ表示するオプション"
+    notes: |
+      aitmpl.com の Stack Builder を OrgOS の自律主導スタイルに翻訳。
+      Owner がチェックボックスで選ぶのではなく、OrgOS が BRIEF.md から
+      最適な組み合わせを判断して報告するのが OrgOS 流。
+      「BRIEF.md 書くだけで最適スタック自動構築」を実現。
+
+  - id: T-OS-103
+    title: "Phase 3: OrgOS コンポーネント export — aitmpl.com 互換フォーマット対応（出力パス）"
+    status: queued
+    deps: ["T-OS-101"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/agents/", "scripts/", "outputs/"]
+    acceptance:
+      - "/org-publish --format aitmpl で agents/skills/commands を互換 YAML で出力"
+      - "export 先: outputs/aitmpl-export/ 配下"
+      - "メタデータ（description, category, tags, iron_law）を frontmatter から自動生成"
+      - "既存の /org-publish（OrgOS-Dev → public 同期）と競合しない"
+      - "README.md 自動生成でライセンス・引用元を明記"
+    notes: |
+      OrgOS のコンポーネントをコミュニティに還元する双方向接続の出力側。
+      T-OS-101（入力）と対になる。
+      OrgOS の実戦で磨かれた Iron Law 付きスキルを外部エコシステムへ還元。
+
+  # ============================================================
+  # === Owner フィードバック対応: OrgOS 真髄の追求 (2026-04-19 朝) ===
+  # Owner 発言:「orgOS の真髄が見たい」「単発チャットだと普通の Claude Code になる」
+  # SELFREVIEW-001 GAP-1 の直接解消
+  # ============================================================
+
+  - id: T-OS-180
+    title: "[Owner-P0] Session Bootstrap Protocol — 単発チャット問題の根本解決"
+    status: running
+    deps: ["T-OS-151F", "T-OS-153F", "T-OS-154", "T-OS-161"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/session-bootstrap.md", ".claude/schemas/session-state.yaml", "scripts/session/"]
+    acceptance:
+      - "session-bootstrap.md に Iron Law を定義"
+      - "bootstrap.sh で全台帳を自動読込"
+      - "依頼受付時の判定フロー (bind to task / propose sub-task / new project) を明記"
+      - "T-OS-180b (hook 統合) への具体的示唆"
+    notes: "Owner の「単発チャット問題」直接解消"
+
+  - id: T-OS-181
+    title: "[Owner-P0] Cross-Session Consistency — 単発依頼と進行中プロジェクトの自動バインド"
+    status: queued
+    deps: ["T-OS-180"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/cross-session-consistency.md", "scripts/session/bind-request.sh"]
+    acceptance:
+      - "依頼内容から進行中タスク/プロジェクトを自動検出するロジック"
+      - "類似度判定 (キーワード / タスクタイトル / recent decisions)"
+      - "バインド結果を応答冒頭で明示"
+
+  - id: T-OS-182
+    title: "[Owner-P1] Proactive Manager — Owner 依頼前に能動提案"
+    status: queued
+    deps: ["T-OS-180", "T-OS-181"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/proactive-mode.md", "scripts/session/suggest-next.sh"]
+    acceptance:
+      - "GOALS.yaml next milestone + TASKS.yaml queued から自動提案"
+      - "Owner 起動時に「今日これやりますね」型の提案"
+      - "Owner preference (USER_PROFILE) を反映した優先順位"
+      - "OrgOS 真髄の核"
+
+  - id: T-OS-183
+    title: "[Owner-P1] Self-Improvement Loop 強化 — org-evolve 高度化"
+    status: queued
+    deps: ["T-OS-163"]
+    owner_role: "codex-implementer"
+    allowed_paths: ["scripts/evolve/", ".claude/evals/manager-quality/daily-check.sh"]
+    acceptance:
+      - "Manager Quality regression を日次化"
+      - "退行検知時の自動修正タスク生成"
+      - "evolve_log に学習トレース記録"
+
+  # ============================================================
+  # === ToBe v2 セルフレビュー対応 (2026-04-19 自律運用) ===
+  # 参照: DECISIONS.md SELFREVIEW-001
+  # 4 並列 Explore の結果から抽出
+  # ============================================================
+
+  - id: T-OS-160
+    title: "[SELFREVIEW-P0] Safety Hardening: pre-commit secret scanner + memory lint"
+    status: queued
+    deps: ["T-OS-151F", "T-OS-153F"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".pre-commit-config.yaml", "scripts/memory/", "scripts/security/", ".claude/rules/memory-lifecycle.md", ".gitignore"]
+    acceptance:
+      - "scripts/memory/check-no-plain-secrets.sh 実装 (USER_PROFILE に secret 実体がないか検査)"
+      - "scripts/memory/normalize-lint.sh 実装 (重複 semantic fact 検出)"
+      - "scripts/memory/promote-lint.sh 実装 (transferability 違反検出)"
+      - ".pre-commit-config.yaml でこれらを hook 化 + gitleaks 強化"
+      - "memory-lifecycle.md に lint 運用ルール追記"
+    notes: "Safety 64% → 85% 到達の核"
+
+  - id: T-OS-161
+    title: "[SELFREVIEW-P1] Awareness 補強: GOALS.yaml 必須化 + Coherence mode rubric"
+    status: queued
+    deps: ["T-OS-154"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/GOALS.yaml", ".ai/GOALS.example.yaml", ".claude/schemas/goals.yaml", ".claude/rules/coherence-mode.md"]
+    acceptance:
+      - ".ai/GOALS.yaml を新規作成 (Vision/Milestone/Project/Task 4 階層)"
+      - ".ai/GOALS.example.yaml を commit 用テンプレートとして作成"
+      - ".claude/schemas/goals.yaml で schema 定義"
+      - ".claude/rules/coherence-mode.md で Silent/Brief/Full Bind の deterministic 判定 rubric (TASKS.yaml dependency graph で判定)"
+    notes: "Awareness 60% → 80% 目標"
+
+  - id: T-OS-163
+    title: "[SELFREVIEW-P1] Evaluation 強化: Regression Detection + rubric 具体化"
+    status: queued
+    deps: ["T-OS-150", "T-OS-158"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/evals/manager-quality/report.py", ".claude/evals/manager-quality/metrics.yaml", "scripts/eval/generate-regression-report.sh"]
+    acceptance:
+      - "Regression Detection ロジック実装 (前回 pass → 今回 fail を自動検出)"
+      - "decision_trace_completeness 判定 rubric 具体化 (assumptions/decisions_made の品質基準)"
+      - "owner_delegation_burden trend 計算実装 (7 日移動平均)"
+      - "退行検知時に DECISIONS.md に ISSUE として出力 (payload only, Manager が反映)"
+    notes: "Evaluation 76% → 90% 目標"
+
+  - id: T-OS-164
+    title: "[SELFREVIEW-P1] 残 4 ケース修正: MQ-009/010/017/018"
+    status: queued
+    deps: ["T-OS-158"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/evals/manager-quality/cases/", ".claude/evals/manager-quality/report.py", "scripts/capabilities/scan.sh"]
+    acceptance:
+      - "MQ-009/010 (context_miss): fixture を実 TASKS.yaml の状況に合わせて調整 or judge を柔軟化"
+      - "MQ-017: scripts/release/check-preview.sh を scan.sh で検出できるよう調整 (scripts 検出の拡張)"
+      - "MQ-018: filesystem MCP 検出ロジックの調整 or fixture 調整 (実環境依存を回避)"
+      - "Eval 16/20 → 20/20 達成"
+    notes: "Manager Quality Eval 完遂"
+
+  # --- Authority / Risk Layer 設計 (Pro 指摘 3 必須欠落の最後) ---
+
+  - id: T-OS-170
+    title: "[SELFREVIEW-P0] Authority / Risk Layer 統合設計 (ISSUE-OS-001 根本解決)"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/authority-layer.md", ".claude/schemas/autonomy.yaml", ".claude/schemas/approval-workflow.yaml", ".claude/schemas/role-matrix.yaml"]
+    acceptance:
+      - "authority-layer.md 新規: Autonomy Level schema + OS Mutation Protocol + Role Matrix + Approval Workflow を統合設計"
+      - "schemas/autonomy.yaml: silent_execute / execute_with_report / ask_before_execute / owner_only の 4 レベル"
+      - "schemas/approval-workflow.yaml: 承認フロー (Manager pre-review / Owner final)"
+      - "schemas/role-matrix.yaml: Manager/Codex/Owner/Reviewer の権限マトリクス"
+      - "Risk-to-Autonomy 対応表 (request-intake-loop Step 5 → Step 6 への還元)"
+      - "ISSUE-OS-001 (AGENTS.md 矛盾) への具体的な解消方針記述"
+      - "既存タスク T-OS-110〜158 への retrofit 戦略 (autonomy_level 付与)"
+    notes: |
+      Authority 12% → 60% への核タスク (設計のみ、実装は T-OS-171 以降)。
+      ISSUE-OS-001 の根本解決第一歩。
+      allow_os_mutation=true 下で「どの operation が許容されるか」を明文化。
+
+  # ============================================================
+  # === セルフレビュー対応: 完璧な OS へのギャップ完遂 (2026-04-18) ===
+  # 参照: .ai/RESOURCES/SELF_REVIEW_2026-04-18.md
+  # 方針: 4 波構成で全 20 項目を完遂
+  #   第1波 (T-OS-110〜113): A カテゴリ - 自律駆動の残骸一掃 (P1)
+  #   第2波 (T-OS-120〜125): C カテゴリ - 運用インフラ (P1)
+  #   第3波 (T-OS-130〜134): D カテゴリ - UX・知識継承 (P2)
+  #   第4波 (T-OS-140〜144): B カテゴリ - エコシステム接続 (P1/P2)
+  # ============================================================
+
+  # --- 第1波: A カテゴリ 自律駆動完遂 (P1) ---
+
+  - id: T-OS-110
+    title: "A-1/A-2/A-3: 選択肢提示と Owner 確認の一掃"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/", ".claude/rules/project-flow.md", ".claude/rules/plan-sync.md", ".claude/rules/rationalization-prevention.md", ".ai/DECISIONS.md"]
+    acceptance:
+      - "org-tick.md L192-200 のセッション終了選択肢を削除"
+      - ".claude/commands/ 全体の「選択肢:」「[A][B]」「どちらにしますか」パターンを grep → Owner しか判断不可な場面以外は削除"
+      - "削除した選択肢は Manager 判断による自律実行に置換（「📌 次: 〇〇を実行します」型）"
+      - "project-flow.md / plan-sync.md / rationalization-prevention.md の「Owner に確認」例外を「予算/本番デプロイ/破壊的操作のみ」に厳格化"
+      - "変更箇所を DECISIONS.md に PLAN-UPDATE として記録"
+    notes: |
+      セルフレビュー A-1/A-2/A-3。T-OS-070 でドキュメントは自律主導に転換済みだが、
+      実装層に 38 箇所の選択肢提示が残存。これを一掃し、OrgOS のアイデンティティを完遂。
+
+  - id: T-OS-111
+    title: "A-4: Iron Law を全 agents に追加"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/"]
+    acceptance:
+      - "12 agents に Iron Law セクションを追加: org-doc-updater, org-tdd-coach, org-planner, org-scribe, org-build-fixer, org-refactor-cleaner, org-architect, org-os-maintainer, org-e2e-runner, org-security-reviewer, org-integrator, manager"
+      - "各 Iron Law は役割に沿った内容（例外なし・検証可能）"
+      - "rationalization-prevention.md の形式に準拠"
+      - "既に Iron Law のある 3 agents (org-reviewer 等) と整合性確認"
+    notes: |
+      セルフレビュー A-4。現状 3/15 agents のみ Iron Law 保有で 80% が無防備。
+      合理化（言い訳）を検出・防止する基盤を全 agents に徹底。
+
+  - id: T-OS-112
+    title: "A-5: 非推奨エージェント参照クリーンアップ"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/", "CLAUDE.md", ".claude/agents/"]
+    acceptance:
+      - "agent-coordination.md L53,56 の org-implementer 参照を codex-implementer に置換"
+      - ".claude/ 全体で org-implementer / org-reviewer（非推奨）の残存参照を grep + 更新"
+      - ".claude/agents/org-implementer.md が存在する場合は [DEPRECATED] プレフィクス + 非推奨明記"
+      - "CLAUDE.md の参照テーブルで非推奨が明示されているか確認"
+    notes: |
+      セルフレビュー A-5。T-OS-040 で移行済みのはずが agent-coordination.md 等に残骸。
+
+  - id: T-OS-113
+    title: "A-6: ad-hoc 実行検出ロジック実装"
+    status: queued
+    deps: ["T-OS-120"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/org-tick.md", ".claude/agents/manager.md", "scripts/ad-hoc-detect.sh"]
+    acceptance:
+      - "/org-tick に ad-hoc 検出 Step を追加（RUN_LOG と TASKS.yaml の差分チェック）"
+      - "未登録作業を検出したら自動で TASKS.yaml に retro-task として追加"
+      - "scripts/ad-hoc-detect.sh でロジックを外部化"
+      - "project-flow.md の Iron Law「全作業 TASKS.yaml 登録必須」を実装で担保"
+    notes: |
+      セルフレビュー A-6。ルール文面はあるが検出メカニズムが未実装。
+      メトリクス基盤（T-OS-120）に依存。
+
+  # --- 第2波: C カテゴリ 運用インフラ (P1) ---
+
+  - id: T-OS-120
+    title: "C-1: メトリクス収集基盤"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/METRICS/", ".claude/commands/org-tick.md", "scripts/metrics/"]
+    acceptance:
+      - "Tick 終了時に .ai/METRICS/YYYY-MM-DD.jsonl に追記（tick_duration, codex_success, codex_fail, error_count, est_cost）"
+      - "scripts/metrics/collect.sh で集計ロジックを外部化"
+      - "DASHBOARD.md に直近 10 Tick のサマリーを自動挿入"
+      - "CONTROL.yaml の runtime セクションに metrics_enabled: true を追加"
+    notes: |
+      セルフレビュー C-1。メトリクスがない = 改善効果が不透明。
+      Phase 1 は JSON Lines のみ。可視化は Dashboard UI 側（T-OS-131）で対応。
+
+  - id: T-OS-121
+    title: "C-2/C-8: Codex リトライ + 並列タスク復旧"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/CODEX_WORKER_GUIDE.md", "scripts/codex-wrapper.sh", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "scripts/codex-wrapper.sh 作成: exponential backoff で最大 3 回リトライ"
+      - "CODEX_WORKER_GUIDE.md の呼び出しを wrapper 経由に変更"
+      - "並列タスク片方失敗時の復旧フローを org-tick.md に追加（他タスク継続 + 失敗タスクを review 化）"
+      - "失敗ログを .ai/METRICS/ に記録"
+    notes: |
+      セルフレビュー C-2/C-8。本番運用に耐える基礎。
+
+  - id: T-OS-122
+    title: "C-3: 台帳修復ロジック"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["scripts/ledger-repair/", ".claude/commands/org-tick.md", ".ai/BACKUPS/"]
+    acceptance:
+      - ".ai/ の YAML/Markdown の schema validation script (scripts/ledger-repair/validate.sh)"
+      - "Tick 開始時に自動検証 + 破損検出時に .ai/BACKUPS/ から復元 or 最小修復"
+      - "検証失敗時は DECISIONS.md に ISSUE として記録 + Owner 通知"
+      - "TASKS.yaml / CONTROL.yaml / DASHBOARD.md の schema を .claude/schemas/ に定義"
+    notes: |
+      セルフレビュー C-3。自律駆動が YAML 解析エラーで止まらない保証。
+
+  - id: T-OS-123
+    title: "C-4/C-5: 自己回帰テスト + checkpoint 評価統合"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/evals/", ".claude/commands/org-tick.md"]
+    acceptance:
+      - ".claude/evals/self-regression.sh 作成（OrgOS 自身を壊さない保証）"
+      - "org-tick に checkpoint 評価の実行ロジックを統合（eval-loop.md 定義を実装）"
+      - "失敗時は自動で修正タスクを生成（T-FIX-EVAL-XXX）"
+      - "既存 evals との整合性確認 + run-all.sh に追加"
+    notes: |
+      セルフレビュー C-4/C-5。eval-loop.md は定義のみ・実装なし。
+
+  - id: T-OS-124
+    title: "C-6: 監査ログ + secret scanning + role-based access"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/hooks/", "scripts/audit/", ".ai/AUDIT/", ".ai/CONTROL.yaml"]
+    acceptance:
+      - "pre-commit hook で secret scanning (gitleaks 相当)"
+      - "Tool 使用ログを .ai/AUDIT/YYYY-MM-DD.log に追記（Tool 名・対象ファイル・時刻）"
+      - "CONTROL.yaml に role_matrix を定義（Manager/Codex/Owner の操作権限）"
+      - ".env / credentials.json の git commit を pre-commit で拒否"
+    notes: |
+      セルフレビュー C-6。自律改善が望まない変更を適用するリスクを抑止。
+
+  - id: T-OS-125
+    title: "C-7/D-6: TASKS.yaml 自動アーカイブ"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["scripts/archive-tasks.sh", ".claude/commands/org-tick.md", ".ai/CONTROL.yaml"]
+    acceptance:
+      - "CONTROL.yaml に tasks_archive_threshold: 50 を追加"
+      - "done タスクが threshold 超えたら自動で TASKS_ARCHIVE.yaml へ移動"
+      - "現在滞留している 31 件を即座にアーカイブ"
+      - "org-tick 毎に自動実行（冪等）"
+    notes: |
+      セルフレビュー C-7/D-6。done タスクが滞留すると衝突検出が遅くなる。
+
+  # --- 第3波: D カテゴリ UX・知識継承 (P2) ---
+
+  - id: T-OS-130
+    title: "D-1/D-2: Mermaid アーキ図・フロー図"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: ["README.md", ".ai/DESIGN/", "docs/"]
+    acceptance:
+      - ".ai/DESIGN/ARCHITECTURE_DIAGRAM.md に OrgOS 全体アーキ図を Mermaid で作成"
+      - "エージェント関係図、Tick 処理フロー図、台帳関係図の 3 種類"
+      - "README.md に初見 Owner 向け「/org-start → /org-tick → /org-evolve」フロー図を埋め込み"
+      - "各図に 1-2 行の解説を付ける"
+    notes: |
+      セルフレビュー D-1/D-2。最も低コスト・高効果のオンボーディング改善。
+
+  - id: T-OS-131
+    title: "D-3: Dashboard UI 整合性 contract 定義"
+    status: queued
+    deps: ["T-OS-120"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/DESIGN/DASHBOARD_SCHEMA.md", ".ai/DASHBOARD.md"]
+    acceptance:
+      - ".ai/DESIGN/DASHBOARD_SCHEMA.md 作成（Dashboard UI との contract）"
+      - "DASHBOARD.md のセクション構造を schema として形式化"
+      - "METRICS との統合ポイントを明記"
+      - "Dashboard 実装（別リポジトリ）側が参照できる固定スキーマ"
+    notes: |
+      セルフレビュー D-3。Dashboard UI との乖離を未然防止。
+
+  - id: T-OS-132
+    title: "D-4/D-5: GLOSSARY.md + DECISIONS TOC 自動生成"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/GLOSSARY.md", ".ai/DECISIONS.md", "scripts/generate-toc.sh", "CLAUDE.md"]
+    acceptance:
+      - ".claude/GLOSSARY.md 作成（Iron Law, Red Flags, CSO, OIP, Tick, Runbook, CODEX, Manager 等 20+ 用語）"
+      - "CLAUDE.md に GLOSSARY.md への参照リンクを追加"
+      - "scripts/generate-toc.sh で DECISIONS.md に TOC を自動挿入（冪等）"
+      - "org-tick 毎に TOC を再生成"
+    notes: |
+      セルフレビュー D-4/D-5。DECISIONS 878 行・用語散在の両方を一括解消。
+
+  - id: T-OS-133
+    title: "D-7: STATUS.md vs RUN_LOG の役割実装レベル整合"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/STATUS.md", ".ai/RUN_LOG.md", ".claude/agents/manager.md", ".claude/commands/org-tick.md"]
+    acceptance:
+      - "STATUS.md を読み取り専用スナップショット（タスク集計・ブロッカーのみ）に統一"
+      - "RUN_LOG.md を時系列 Tick ログのみに統一"
+      - "manager.md / org-tick.md の更新指示を実装レベルで明確化"
+      - "T-OS-034 の未完了部分を完遂"
+    notes: |
+      セルフレビュー D-7。T-OS-034 で定義済みだが実装で曖昧。
+
+  - id: T-OS-134
+    title: "D-8: Codex 環境依存の抽象化"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/CODEX_WORKER_GUIDE.md", ".ai/CONTROL.yaml", "scripts/"]
+    acceptance:
+      - "CONTROL.yaml に codex.binary_path を追加（デフォルト: which codex → /opt/homebrew/bin/codex → /usr/local/bin/codex）"
+      - "scripts/find-codex.sh で環境抽象化"
+      - "Linux/Windows サポート方針を documentation に追加"
+      - "CLAUDE.md の `/opt/homebrew/bin/codex` ハードコードを削除"
+    notes: |
+      セルフレビュー D-8。Mac 前提を排除し他 OS で使えるように。
+
+  # --- 第4波: B カテゴリ エコシステム接続 (P1/P2) ---
+
+  - id: T-OS-140
+    title: "B-2: MCP 統合パイプライン（実行可能化）"
+    status: queued
+    deps: ["T-OS-101"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/mcp/", ".ai/CONTROL.yaml", ".claude/commands/org-start.md"]
+    acceptance:
+      - "CONTROL.yaml に mcp_servers 定義フィールドを追加（name, command, args, env）"
+      - ".claude/mcp/ に起動/停止ロジックを実装"
+      - "/org-start で主要 MCP（Supabase, Vercel, GitHub, Playwright）のセットアップを自律選定"
+      - "Claude Code の .mcp.json に相当する設定を OrgOS 側でも管理"
+    notes: |
+      セルフレビュー B-2。MCP は CONTROL.yaml に定義欄のみ・実行なし。
+
+  - id: T-OS-141
+    title: "B-3: Intelligence Pipeline 実装"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/intelligence/", ".claude/commands/org-evolve.md"]
+    acceptance:
+      - "Intelligence Pipeline の監視トピック定義を実行可能に"
+      - "週次で外部トレンド収集 → OIP-AUTO 生成"
+      - "org-evolve との統合（T-OS-101 の aitmpl.com 取り込みと連動）"
+      - ".claude/intelligence/topics.yaml で監視対象を管理"
+    notes: |
+      セルフレビュー B-3。Intelligence は定義のみで未実装。
+
+  - id: T-OS-142
+    title: "B-4: Slack 通知実装"
+    status: queued
+    deps: ["T-OS-140"]
+    owner_role: "codex-implementer"
+    allowed_paths: ["scripts/slack-notify.sh", ".claude/commands/", ".ai/CONTROL.yaml"]
+    acceptance:
+      - "scripts/slack-notify.sh 作成（webhook 経由）"
+      - "org-evolve / org-tick 完了時に通知"
+      - "ブロッカー検出時・P0 エラー時も通知"
+      - "CONTROL.yaml の slack_webhook が空でも安全に no-op"
+    notes: |
+      セルフレビュー B-4。設定欄あるが未使用。低コストで可視性向上。
+
+  - id: T-OS-143
+    title: "B-5: GitHub / Linear / Jira 連携"
+    status: queued
+    deps: ["T-OS-140"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/integrations/", ".claude/commands/", ".ai/CONTROL.yaml"]
+    acceptance:
+      - "GitHub Issue → TASKS.yaml 取り込み（gh CLI 経由）"
+      - "Linear / Jira との双方向同期（MCP 経由）"
+      - "/org-import で既存 Issue を一括取り込み可能に"
+      - "CONTROL.yaml の integrations セクションで有効化"
+    notes: |
+      セルフレビュー B-5。外部タスク管理システムとの接続。
+
+  - id: T-OS-144
+    title: "B-6: マルチプロジェクト学習転移"
+    status: queued
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/commands/org-dashboard.md", "scripts/shared-knowledge/"]
+    acceptance:
+      - "~/.orgos/shared/ に共有 DECISIONS / RISKS / PATTERNS を配置"
+      - "プロジェクト間で Iron Law / 共通スキル / 失敗パターンを同期"
+      - "/org-dashboard で横断検索可能に"
+      - "新規プロジェクト開始時に shared/ から初期値を引き継ぐ"
+    notes: |
+      セルフレビュー B-6。/org-dashboard がパスリストのみの現状を超える。
+
+  # --- レビュー修正タスク ---
+
+  - id: T-OS-151F
+    title: "[Fix] T-OS-151R 指摘修正: 共通 metadata + transferability + mock judge 置換"
+    status: done
+    deps: ["T-OS-151", "T-OS-151R"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/schemas/user-profile.yaml", ".claude/rules/memory-lifecycle.md", ".ai/USER_PROFILE.example.yaml", ".ai/USER_PROFILE.yaml", ".claude/evals/manager-quality/report.py", ".claude/evals/manager-quality/metrics.yaml", ".pre-commit-config.yaml"]
+    acceptance:
+      - "HIGH 3 件 (F1/F2/F3) + MEDIUM 4 件 (F4/F5/F6/F7) に対応"
+      - "repeated-question 系 eval が一部 pass するようになる"
+    notes: "LOW 指摘 3 件は T-OS-151G に先送り"
+
+  # --- レビュータスク (Codex 独立レビュー) ---
+
+  - id: T-OS-151R
+    title: "[Review] T-OS-151 Safe Memory 独立レビュー"
+    status: done
+    deps: ["T-OS-151"]
+    owner_role: "codex-reviewer"
+    allowed_paths: [".ai/CODEX/RESULTS/T-OS-151R.md"]
+    acceptance:
+      - "R1-R8 の独立検証完了"
+      - "総合判定 + 問題分類 (CRITICAL/HIGH/MEDIUM/LOW)"
+      - "APPROVED / APPROVED_WITH_MINOR_FIXES / CHANGES_REQUESTED / REJECTED のステータス"
+    notes: "Pro 指摘: サブエージェント報告を信用しない → 独立レビュー必須"
+
+  - id: T-OS-153R
+    title: "[Review] T-OS-153 Capability Preflight 独立レビュー"
+    status: done
+    deps: ["T-OS-153"]
+    owner_role: "codex-reviewer"
+    allowed_paths: [".ai/CODEX/RESULTS/T-OS-153R.md"]
+    acceptance:
+      - "R1-R8 の独立検証完了"
+      - "scan.sh の冪等性を実地確認"
+      - "APPROVED / APPROVED_WITH_MINOR_FIXES / CHANGES_REQUESTED / REJECTED のステータス"
+    notes: "独立レビュー"
+
+  # ============================================================
+  # === ChatGPT Pro レビュー反映: ToBe v2 核心タスク (2026-04-18) ===
+  # 参照: .ai/DESIGN/CHATGPT_PRO_REVIEW_2026-04-18.md
+  # 判定: △ (要修正) - "4 レイヤーを足す設計" から "制御システム" へ
+  # 最優先: Pro が指摘した 3 つの本質的盲点を埋める
+  #   1. Manager の評価関数の不在
+  #   2. 委譲プロトコル (Handoff Packet) の弱さ
+  #   3. 記憶ライフサイクル (capture→retire/promote) の欠如
+  # ============================================================
+
+  # --- Phase 0: 評価基盤 (P0, 最優先) ---
+
+  - id: T-OS-150
+    title: "[Pro-P0-2] Manager Quality Eval: regression suite 20 ケース + metrics 基盤"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/evals/manager-quality/", ".ai/METRICS/", "scripts/eval/"]
+    acceptance:
+      - ".claude/evals/manager-quality/ に Owner 不満 20 ケースを regression suite として実装"
+      - "metrics 指標: repeated_question_rate, owner_delegation_burden, context_miss_rate, unnecessary_owner_question_rate, capability_reuse_rate, decision_trace_completeness"
+      - "各指標の target (例: repeated_question_rate < 5%) を定義"
+      - "run-all.sh に統合し org-tick 毎に実行"
+      - "退行検知時は DECISIONS.md に ISSUE として自動記録"
+    notes: |
+      Pro 指摘の「最大の穴」。Manager が Manager らしく振る舞えているかを定量化する基盤。
+      Phase 1 以降の改善を測定する土台なので最優先。
+      T-OS-120 (メトリクス) と統合可能だが、本タスクの方が具体的で優先。
+
+  # --- Phase 1: Safe Memory (P0) ---
+
+  - id: T-OS-151
+    title: "[Pro-P0-1] Safe Memory: USER_PROFILE を fact registry として実装（secret pointer 方式）"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/USER_PROFILE.yaml", ".claude/schemas/", ".claude/rules/memory-lifecycle.md", ".gitignore"]
+    acceptance:
+      - ".ai/USER_PROFILE.yaml を facts / secrets / preferences の 3 セクションで新設"
+      - "必須フィールド: scope, source, confidence, source_ref, valid_from, expires_at, pii_level"
+      - "secret セクションは実体を持たず secret_ref のみ（1password://, keychain://, sops://, env:// の URI 形式）"
+      - ".ai/USER_PROFILE.yaml を .gitignore に追加（.ai/USER_PROFILE.example.yaml は commit）"
+      - "memory-lifecycle.md で capture → normalize → scope → retrieve → validate → retire/promote の 6 操作を Iron Law 化"
+      - "past_qa も fact として統一管理"
+    notes: |
+      Pro 指摘: v1 の USER_PROFILE は危険（credentials に実体を置く設計）。
+      secret pointer 方式 + 失効条件 + scope + confidence で fact registry 化。
+      MCP の Resources/Tools 概念と整合性を取る。
+
+  - id: T-OS-152
+    title: "[Pro-P1] Secret 管理統合: 1Password/Keychain/SOPS のいずれかを採用"
+    status: queued
+    deps: ["T-OS-151"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/skills/secret-management.md", "scripts/secret/", ".ai/CONTROL.yaml"]
+    acceptance:
+      - "Secret Manager の選定・導入（推奨: 1Password CLI または macOS Keychain）"
+      - "scripts/secret/resolve.sh で secret_ref → 実体を解決"
+      - "secret resolve は read-only、write は Owner 承認必須"
+      - "pre-commit hook で .ai/ 配下の secret 混入を検出・拒否（T-OS-124 と統合）"
+      - "CONTROL.yaml に secret_manager: {type, config} を定義"
+    notes: |
+      Pro 指摘の PII リスク対応。
+      実装選択は Owner の環境に合わせる（1Password or Keychain）。
+
+  # --- Phase 2: Capability Preflight (P1) ---
+
+  - id: T-OS-153
+    title: "[Pro-P1-4] Capability Preflight: tool manifest 化 + 自動検出"
+    status: done
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/CAPABILITIES.yaml", ".claude/schemas/", "scripts/capabilities/", ".claude/rules/capability-preflight.md"]
+    acceptance:
+      - ".ai/CAPABILITIES.yaml を tool manifest として新設"
+      - "各 capability: id, kind, command, status, auth_status, risk_level, supports_dry_run, owner_approval_required_for, common_operations, input_resolution_order"
+      - "scripts/capabilities/scan.sh で毎 Tick 自動検出 + manifest 更新"
+      - "Manager ルール: Owner に手順依頼する前に CAPABILITIES を必ず探索（Iron Law）"
+      - "MCP 互換フォーマット（Resources/Tools）で設計"
+    notes: |
+      Pro 指摘: v1 は「使える CLI 一覧」止まり。auth_status, dry-run, risk, approval 境界が必要。
+      MCP との相互運用を将来担保。
+      既存 T-OS-140 (MCP 統合) と重複領域があるが、本タスクが先行する。
+
+  # --- Phase 3: Request Intake State Machine (P0) ---
+
+  - id: T-OS-154
+    title: "[Pro-P0-3] Request Intake State Machine: 10 ステップループの Iron Law 化"
+    status: done
+    deps: ["T-OS-151", "T-OS-153"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/rules/request-intake-loop.md", ".claude/agents/manager.md", "CLAUDE.md"]
+    acceptance:
+      - "request-intake-loop.md 新設: 10 ステップ (Intake → Load Memory → Bind Work Graph → Discover Capabilities → Classify Risk → Decide → Execute → Verify → Update → Report)"
+      - "各ステップに Iron Law を定義（例: Step 2 で USER_PROFILE を必ず読む）"
+      - "Coherence 表示の 3 段階 (Silent/Brief/Full Bind) を Step 10 で判定"
+      - "Active Inquiry の認知負荷予算モデル (max 3 問, ask_only_if / do_not_ask_if) を Step 6 に組み込み"
+      - "manager.md をこのループ前提に書き換え"
+      - "CLAUDE.md から冗長な判断ロジックを削除し、本ループを唯一の正とする"
+    notes: |
+      Pro 指摘の核心: 「制御システム」への転換。
+      v1 の 4 レイヤーを状態機械として統合し、全依頼に強制適用。
+      既存 T-OS-113 (ad-hoc 検出) は本タスクの副産物として自然に解決。
+
+  # --- Phase 4: Handoff Packet (P1) ---
+
+  - id: T-OS-155
+    title: "[Pro-P1-5] Handoff Packet: 全 subagent に標準化された委譲プロトコル強制"
+    status: done
+    deps: ["T-OS-154"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".claude/agents/", ".claude/rules/handoff-protocol.md", ".claude/schemas/handoff-packet.yaml"]
+    acceptance:
+      - "handoff-protocol.md 新設: Handoff Packet の仕様"
+      - "schema: task_id, assumptions, changed_files, decisions_made, unresolved_questions, downstream_impacts, memory_updates"
+      - "全 subagent 定義 (.claude/agents/*.md) に Handoff Packet 返却を強制"
+      - "Manager は受け取った packet を memory_updates → USER_PROFILE / CAPABILITIES / DECISIONS に反映"
+      - "OpenAI Agents SDK の tracing 粒度を参考に trace ログも記録"
+    notes: |
+      Pro 指摘: 症状 B (並列タスクで文脈が飛ぶ) の本質原因。
+      subagent の成果物だけでなく、仮定・未解決点・下流影響を標準パケットで受け渡す。
+
+  # --- Phase 5: 継続運用 (P2) ---
+
+  - id: T-OS-156
+    title: "[Pro-P2-6] Context Pack Builder: redacted export for ChatGPT Pro/Codex"
+    status: queued
+    deps: ["T-OS-151", "T-OS-152"]
+    owner_role: "codex-implementer"
+    allowed_paths: ["scripts/context-pack/", ".claude/commands/org-export.md"]
+    acceptance:
+      - "scripts/context-pack/build.sh: GOALS / 現在フェーズ / 主要決定 / 未解決論点 / 非機密 preferences を pack 化"
+      - "secret_ref は \"available via secret_ref\" 表記に redact"
+      - "/org-export コマンド新設 (.context_exports/ に出力)"
+      - "ChatGPT Pro / Codex / Claude subagent 用のバリエーション生成"
+    notes: |
+      Pro 提案: OrgOS Manager と ChatGPT Pro の役割分担設計の実装。
+
+  - id: T-OS-157
+    title: "[Pro-P2-7] Autonomy Boundary Model: タスクごとの自律レベル定義"
+    status: queued
+    deps: ["T-OS-154"]
+    owner_role: "codex-implementer"
+    allowed_paths: [".ai/TASKS.yaml", ".claude/schemas/task.yaml", ".claude/rules/authority-layer.md"]
+    acceptance:
+      - "authority-layer.md 新設: 自律レベル (silent_execute / execute_with_report / ask_before_execute / owner_only)"
+      - "各タスクの task schema に autonomy_level + approval_required_for + owner_input_needed を追加"
+      - "既存タスクへの retrofit: 既存 60+ タスクに autonomy_level を付与"
+      - "Manager は tasks の autonomy_level に従って実行"
+    notes: |
+      Pro 代替案 2: Work Graph + Autonomy Boundary Model。
+      「自律駆動」一律方針を、タスク複雑度・リスクで変える制御に変更。
+
+  # === ToBe v2 では superseded されるタスク（統合案） ===
+  # T-OS-110 (選択肢一掃) → T-OS-154 の Active Inquiry 組み込みで自然解決
+  # T-OS-113 (ad-hoc 検出) → T-OS-154 の Request Intake Loop で自然解決
+  # T-OS-120 (メトリクス) → T-OS-150 の一部として再構築
+  # T-OS-124 (監査 + secret scanning) → T-OS-152 に統合
+  # T-OS-140 (MCP 統合) → T-OS-153 Capability Preflight で MCP 互換化
+  # T-OS-144 (マルチ学習転移) → T-OS-156 Context Pack Builder と統合
+  # 詳細: DECISIONS.md PLAN-UPDATE-018
+
   # === 以下はCodex workerを使う実装タスクの例 ===
   # - id: T-003
   #   title: "Implement: user authentication module"

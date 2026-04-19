@@ -1,0 +1,5 @@
+実装しました。追加したのは [proactive-mode.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/proactive-mode.md), [suggest-next.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/suggest-next.sh), [priority-ranker.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/priority-ranker.sh), [T-OS-182.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-182.md) です。
+
+`proactive-mode` で bootstrap 後の能動提案フローを固定し、`suggest-next.sh` で `GOALS/TASKS/USER_PROFILE` を読んで 3-5 件の次アクションを Markdown 提案、`priority-ranker.sh` で `priority + unblock + momentum + preference` を点数化する形にしました。朝起動時は直近完了サマリ付き、中日起動時は提案のみです。
+
+検証は `bash -n scripts/session/suggest-next.sh && bash -n scripts/session/priority-ranker.sh`、`bash scripts/session/suggest-next.sh`、`bash scripts/session/priority-ranker.sh < /tmp/tasks.json` で通しています。現台帳では `GOALS.yaml` と `TASKS.yaml` の running/queued に軽い不整合があるため、結果レポートは `DONE_WITH_CONCERNS` にしています。

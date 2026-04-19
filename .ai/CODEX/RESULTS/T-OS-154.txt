@@ -1,0 +1,41 @@
+変更対象は [request-intake-loop.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/request-intake-loop.md) です。結果レポートは [T-OS-154.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-154.md) に出力しました。既存 OS ファイルは編集していません。
+
+1. 変更ファイル一覧
+- 変更対象: `.claude/rules/request-intake-loop.md`
+- 成果物レポート: `.ai/CODEX/RESULTS/T-OS-154.md`
+
+2. A1〜A5 対応表
+- A1: 10 ステップを `Intake` から `Report with Minimal Cognitive Load` まで完全記述
+- A2: 各 Step に `Iron Law` / `Violation Detection` / `Skippable Conditions` / `Relationship To Other Rules` を明記
+- A3: 冒頭に「本ルールの位置づけ」を置き、下位ルールとの階層関係を列挙
+- A4: 末尾に `既存 OS ファイルとの連携 (T-OS-154b で実施予定)` を追加
+- A5: 末尾に `測定` セクションを追加し、manager-quality 指標と接続
+
+3. 10 ステップの要約
+- 1: 依頼原文を固定
+- 2: `USER_PROFILE` / `past_qa` を先に読む
+- 3: `CONTROL` / `TASKS` / `GOALS` に bind
+- 4: `CAPABILITIES.yaml` を先に探索
+- 5: 可逆性、コスト、セキュリティ、破壊度を分類
+- 6: matrix と inquiry budget で `act` / `ask` / `defer` / `refuse` を決定
+- 7: trace 付きで実行または推奨付きで質問
+- 8: 結果と副作用を検証
+- 9: TASKS / DECISIONS / MEMORY 更新判定
+- 10: Silent / Brief / Full Bind で最小認知負荷報告
+
+4. 下位ルールとの関係サマリー
+- Step 2/9 は `memory-lifecycle.md` を参照
+- Step 4 は `capability-preflight.md` と `owner-task-minimization.md` を参照
+- Step 6 は `ai-driven-development.md` を参照
+- Step 10 は `next-step-guidance.md` を参照
+- 全 Step の Iron Law 形式は `rationalization-prevention.md` に揃えた
+
+5. T-OS-154b への示唆
+- `.claude/agents/manager.md` に Step 1〜10 の固定 Tick フローと完了条件チェックを追加
+- `CLAUDE.md` に Step 2〜4 先行、Step 6 inquiry budget 遵守を短く統合
+- `rationalization-prevention.md` に本ループを最高位 Iron Law として追加
+
+6. ステータス
+- DONE
+
+テストは不要なドキュメント追加のみのため未実施です。

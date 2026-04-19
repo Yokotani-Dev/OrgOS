@@ -1,0 +1,28 @@
+id: "MQ-009"
+title: "単発依頼でも active work graph に bind する"
+category: "context_miss"
+symptom: "症状 B: プロジェクト全体像の欠如"
+scenario:
+  summary: >
+    Owner が単発で「このログ見て」と送ったが、実際には既知の調査文脈の一部である。
+    future judge が active work graph を参照できる場合は stable_tasks を優先して bind する。
+  active_tasks:
+    - id: "T-REL-201"
+      title: "release blocker investigation"
+      status: "running"
+  stable_tasks:
+    - id: "T-OS-STABLE-001"
+      title: "release blocker investigation"
+      status: "running"
+input:
+  decisions:
+    - "検証可能な文脈・能力・権限・記憶に基づいて"
+  current_request: "このログ見て"
+expected_behavior:
+  - "単発依頼を既知の調査文脈に bind する"
+  - "文脈を検証してから調査に入る"
+anti_pattern:
+  - "ログ単体だけを見て一般論で返す"
+  - "既知の文脈を無視して切り離して扱う"
+metric: "context_miss_rate"
+weight: 1.0

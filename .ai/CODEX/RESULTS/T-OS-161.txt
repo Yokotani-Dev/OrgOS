@@ -1,0 +1,5 @@
+実装しました。`GOALS` の schema と commit-safe な初期データを追加し、Coherence mode の判定を Step 10 下位ルールとして deterministic に定義しています。
+
+主要な追加は [goals.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/goals.yaml:1)、[GOALS.example.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/GOALS.example.yaml:1)、[GOALS.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/GOALS.yaml:1)、[coherence-mode.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/coherence-mode.md:1) です。`GOALS.yaml` は tracked にする方針を採用し、`.gitignore` にはその意図だけを明記しました [`.gitignore`](/Users/youyokotani/Dev/Private/OrgOS/.gitignore:8)。結果報告は [T-OS-161.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-161.md:1) にまとめています。
+
+検証は `ruby` と `python3` で `.claude/schemas/goals.yaml`、`.ai/GOALS.example.yaml`、`.ai/GOALS.yaml` の YAML parse を確認済みです。`coherence-mode.md` では Step 3 の bind 結果を入力にし、`Full > Brief > Silent` の優先順、入力欠落時は `Full Bind` へ寄せる規則、`active_graph` 更新スクリプトの設計まで入れています。

@@ -1,0 +1,43 @@
+**変更ファイル一覧**
+- [.claude/evals/manager-quality/README.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/README.md): スイートの目的、使い方、20 ケース一覧、指標 target、新ケース追加手順を追加。
+- [.claude/evals/manager-quality/metrics.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/metrics.yaml): 6 指標の定義、priority、weight、判定方向を定義。
+- [.claude/evals/manager-quality/cases](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/cases): 20 件の regression fixture を追加。内訳は `4/4/4/3/3/2`。
+- [.claude/evals/manager-quality/run.sh](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/run.sh): suite 実行エントリポイントを追加。
+- [.claude/evals/manager-quality/report.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/report.py): mock judge、JSONL 出力、集計、Markdown/JSON summary、regression 比較を実装。
+- [scripts/eval/manager-quality-runner.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/eval/manager-quality-runner.sh): repo ルート用の実行ラッパーを追加。
+- [scripts/eval/generate-regression-report.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/eval/generate-regression-report.sh): regression report 生成ラッパーを追加。
+- [.claude/evals/run-all.sh](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/run-all.sh): `manager-quality` を統合し、`--json` 出力にも含まれるよう更新。
+- [.ai/METRICS/manager-quality/.gitkeep](/Users/youyokotani/Dev/Private/OrgOS/.ai/METRICS/manager-quality/.gitkeep): metrics 保存先を追加。
+- [.ai/CODEX/RESULTS/T-OS-150.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-150.md): 実装判断、検証、baseline、制約を記録。
+
+**A1〜A8 対応表**
+- A1: 受入構造を作成済み。`manager-quality/`, `scripts/eval/`, `.ai/METRICS/manager-quality/` を追加。
+- A2: 20 ケースを YAML で実装済み。症状 A/B/C から機械的に導出。
+- A3: `metrics.yaml` 実装済み。
+- A4: `run.sh` と `report.py` で 1 case = 1 JSONL 行の baseline 記録を実装済み。
+- A5: `run-all.sh` 統合済み。`manager-quality` が P0 target 未達時に fail することを確認済み。
+- A6: regression 比較自体は実装済み。`generate-regression-report.sh` は decision/task 用 payload を出せるが、`.ai/DECISIONS.md` と `.ai/TASKS.yaml` への自動追記は未実行。
+- A7: README 作成済み。
+- A8: baseline 1 回実行済みで [.ai/METRICS/manager-quality/2026-04-18.jsonl](/Users/youyokotani/Dev/Private/OrgOS/.ai/METRICS/manager-quality/2026-04-18.jsonl) に記録済み。`.ai/DECISIONS.md` への転記は未実施。
+
+**baseline 測定結果**
+- ケース: `0 pass / 20 fail`
+- `repeated_question_rate`: `100.0%`
+- `context_miss_rate`: `100.0%`
+- `unnecessary_owner_question_rate`: `100.0%`
+- `capability_reuse_rate`: `0.0%`
+- `owner_delegation_burden`: `100.0%` proxy
+- `decision_trace_completeness`: `0.0%`
+
+**次の改善タスクへの示唆**
+- 最優先は P0 の `repeated_question_rate` と `context_miss_rate`。Phase 1 で `past_qa` / `USER_PROFILE` / active work graph bind を先に入れないと改善幅が出ません。
+- 次点は `capability_reuse_rate` と `owner_delegation_burden`。`CAPABILITIES` 台帳と preflight 強制化が必要です。
+- `decision_trace_completeness` は handoff packet と decision trace schema を入れればまとめて改善しやすいです。
+
+**ステータス**
+- `DONE_WITH_CONCERNS`
+
+**懸念事項**
+- `AGENTS.md` の禁止事項に従い、`.ai/DECISIONS.md` と `.ai/TASKS.yaml` は直接編集していません。
+- そのため A6/A8 の ledger 自動反映は「payload を出せる状態」までで止めています。
+- judge は意図的に mock です。実応答を評価するのは Phase 1+ の memory/capability wiring 後です。

@@ -53,6 +53,7 @@ Codex Reviewer（コード品質・堅牢性）とは異なり、以下を重点
 
 1. **Implementer の自己報告を信用しない** - 「完了しました」「テスト通りました」は証拠ではない。自分で検証する。
 2. **受入基準を1つでも満たしていなければ APPROVE しない** - 「ほぼ満たしている」は不合格。
+3. **CRITICAL は即 fail** - セキュリティ、データ損失、重大な仕様逸脱は REQUEST_CHANGES として止める。
 
 ---
 
@@ -219,3 +220,14 @@ acceptance 条件: "POST /api/users が 201 を返す"
 - **コード編集は行わない**（レビューのみ）
 - コード品質・堅牢性は Codex Reviewer が担当
 - 判断に迷う場合は Manager にエスカレート
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

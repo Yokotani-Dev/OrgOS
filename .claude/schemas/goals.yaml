@@ -1,0 +1,169 @@
+# GOALS.yaml schema
+#
+# Purpose:
+# - long-horizon goal registry for Request Intake Loop Step 3
+# - 4-layer graph: Vision -> Milestone -> Project -> Task
+# - active_graph is dynamic state refreshed on each Tick
+
+schema:
+  type: object
+  additional_properties: false
+  required:
+    - vision
+    - milestones
+    - projects
+    - active_graph
+
+vision:
+  type: object
+  additional_properties: false
+  required:
+    - id
+    - statement
+    - created_at
+    - updated_at
+  fields:
+    id:
+      type: string
+      pattern: "^V-[A-Z0-9-]+$"
+    statement:
+      type: string
+      min_length: 1
+      note: 1-2 year long-term direction. Must not contain secrets or credentials.
+    created_at:
+      type: date
+    updated_at:
+      type: date
+
+milestones:
+  type: array
+  min_items: 1
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - title
+      - description
+      - target_date
+      - status
+      - vision_ref
+      - acceptance
+    fields:
+      id:
+        type: string
+        pattern: "^M-[A-Z0-9-]+$"
+      title:
+        type: string
+        min_length: 1
+      description:
+        type: string
+        min_length: 1
+      target_date:
+        type: date_or_null
+      status:
+        type: enum
+        values:
+          - active
+          - achieved
+          - paused
+          - cancelled
+      vision_ref:
+        type: string
+        pattern: "^V-[A-Z0-9-]+$"
+      acceptance:
+        type: array
+        min_items: 1
+        item:
+          type: string
+
+projects:
+  type: array
+  min_items: 1
+  item:
+    type: object
+    additional_properties: false
+    required:
+      - id
+      - title
+      - milestone_ref
+      - status
+      - priority
+      - tasks_ref
+    fields:
+      id:
+        type: string
+        pattern: "^(P-[A-Z0-9-]+|T-OS-[0-9]+)$"
+      title:
+        type: string
+        min_length: 1
+      milestone_ref:
+        type: string
+        pattern: "^M-[A-Z0-9-]+$"
+      status:
+        type: enum
+        values:
+          - backlog
+          - active
+          - blocked
+          - done
+          - archived
+      priority:
+        type: enum
+        values:
+          - P0
+          - P1
+          - P2
+          - P3
+      tasks_ref:
+        type: array
+        min_items: 1
+        item:
+          type: string
+          pattern: "^T-[A-Z0-9-]+$"
+
+active_graph:
+  type: object
+  additional_properties: false
+  required:
+    - current_phase
+    - running_tasks
+    - blocked_tasks
+    - recent_decisions
+  fields:
+    current_phase:
+      type: enum
+      values:
+        - KICKOFF
+        - REQUIREMENTS
+        - DESIGN
+        - IMPLEMENTATION
+        - INTEGRATION
+        - RELEASE
+    running_tasks:
+      type: array
+      item:
+        type: string
+        pattern: "^T-[A-Z0-9-]+$"
+    blocked_tasks:
+      type: array
+      item:
+        type: string
+        pattern: "^T-[A-Z0-9-]+$"
+    recent_decisions:
+      type: array
+      max_items: 5
+      item:
+        type: string
+        note: Reference only, e.g. DECISION-2026-04-19-001 or file:.ai/DECISIONS.md#L42.
+
+constraints:
+  secrecy:
+    statement: GOALS.yaml is commit-safe project metadata. Secrets, credentials, and personal data are forbidden.
+  referential_integrity:
+    - milestones[*].vision_ref must match vision.id
+    - projects[*].milestone_ref must match milestones[*].id
+    - projects[*].tasks_ref should refer to TASKS.yaml ids
+  lifecycle:
+    - active_graph is runtime-derived and should be refreshed each Tick
+    - achieved milestone should not have active child projects unless explicitly justified

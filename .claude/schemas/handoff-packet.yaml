@@ -1,0 +1,429 @@
+# Handoff Packet Schema v1.0
+#
+# Purpose:
+# - canonical completion packet returned by every subagent / Codex worker
+# - machine-readable input for Manager Step 9 processing
+# - trace-aware contract for parallel delegation
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - handoff_packet
+
+handoff_packet:
+  type: object
+  additional_properties: false
+  required:
+    - schema_version
+    - task_id
+    - agent
+    - status
+    - completed_at
+    - trace
+    - changed_files
+    - assumptions
+    - decisions_made
+    - unresolved_questions
+    - downstream_impacts
+    - memory_updates
+    - verification
+  fields:
+    schema_version:
+      type: string
+      const: "1.0"
+      note: "Packet schema version. Future parser は v1/v2 coexistence をこの値で判定する。"
+    task_id:
+      type: string
+      pattern: "^T-[A-Z]+-[0-9]+[a-z]?$"
+      examples:
+        - "T-OS-155"
+    agent:
+      type: string
+      min_length: 1
+      note: "実行 agent / worker 名。例: manager, org-planner, codex-worker"
+    status:
+      type: enum
+      values:
+        - DONE
+        - DONE_WITH_CONCERNS
+        - NEEDS_CONTEXT
+        - BLOCKED
+        - CHANGES_REQUESTED
+    completed_at:
+      type: datetime
+      note: "ISO-8601 timestamp"
+    trace:
+      type: object
+      additional_properties: false
+      required:
+        - request_trace_id
+        - span_id
+        - attempt
+      fields:
+        request_trace_id:
+          type: string
+          min_length: 1
+          note: "依頼単位の最上位 trace ID。Manager が発行し、handoff chain 全体で共有する。"
+        span_id:
+          type: string
+          min_length: 1
+          note: "個別 subagent 実行に割り当てる span ID。retry ごとに新しい span_id を推奨する。"
+        attempt:
+          type: integer
+          min: 1
+          note: "同一 request_trace_id における retry 番号。初回実行は 1。"
+        parent_span_id:
+          type: string_or_null
+          note: "親 span。handoff chain の親子関係を表す。root span は null を許可する。"
+        resume_of:
+          type: string_or_null
+          note: "durable execution で再開した元 span_id。再開でない場合は null。"
+    changed_files:
+      type: array
+      default: []
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - path
+          - summary
+        fields:
+          path:
+            type: string
+            min_length: 1
+          summary:
+            type: string
+            min_length: 1
+    assumptions:
+      type: array
+      default: []
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - statement
+          - confidence
+          - source
+        fields:
+          statement:
+            type: string
+            min_length: 1
+          confidence:
+            type: float
+            min: 0.0
+            max: 1.0
+          source:
+            type: string
+            min_length: 1
+            note: "仮定の根拠。例: owner_message:2026-04-18, file:path#L42"
+    decisions_made:
+      type: array
+      default: []
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - decision
+          - rationale
+          - alternatives_considered
+        fields:
+          decision:
+            type: string
+            min_length: 1
+          rationale:
+            type: string
+            min_length: 1
+          alternatives_considered:
+            type: array
+            default: []
+            item:
+              type: string
+    unresolved_questions:
+      type: array
+      default: []
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - question
+          - blocker
+          - suggested_owner
+        fields:
+          question:
+            type: string
+            min_length: 1
+          blocker:
+            type: boolean
+          suggested_owner:
+            type: enum
+            values:
+              - Owner
+              - next_agent
+              - defer
+    downstream_impacts:
+      type: array
+      default: []
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - target_task
+          - impact_type
+          - description
+        fields:
+          target_task:
+            type: string
+            pattern: "^T-[A-Z]+-[0-9]+[a-z]?$"
+          impact_type:
+            type: enum
+            values:
+              - acceptance_change
+              - spec_update
+              - blocker_removed
+              - risk_added
+          description:
+            type: string
+            min_length: 1
+    memory_updates:
+      type: array
+      default: []
+      item:
+        type: oneOf
+        variants:
+          - name: user_profile_fact_update
+            type: object
+            additional_properties: false
+            required:
+              - target
+              - operation
+              - scope
+              - payload
+            fields:
+              target:
+                const: USER_PROFILE.facts
+              operation:
+                type: enum
+                values:
+                  - capture
+                  - update
+                  - retire
+                  - promote
+              scope:
+                type: enum
+                values:
+                  - user_profile.facts.working
+                  - user_profile.facts.confirmed
+                  - user_profile.facts.deprecated
+              payload:
+                type: object
+                additional_properties: false
+                required:
+                  - id
+                  - type
+                  - value_ref
+                  - scope
+                fields:
+                  id:
+                    type: string
+                    min_length: 1
+                  type:
+                    type: enum
+                    values:
+                      - identity
+                      - preference
+                      - project_context
+                      - workflow_rule
+                      - constraint
+                  value_ref:
+                    type: any
+                    note: "Fact value そのもの、または参照可能な構造。"
+                  scope:
+                    type: enum
+                    values:
+                      - user_profile.facts.working
+                      - user_profile.facts.confirmed
+                      - user_profile.facts.deprecated
+                  confidence:
+                    type: float
+                    min: 0.0
+                    max: 1.0
+                  source:
+                    type: string
+                    min_length: 1
+                  observed_at:
+                    type: datetime
+                  note:
+                    type: string
+          - name: capability_update
+            type: object
+            additional_properties: false
+            required:
+              - target
+              - operation
+              - scope
+              - payload
+            fields:
+              target:
+                const: CAPABILITIES
+              operation:
+                const: update
+              scope:
+                type: enum
+                values:
+                  - capabilities.registry
+              payload:
+                type: object
+                additional_properties: false
+                required:
+                  - capability_id
+                  - fields_to_update
+                fields:
+                  capability_id:
+                    type: string
+                    min_length: 1
+                  fields_to_update:
+                    type: map
+                    min_properties: 1
+                  reason:
+                    type: string
+          - name: decision_append
+            type: object
+            additional_properties: false
+            required:
+              - target
+              - operation
+              - scope
+              - payload
+            fields:
+              target:
+                const: DECISIONS
+              operation:
+                const: append
+              scope:
+                type: enum
+                values:
+                  - decisions.ledger
+              payload:
+                type: object
+                additional_properties: false
+                required:
+                  - decision_id
+                  - content
+                fields:
+                  decision_id:
+                    type: string
+                    min_length: 1
+                  content:
+                    type: string
+                    min_length: 1
+                  tags:
+                    type: array
+                    default: []
+                    item:
+                      type: string
+                  rationale:
+                    type: string
+          - name: user_profile_preference_update
+            type: object
+            additional_properties: false
+            required:
+              - target
+              - operation
+              - scope
+              - payload
+            fields:
+              target:
+                const: USER_PROFILE.preferences
+              operation:
+                type: enum
+                values:
+                  - capture
+                  - update
+                  - retire
+                  - promote
+              scope:
+                type: enum
+                values:
+                  - user_profile.preferences.working
+                  - user_profile.preferences.confirmed
+                  - user_profile.preferences.deprecated
+              payload:
+                type: object
+                additional_properties: false
+                required:
+                  - id
+                  - key
+                  - value_ref
+                  - scope
+                fields:
+                  id:
+                    type: string
+                    min_length: 1
+                  key:
+                    type: string
+                    min_length: 1
+                  value_ref:
+                    type: any
+                  scope:
+                    type: enum
+                    values:
+                      - user_profile.preferences.working
+                      - user_profile.preferences.confirmed
+                      - user_profile.preferences.deprecated
+                  confidence:
+                    type: float
+                    min: 0.0
+                    max: 1.0
+                  source:
+                    type: string
+                    min_length: 1
+                  note:
+                    type: string
+    verification:
+      type: object
+      additional_properties: false
+      required:
+        - tests_run
+        - eval_results
+        - self_check
+      fields:
+        tests_run:
+          type: list
+          default: []
+          note: "実行したテストや確認手順の一覧"
+          item:
+            type: string
+        eval_results:
+          type: object
+          note: "Manager Quality Eval 等に引き継ぐ任意の構造化結果"
+        self_check:
+          type: string
+          min_length: 1
+
+scope_registry:
+  allowed_scopes:
+    - user_profile.facts.working
+    - user_profile.facts.confirmed
+    - user_profile.facts.deprecated
+    - user_profile.preferences.working
+    - user_profile.preferences.confirmed
+    - user_profile.preferences.deprecated
+    - capabilities.registry
+    - decisions.ledger
+  note: "memory_updates.scope および payload.scope はこの registry 内の値のみ許可する。"
+
+validation_notes:
+  required_behavior:
+    - "packet 欠損または必須フィールド欠落は invalid とする"
+    - "status は enum 外を許可しない"
+    - "trace.request_trace_id / trace.span_id / trace.attempt 欠損は invalid とする"
+    - "memory_updates.scope と payload.scope は scope_registry.allowed_scopes 内でなければならない"
+    - "memory_updates は target / operation / payload shape の oneOf に一致しなければならない"
+  quarantine_behavior:
+    - "validation failure 時は shared state に apply せず quarantine に一時格納する"
+    - "quarantine した packet は Manager review 後に apply または discard を決定する"
+  compatibility:
+    - "推奨形式は YAML frontmatter + Markdown 本文"
+    - "代替形式として Markdown 末尾の ```yaml handoff_packet``` ブロックを許可する"

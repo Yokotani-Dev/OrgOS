@@ -1,10 +1,13 @@
 # OrgOS WebConsole Version
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.22.0"
-released_at: "2026-04-01"
+current: "0.23.0"
+released_at: "2026-04-19"
 
 history:
+  - version: "0.23.0"
+    date: "2026-04-19"
+    description: "Chief of Staff Edition: ToBe v2 complete (Manager Quality Eval 0/20→19/20, Safe Memory, Capability Preflight, Request Intake State Machine, Handoff Packet, Authority Layer with RBAC/OS Mutation/Approval Workflow, Session Bootstrap, Proactive Manager, Self-Improvement Loop)"
   - version: "0.22.0"
     date: "2026-04-01"
     description: "Autonomous driving mode, business context hearing, reference research, MVP→confirm→expand cycle, external AI resource scanning, Runbook mechanism"

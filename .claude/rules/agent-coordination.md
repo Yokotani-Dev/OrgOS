@@ -218,6 +218,22 @@ BLOCKED: 進行不能
 
 ---
 
+## Codex 起動規約
+
+### codex-implementer の標準フラグ
+
+- `codex-implementer` の非対話起動は `--full-auto` を標準とする
+- `-s workspace-write -a on-request` の冗長指定は使わない
+- 結果は `--output-last-message` で `.ai/CODEX/RESULTS/` に保存する
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
+  --output-last-message .ai/CODEX/RESULTS/<TASK_ID>.txt \
+  - < .ai/CODEX/ORDERS/<TASK_ID>.md
+```
+
+---
+
 ## コンテキスト管理
 
 ### コンテキストウィンドウの効率的な使用

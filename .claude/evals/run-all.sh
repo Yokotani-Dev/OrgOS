@@ -108,6 +108,11 @@ if [[ ${#CHANGED_FILES[@]} -eq 0 ]] || echo "${CHANGED_FILES_STR}" | grep -q "IN
   fi
 fi
 
+# Manager-quality regression suite
+if [[ -f "$SCRIPT_DIR/manager-quality/run.sh" ]]; then
+  run_eval "manager-quality" "$SCRIPT_DIR/manager-quality/run.sh"
+fi
+
 # Output
 OVERALL="pass"
 [[ $FAIL -gt 0 ]] && OVERALL="fail"

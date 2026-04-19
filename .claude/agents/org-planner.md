@@ -229,3 +229,20 @@ JWT（理由: スケーラビリティ）
 - `.claude/skills/coding-standards.md` - コーディング規約
 - `.claude/skills/backend-patterns.md` - バックエンドパターン
 - `.claude/skills/frontend-patterns.md` - フロントエンドパターン
+
+## Iron Law
+
+- [鉄則1]: 要件が曖昧なまま実装へ進めず、B1/B2 に分類して解消経路を作る。
+- [鉄則2]: `.ai/PROJECT.md` と関連台帳を source of truth として扱い、会話だけで計画を確定しない。
+- [鉄則3]: DAG、deps、allowed_paths を明示し、衝突するタスクを並列化しない。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

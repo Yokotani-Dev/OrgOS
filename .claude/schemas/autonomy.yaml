@@ -1,0 +1,130 @@
+# Autonomy Level Schema
+#
+# Purpose:
+# - define allowed autonomy levels for task / work order metadata
+# - provide deterministic mapping inputs for Step 5 -> Step 6 reduction
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - autonomy
+
+autonomy:
+  type: object
+  additional_properties: false
+  required:
+    - levels
+    - frontmatter
+    - mapping_inputs
+  fields:
+    levels:
+      type: array
+      min_items: 4
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - id
+          - description
+          - decision_outcome
+        fields:
+          id:
+            type: enum
+            values:
+              - silent_execute
+              - execute_with_report
+              - ask_before_execute
+              - owner_only
+          description:
+            type: string
+            min_length: 1
+          decision_outcome:
+            type: enum
+            values:
+              - act_silent
+              - act_report
+              - ask
+              - ask_defer_or_refuse
+          applicable_to:
+            type: array
+            default: []
+            item:
+              type: string
+          examples:
+            type: array
+            default: []
+            item:
+              type: string
+    frontmatter:
+      type: object
+      additional_properties: false
+      required:
+        - autonomy_level
+      fields:
+        autonomy_level:
+          type: enum
+          values:
+            - silent_execute
+            - execute_with_report
+            - ask_before_execute
+            - owner_only
+        approval_required_for:
+          type: array
+          default: []
+          item:
+            type: string
+        owner_input_needed:
+          type: array
+          default: []
+          item:
+            type: string
+    mapping_inputs:
+      type: object
+      additional_properties: false
+      required:
+        - risk
+        - reversibility
+      fields:
+        risk:
+          type: enum
+          values:
+            - low
+            - medium
+            - high
+            - critical
+            - os_mutation_in_core
+            - os_mutation_in_new
+        reversibility:
+          type: enum
+          values:
+            - reversible
+            - irreversible
+        security:
+          type: enum
+          values:
+            - none
+            - low
+            - medium
+            - high
+        destructiveness:
+          type: enum
+          values:
+            - silent
+            - local
+            - shared
+            - external
+        cost:
+          type: enum
+          values:
+            - low
+            - medium
+            - high
+
+examples:
+  - task:
+      id: T-OS-170
+      autonomy_level: execute_with_report
+      approval_required_for: []
+      owner_input_needed: []

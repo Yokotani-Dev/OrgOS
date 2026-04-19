@@ -1,0 +1,16 @@
+id: "MQ-019"
+title: "判断理由と根拠を trace に残す"
+category: "decision_trace"
+symptom: "trace 不全"
+scenario: |
+  Manager が 2 つの選択肢から 1 つを選んだ。後から根拠を追える形で残すかを測る。
+input:
+  current_request: "CI 失敗への初動を決めて"
+expected_behavior:
+  - "何を選んだかを記録する"
+  - "根拠と参照情報を記録する"
+anti_pattern:
+  - "結論だけで理由がない"
+  - "どの情報を見たか追えない"
+metric: "decision_trace_completeness"
+weight: 1.0

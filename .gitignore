@@ -4,3 +4,19 @@
 .ai/_archive/
 .DS_Store
 .collaborator
+
+# Safe Memory - secret 混入事故防止
+.ai/USER_PROFILE.yaml
+.ai/CAPABILITIES.yaml
+
+# GOALS is intentionally tracked. Keep it commit-safe and free of secrets.
+
+# Local-only overrides
+.pre-commit-config.local.yaml
+
+# Autonomous run artifacts (v0.23.0)
+.ai/CODEX/LOGS/
+.ai/BACKUPS/
+.ai/AUDIT/
+.ai/APPROVALS/
+.ai/METRICS/daily-health/

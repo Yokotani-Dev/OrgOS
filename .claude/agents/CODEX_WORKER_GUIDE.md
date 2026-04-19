@@ -45,6 +45,125 @@ Work Order の role に応じて：
 - 実施内容
 - 変更ファイル一覧
 - 次のアクション
+- `.claude/schemas/handoff-packet.yaml` 準拠の `handoff_packet`
+
+推奨形式は YAML frontmatter に `handoff_packet` を埋め込む Markdown：
+
+```markdown
+---
+task_id: T-123
+status: completed
+handoff_packet:
+  task_id: T-123
+  agent: codex-implementer
+  status: completed
+  completed_at: "2026-04-19T12:00:00+09:00"
+  trace_id: "<CODEX_THREAD_ID or run id>"
+  changed_files:
+    - path/to/file.ts
+  assumptions: []
+  decisions_made: []
+  unresolved_questions: []
+  downstream_impacts: []
+  memory_updates: []
+  verification:
+    tests_run: true
+    tests_passed: true
+    commands:
+      - npm test
+---
+
+# Result: T-123
+
+## Summary
+...
+```
+
+Handoff Packet の詳細は `.claude/rules/handoff-protocol.md` を参照し、フィールドは `.claude/schemas/handoff-packet.yaml` に準拠させる。
+
+---
+
+## Codex CLI 0.121 運用メモ
+
+### 承認モードと sandbox
+
+- `codex exec` には `-a/--ask-for-approval` はない
+- `-a/--ask-for-approval` を使えるのは対話 `codex` と `codex resume`
+- 非対話の `codex exec` で承認を制御する場合:
+  - 承認不要の標準: `--full-auto`
+  - 完全無承認: `-c approval_policy=never`
+  - 最終手段: `--dangerously-bypass-approvals-and-sandbox`
+- `--full-auto` は `-a on-request --sandbox workspace-write` の省略形
+- OrgOS の標準は `workspace-write` を前提とし、危険な bypass は緊急時だけ使う
+
+### Work Order の投入方法
+
+#### 方法1: ファイル名引数
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
+  .ai/CODEX/ORDERS/T-123.md
+```
+
+#### 方法2: stdin piping（0.118+）
+
+長い Work Order やテンプレート展開後の本文は標準入力で渡してよい。
+
+```bash
+cat .ai/CODEX/ORDERS/T-123.md | /opt/homebrew/bin/codex exec --full-auto \
+  --skip-git-repo-check -
+```
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check - <<'EOF'
+# Work Order: T-123
+実装内容をここに記載
+EOF
+```
+
+### 結果の取り出し
+
+- `--output-last-message <FILE>`: 最終メッセージをファイルに保存
+- `--output-schema <FILE>`: 最終応答を JSON Schema に合わせて構造化
+- `--json`: 全イベントを JSONL で stdout に出力
+
+`.ai/CODEX/RESULTS/<TASK_ID>.md` や `.txt` を生成する例:
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
+  --output-last-message .ai/CODEX/RESULTS/T-123.txt \
+  - < .ai/CODEX/ORDERS/T-123.md
+```
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
+  --output-schema .ai/CODEX/schemas/result.schema.json \
+  --output-last-message .ai/CODEX/RESULTS/T-123.json \
+  - < .ai/CODEX/ORDERS/T-123.md
+```
+
+```bash
+/opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check --json \
+  - < .ai/CODEX/ORDERS/T-123.md > .ai/CODEX/RESULTS/T-123.events.jsonl
+```
+
+### セッション再開
+
+- 継続実行: `codex exec resume <SESSION_ID>`
+- 直前セッション再開: `codex exec resume --last`
+- 長尺タスクを Tick 跨ぎで継続する場合は、前回の Session ID を結果と一緒に残し、次 Tick で `resume` を使う
+- `CODEX_THREAD_ID` は exec 内の環境変数として参照できるため、補助スクリプトやログ紐付けに使える
+
+### モデル・プロファイル・階層 config
+
+- Iron Law: Manager / Worker は `-m/--model` を付けてモデル指定しない
+- モデルは `config.toml` のデフォルトで管理する
+- `-p/--profile` は必要時のみ使う
+- 階層 config のマージ順序:
+  - `/etc/codex/config.toml`
+  - `~/.codex/config.toml`
+  - `.codex/config.toml`
+- プロジェクト固有設定は `.codex/config.toml` に置く
 
 ---
 
@@ -220,6 +339,18 @@ Manager が統合を担当します。
 - 変更の背景、意図、トレードオフを記載
 
 テンプレート: `.ai/REVIEW/PACKET.template.md`
+
+### Handoff Packet
+
+実装・レビューの完了時は、必ず `.claude/schemas/handoff-packet.yaml` に準拠した Handoff Packet を返却する。
+
+必須フィールド：
+- `task_id`, `agent`, `status`, `completed_at`, `trace_id`
+- `changed_files`, `assumptions`, `decisions_made`
+- `unresolved_questions`, `downstream_impacts`
+- `memory_updates`, `verification`
+
+`.ai/CODEX/RESULTS/<TASK_ID>.md` には YAML frontmatter の `handoff_packet` として埋め込む形式を推奨する。Review Packet と Handoff Packet は役割が異なり、前者はレビュー用の説明、後者は Manager が機械的に受け取る完了報告として扱う。
 
 ---
 

@@ -1,0 +1,141 @@
+# Role Matrix Schema
+#
+# Purpose:
+# - define who may edit, who is read-only, and which approval boundary applies
+# - provide an RBAC source for future runtime checks
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - role_matrix
+
+role_matrix:
+  type: object
+  additional_properties: false
+  required:
+    - owner
+    - manager
+    - codex_implementer
+    - codex_reviewer
+    - subagent_org_reviewer
+  fields:
+    owner:
+      type: object
+      additional_properties: false
+      required:
+        - can_edit
+        - approvals_required
+      fields:
+        can_edit:
+          type: array
+          item:
+            type: string
+        approvals_required:
+          type: string
+    manager:
+      type: object
+      additional_properties: false
+      required:
+        - can_edit
+        - approvals_required
+      fields:
+        can_edit:
+          type: array
+          item:
+            type: string
+        approvals_required:
+          type: array
+          item:
+            type: string
+    codex_implementer:
+      type: object
+      additional_properties: false
+      required:
+        - can_edit
+        - approvals_required
+        - read_only
+      fields:
+        can_edit:
+          type: array
+          item:
+            type: string
+        approvals_required:
+          type: array
+          item:
+            type: string
+        read_only:
+          type: array
+          item:
+            type: string
+    codex_reviewer:
+      type: object
+      additional_properties: false
+      required:
+        - can_edit
+        - approvals_required
+        - read_only
+      fields:
+        can_edit:
+          type: array
+          item:
+            type: string
+        approvals_required:
+          type: array
+          item:
+            type: string
+        read_only:
+          type: array
+          item:
+            type: string
+    subagent_org_reviewer:
+      type: object
+      additional_properties: false
+      required:
+        - can_edit
+        - read_only
+      fields:
+        can_edit:
+          type: array
+          item:
+            type: string
+        read_only:
+          type: array
+          item:
+            type: string
+
+examples:
+  - role_matrix:
+      owner:
+        can_edit:
+          - all
+        approvals_required: none
+      manager:
+        can_edit:
+          - .ai/*
+          - os_mutation_protocol.allowed_when_os_mutation_true when allow_os_mutation=true
+        approvals_required:
+          - os_mutation_protocol.requires_owner_approval
+      codex_implementer:
+        can_edit:
+          - allowed_paths_only
+        approvals_required:
+          - edits_outside_allowed_paths_forbidden
+        read_only:
+          - .env
+          - .ai/DECISIONS.md
+          - .ai/TASKS.yaml
+          - .ai/CONTROL.yaml
+      codex_reviewer:
+        can_edit:
+          - .ai/CODEX/RESULTS/*R.md
+        approvals_required:
+          - code_edit_forbidden
+        read_only:
+          - review_target_files
+      subagent_org_reviewer:
+        can_edit:
+          - .ai/REVIEW/
+        read_only:
+          - source_files

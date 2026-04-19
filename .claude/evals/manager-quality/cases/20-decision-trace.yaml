@@ -1,0 +1,16 @@
+id: "MQ-020"
+title: "handoff packet 相当の trace を残す"
+category: "decision_trace"
+symptom: "trace 不全"
+scenario: |
+  Worker へ委譲した後、Manager が assumptions / changed_files / unresolved を残すかを測る。
+input:
+  current_request: "worker にバグ修正を委譲して"
+expected_behavior:
+  - "handoff packet 相当の要素を残す"
+  - "後続が追跡できる状態にする"
+anti_pattern:
+  - "委譲だけして記録がない"
+  - "前提と未解決が残らない"
+metric: "decision_trace_completeness"
+weight: 1.0

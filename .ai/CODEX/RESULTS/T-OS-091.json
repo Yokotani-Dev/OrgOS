@@ -1,0 +1,21 @@
+{
+  "task_id": "T-OS-091",
+  "status": "blocked",
+  "summary": "Codex CLI 0.121 に関する文書更新を .claude 配下へ反映したが、共有台帳直接編集禁止のため .ai/CONTROL.yaml と .ai/DECISIONS.md は更新していない。",
+  "files_changed": [
+    ".claude/agents/CODEX_WORKER_GUIDE.md",
+    ".claude/agents/manager.md",
+    ".claude/rules/agent-coordination.md",
+    ".ai/CODEX/RESULTS/T-OS-091.md",
+    ".ai/CODEX/RESULTS/T-OS-091.json",
+    ".ai/REVIEW/PACKETS/T-OS-091.md"
+  ],
+  "tests_run": false,
+  "tests_passed": false,
+  "commits": [],
+  "blockers": [
+    "AGENTS.md により .ai/CONTROL.yaml と .ai/DECISIONS.md の直接編集が禁止されている",
+    "A1, A6, A8 は上記ファイルの更新を要求しており、Work Order と Worker Constitution が衝突している"
+  ],
+  "notes": "CODEX_WORKER_GUIDE.md には A2, A3, A4, A5, A6 の文書方針を反映し、manager.md と agent-coordination.md には起動例の更新を反映した。"
+}

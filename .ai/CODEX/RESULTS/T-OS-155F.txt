@@ -1,0 +1,7 @@
+修正は完了しました。`[handoff-packet.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/handoff-packet.yaml)` で YAML parse エラーを解消し、`memory_updates` を target 別 payload 制約付きに再設計しました。`[handoff-protocol.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/handoff-protocol.md)` では scope registry、quarantine、trace の粒度分離、retry policy、legacy fallback、machine-readable violation 条件、`schema_version`、Agents SDK / LangGraph 対応表を追加しています。
+
+検証は指定どおり実施し、両方 `OK` でした。
+- `ruby -e 'require "yaml"; YAML.load_file(".claude/schemas/handoff-packet.yaml")' && echo OK`
+- `python3 -c "import yaml; yaml.safe_load(open('.claude/schemas/handoff-packet.yaml'))" && echo OK`
+
+レポートは `[T-OS-155F.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-155F.md)` にまとめています。

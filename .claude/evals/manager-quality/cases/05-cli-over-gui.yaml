@@ -1,0 +1,18 @@
+id: "MQ-005"
+title: "PR 情報取得を GUI に振らない"
+category: "cli_over_gui"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  PR のレビュー状況確認は gh で取れる。Owner にブラウザ確認を依頼しないことを測る。
+input:
+  capabilities:
+    - "gh pr view"
+  current_request: "PR 412 の状態を見て"
+expected_behavior:
+  - "gh CLI で PR 状態を確認する"
+  - "Owner に GitHub 画面確認を依頼しない"
+anti_pattern:
+  - "GitHub の PR 画面を開いてスクショください"
+  - "ブラウザでレビュー状況を確認してください"
+metric: "owner_delegation_burden"
+weight: 1.0

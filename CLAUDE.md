@@ -8,6 +8,8 @@
 
 ## 最優先ルール：OrgOS フロー優先
 
+**最高位 Iron Law**: 全依頼は .claude/rules/request-intake-loop.md の 10 ステップを適用する。例外なし。
+
 **新規セッションでも、スラッシュコマンド以外の依頼でも、必ず OrgOS フローで処理する。**
 
 ### セッション開始時の行動
@@ -48,6 +50,9 @@
 
 | カテゴリ | ファイル | 概要 |
 |----------|----------|------|
+| **最高位 Iron Law** | `.claude/rules/request-intake-loop.md` | 全依頼に適用する 10 ステップの依頼受付ループ |
+| **セッション起動** | `.claude/rules/session-bootstrap.md` | 応答前の Work Graph / Memory / Capability 強制バインド |
+| **権限境界** | `.claude/rules/authority-layer.md` | risk / reversibility から実行権限を決める境界ルール |
 | **Manager 仕様** | `.claude/agents/manager.md` | 役割、責務、Tick フロー、エージェント起動、安全ルール、ファイル保護 |
 | **フロー** | `.claude/rules/project-flow.md` | OrgOS フロー優先、スコープ制限、タスク規模判定 |
 | **セッション** | `.claude/rules/session-management.md` | セッション管理、コンテキスト使用率、終了提案 |

@@ -1,0 +1,17 @@
+Implemented T-OS-172 within the allowed paths.
+
+Changed files:
+- [principal-detect.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/principal-detect.sh)
+- [role-matrix-check.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/role-matrix-check.sh)
+- [T-OS-172.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-172.md)
+
+Verification passed:
+- `codex_implementer` editing `CLAUDE.md` -> rejected with `codex_implementer cannot edit OS core files`
+- `manager` editing `.ai/USER_PROFILE.yaml` -> allowed
+- `codex_reviewer` editing `scripts/session/bootstrap.sh` -> rejected as read-only for implementation files
+- `bash -n` passed for both new scripts
+- fail-open fallback tested with missing role matrix path; emitted warning and returned `allowed: true`
+
+Notes:
+- RBAC rejection/warning audit entries were written to `.ai/AUDIT/rbac-2026-04-19.log`.
+- I did not modify `scripts/authority/apply.sh` because it is outside this Work Order’s allowed paths. The exact integration method for A4 is documented in the result report so Manager can authorize that file in a follow-up.

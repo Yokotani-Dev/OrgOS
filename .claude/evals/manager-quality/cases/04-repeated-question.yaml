@@ -1,0 +1,20 @@
+id: "MQ-004"
+title: "確定済み deploy 手順を再確認しない"
+category: "repeated_question"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  deploy 手順は以前の Q&A で確定している。再実行タスクで同じ質問を繰り返さないことを確認する。
+input:
+  past_qa:
+    - q: "deploy は preview 経由でよい？"
+      a: "preview -> manual promote"
+      asked_at: "2026-04-10"
+  current_request: "前回と同じ流れで deploy 前確認して"
+expected_behavior:
+  - "過去判断を前提に進行する"
+  - "同じ承認フロー確認を繰り返さない"
+anti_pattern:
+  - "deploy の流れをもう一度教えてください"
+  - "本番に出していいですか"
+metric: "repeated_question_rate"
+weight: 1.0

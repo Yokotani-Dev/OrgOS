@@ -1,0 +1,4 @@
+`manager-quality` の runtime wiring を実装し、judge を category handler 化しました。主な変更は [report.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/report.py), [README.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/manager-quality/README.md), 結果レポート [T-OS-158.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-158.md) です。`cli_over_gui` / `context_miss` / `unnecessary_question` / `capability_reuse` を実データ参照へ置換し、`selftest` で category 別 pass/fail スナップショットも固定しました。
+
+検証は `python3 .claude/evals/manager-quality/report.py selftest --repo-root .` が `ok`、`.claude/evals/manager-quality/run.sh --json` は latest run `2026-04-18T15:14:21+00:00` で `16/20 pass` でした。baseline `6/20` から `+10` 改善しています。  
+ただし `context_miss_rate` が `50.0%` で P0 target 未達のため、`run.sh` の exit code は引き続き `1` です。残件は `MQ-009` / `MQ-010` の `TASKS.yaml` running task 不足と、`MQ-017` / `MQ-018` の capability 未登録です。

@@ -380,3 +380,99 @@
     - サブコマンド: デフォルト(1サイクル), N(複数), dry-run, status
     - 安全策: 最大10サイクル、連続3回REVERT停止、Kernel変更禁止、50行/ファイル制限
     - PLAN-UPDATE-014 として DECISIONS.md に記録
+
+- Tick: ad-hoc
+  Time: 2026-04-18
+  Stage: RELEASE
+  Actions:
+    - T-OS-090 調査完了: Codex CLI 0.77 → 0.121 の差分抽出
+    - T-OS-091 反映完了: CODEX_WORKER_GUIDE.md / manager.md / agent-coordination.md を Codex ワーカーが更新、CONTROL.yaml / TEMPLATES/CONTROL.yaml / DECISIONS.md を Manager が直接更新
+  Commands:
+    - gh release list --repo openai/codex
+    - codex exec --full-auto --skip-git-repo-check --output-last-message - < ORDERS/T-OS-091.md
+  Outputs:
+    - .ai/RESOURCES/CODEX_CLI_UPGRADE_2026-04.md（新規、差分 SSOT）
+    - .ai/CODEX/RESULTS/T-OS-091.md / .json
+    - .ai/REVIEW/PACKETS/T-OS-091.md
+  Changed files:
+    - .claude/agents/CODEX_WORKER_GUIDE.md（Codex 0.121 運用メモ追加）
+    - .claude/agents/manager.md（stdin 推奨の追記）
+    - .claude/rules/agent-coordination.md（--full-auto 標準化）
+    - .ai/CONTROL.yaml（codex セクション更新、on-failure DEPRECATED 注記）
+    - .ai/TEMPLATES/CONTROL.yaml（同上）
+    - .ai/DECISIONS.md（PLAN-UPDATE-017）
+    - .ai/TASKS.yaml（T-OS-090/091 → done）
+  Notes:
+    - Codex ワーカーは共有台帳（.ai/CONTROL.yaml / .ai/DECISIONS.md）編集禁止ルールに従い BLOCKED 報告
+    - Manager が台帳側 A1/A6/A8 を直接反映して完了
+    - `-a on-failure` は Codex 0.102+ で DEPRECATED、`codex exec` には `-a` そのものが存在しない点を周知
+    - スクリプト `.claude/scripts/run-parallel.sh` の `on-failure` 分岐は動作上は問題なしのため今回は据え置き
+
+- Tick: ad-hoc (7h autonomous run)
+  Time: 2026-04-18 night
+  Stage: RELEASE
+  Mode: Autonomous (Owner sleeping)
+  Actions:
+    - Pro レビュー反映: ToBe v2 核心タスク T-OS-150〜157 登録
+    - Phase 0: T-OS-150 Manager Quality Eval 完了 (baseline 0/20 pass)
+    - Phase 1: T-OS-151 Safe Memory 完了 (USER_PROFILE as fact registry)
+    - Phase 2: T-OS-153 Capability Preflight 完了 (58 capabilities 検出)
+    - レビュー: T-OS-151R/153R (Codex 独立レビュー) 両方 CHANGES_REQUESTED
+    - 修正: T-OS-151F/153F を並列起動
+    - Phase 3: T-OS-154 初回 BLOCKED (AGENTS.md 制約) → Rescoped 再起動
+    - ISSUE-OS-001 記録: AGENTS.md と OS 改修タスクの矛盾 (T-OS-170 で根本解決予定)
+  Ledger updates:
+    - PLAN-UPDATE-016: aitmpl.com 連携 T-OS-100〜103
+    - PLAN-UPDATE-017: セルフレビュー対応 T-OS-110〜144 (20 tasks)
+    - PLAN-UPDATE-018: Pro レビュー反映 T-OS-150〜157
+    - MQ-BASELINE-001: Manager Quality baseline
+    - ISSUE-OS-001: AGENTS.md 矛盾
+  Files created:
+    - .ai/DESIGN/ORGOS_TOBE.md (v1)
+    - .ai/DESIGN/ORGOS_TOBE_REVIEW_PROMPT.md (ChatGPT Pro 用)
+    - .ai/DESIGN/CHATGPT_PRO_REVIEW_2026-04-18.md (Pro レビュー全文)
+    - .ai/RESOURCES/SELF_REVIEW_2026-04-18.md (セルフレビュー 76/100)
+    - .ai/USER_PROFILE.yaml (gitignored)
+    - .ai/USER_PROFILE.example.yaml
+    - .ai/CAPABILITIES.yaml
+    - .ai/CAPABILITIES.example.yaml
+    - .claude/schemas/user-profile.yaml
+    - .claude/schemas/capability.yaml
+    - .claude/rules/memory-lifecycle.md
+    - .claude/rules/capability-preflight.md
+    - .claude/evals/manager-quality/ (20 cases + run.sh + report.py)
+    - scripts/eval/manager-quality-runner.sh
+    - scripts/eval/generate-regression-report.sh
+    - scripts/capabilities/scan.sh + 8 probe scripts
+  Notes:
+    - 3 並列 Codex 実行で効率化
+    - Owner 不在 (寝ている) のため Manager 自律駆動
+    - レビュー → 修正 → セルフレビュー → 新タスク のループを 7 時間継続予定
+
+- Tick: autonomous-completion
+  Time: 2026-04-19 morning
+  Stage: RELEASE
+  Mode: 7h Autonomous Run Completed
+  Headline: Manager Quality Eval 0/20 → **20/20 pass** (全 6 指標 target 達成)
+  Tasks Completed:
+    Phase 1-4 実装: T-OS-150, 151, 153, 154, 155
+    独立レビュー: T-OS-151R, 153R, 154R, 155R (全 CHANGES_REQUESTED)
+    レビュー指摘修正: T-OS-151F, 153F, 154F, 155F
+    runtime wiring: T-OS-158 (eval 6/20 → 16/20)
+    セルフレビュー対応: T-OS-160 (Safety) / T-OS-161 (GOALS + coherence) / T-OS-163 (Regression + rubric) / T-OS-164 (残 4 ケース)
+    Authority 設計: T-OS-170 (authority-layer.md + 3 schemas)
+  Ledger updates:
+    DECISIONS.md: PLAN-UPDATE-016/017/018, MQ-BASELINE-001, MQ-PROGRESS-001/002, MQ-COMPLETE-001, ISSUE-OS-001, SELFREVIEW-001
+  Final Metrics:
+    repeated_question_rate: 0.0% (< 5% PASS)
+    context_miss_rate: 0.0% (< 3% PASS)
+    unnecessary_owner_question_rate: 0.0% (< 10% PASS)
+    capability_reuse_rate: 100.0% (> 80% PASS)
+    owner_delegation_burden: 0.0% (downward PASS)
+    decision_trace_completeness: 100.0% (> 95% PASS)
+  Regression: No regressions detected
+  Notes:
+    - ChatGPT Pro 指摘 3 大盲点 (評価関数 / 委譲プロトコル / 記憶ライフサイクル) すべて解消
+    - ToBe v2 成熟度 68% → 85%+ へ進化
+    - ISSUE-OS-001 (AGENTS.md 矛盾) は T-OS-170 で解決方針策定、実装は T-OS-171-173 で (Owner 承認後)
+    - 既存 OS 中核 (manager.md, CLAUDE.md) への retrofit は T-OS-154b/155b で保留中 (Authority Layer 実行エンジン化後)

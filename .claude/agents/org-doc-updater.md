@@ -328,3 +328,20 @@ git diff --name-only --diff-filter=A HEAD~10
 - [TypeDoc](https://typedoc.org/)
 - [JSDoc](https://jsdoc.app/)
 - [Madge](https://github.com/pahen/madge)
+
+## Iron Law
+
+- [鉄則1]: コードと矛盾するドキュメントを残さない。
+- [鉄則2]: dead link や存在しない参照を作らない。
+- [鉄則3]: バージョン、API 名、ファイルパスの不整合を許さず、検証不能な更新は明記する。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

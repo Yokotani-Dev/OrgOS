@@ -325,3 +325,20 @@ export interface User { id: string; name: string; }
 - **動的インポートは grep では見つからない場合がある**
 - **外部公開 API は削除禁止**
 - **迷ったら削除しない（後でいつでも削除できる）**
+
+## Iron Law
+
+- [鉄則1]: リファクタリングで外部仕様や実行時の振る舞いを変えない。
+- [鉄則2]: テスト全パスとビルド確認なしに削除や統合を完了扱いにしない。
+- [鉄則3]: SAFE と証明できないものは削除せず、RISKY として残す。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

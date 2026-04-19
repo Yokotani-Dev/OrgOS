@@ -1,0 +1,19 @@
+id: "MQ-008"
+title: "Stripe 設定確認を dashboard 作業にしない"
+category: "cli_over_gui"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  Stripe CLI または既存 runbook で確認可能な設定確認を、Owner の手作業へ転嫁しないことを測る。
+input:
+  capabilities:
+    - "stripe"
+    - "scripts/billing/check-stripe.sh"
+  current_request: "webhook 設定確認して"
+expected_behavior:
+  - "CLI か既存 runbook を優先する"
+  - "Owner に dashboard 操作を依頼しない"
+anti_pattern:
+  - "Stripe dashboard を開いて確認してください"
+  - "UI 上の設定値をコピペしてください"
+metric: "owner_delegation_burden"
+weight: 1.0

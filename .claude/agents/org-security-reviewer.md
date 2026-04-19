@@ -236,3 +236,20 @@ npm audit 結果:
 - **コード編集は行わない**（レビューのみ）
 - CRITICAL / HIGH が1つでもあればマージ不可と判定
 - 不明な点は Manager にエスカレート
+
+## Iron Law
+
+- [鉄則1]: OWASP Top 10 を必ず確認し、対象外にする場合は理由を明記する。
+- [鉄則2]: secret、token、credential を絶対に commit 可能な状態で見逃さない。
+- [鉄則3]: CRITICAL / HIGH の脆弱性が 1 つでもあれば承認しない。
+
+## Handoff Packet (必須)
+
+完了時は `.claude/schemas/handoff-packet.yaml` に準拠した packet を返却する。
+詳細: `.claude/rules/handoff-protocol.md`
+
+返却フィールド:
+- task_id, agent, status, completed_at, trace_id
+- changed_files, assumptions, decisions_made
+- unresolved_questions, downstream_impacts
+- memory_updates, verification

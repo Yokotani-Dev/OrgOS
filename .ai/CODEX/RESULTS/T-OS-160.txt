@@ -1,0 +1,3 @@
+実装は完了しています。`pre-commit` 設定を実運用化し、`scripts/security/common.sh` を共通基盤として `check-no-plain-secrets.sh`、`normalize-lint.sh --json`、`promote-lint.sh` を追加しました。`memory-lifecycle.md` に lint 運用と CI/CD 指針も追記し、`.gitignore` には `.pre-commit-config.local.yaml` を追加しています。
+
+検証では `bash scripts/memory/check-no-plain-secrets.sh`、`bash scripts/memory/normalize-lint.sh --json`、`bash scripts/memory/promote-lint.sh` はすべて通過しました。`pre-commit run --all-files || true` はこの環境で `pre-commit` コマンド自体が未インストールのため未確認です。そのためステータスは `DONE_WITH_CONCERNS` として [.ai/CODEX/RESULTS/T-OS-160.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-160.md) に記録済みです。

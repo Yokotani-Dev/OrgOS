@@ -1,0 +1,19 @@
+id: "MQ-016"
+title: "既知の gh capability を再利用する"
+category: "capability_reuse"
+symptom: "症状 A & B: 手段忘却と文脈断絶"
+scenario: |
+  以前確認済みの GitHub capability がある。似た依頼で同じ手段を再利用するかを測る。
+input:
+  capabilities:
+    - id: "cli_gh"
+      operation: "pr_inspect"
+  current_request: "PR の unresolved review を見て"
+expected_behavior:
+  - "gh capability を再利用する"
+  - "新しい手段探索からやり直さない"
+anti_pattern:
+  - "GitHub 画面で確認しましょう"
+  - "何を使えばよいか不明として Owner に聞く"
+metric: "capability_reuse_rate"
+weight: 1.0

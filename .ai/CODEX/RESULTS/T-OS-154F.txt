@@ -1,0 +1,19 @@
+変更は [request-intake-loop.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/request-intake-loop.md) に反映し、結果は [T-OS-154F.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-154F.md) に出力しました。テスト実行は不要な文書修正のため行っていません。
+
+1. 変更ファイル
+- `.claude/rules/request-intake-loop.md`
+
+2. F1-F3 対応表
+- `F1`: 「本ループは最高位 Iron Law」「Step 1-10 未実施のまま応答禁止」を追記し、6 指標での違反検出と T-OS-154b での Tick 先頭固定フロー enforcement を明文化。
+- `F2`: Step 5 に `reduction_rules` / `reversibility_rules` を追加し、Step 6 は還元後にのみ `act/ask/defer/refuse` を判定すると明記。
+- `F3`: 測定節を 6 指標すべてに拡張し、Step 1/5/6/8/10 の違反も検出ロジックへ接続。
+
+3. `reduction_rules` の決定的例
+- ローカル Markdown 修正: `security=none`, `destructiveness=local`, `cost_billing=0`, `local_file_edit` → `low + reversible` → `act (silent)`
+- 共有設定更新: `security=medium`, `destructiveness=shared`, `cost_billing=0`, `local_file_edit` → `medium + reversible` → `act (report)`
+- 外部送信あり: `security=high`, `destructiveness=external`, `cost_billing>0`, `external_communication` → `high + irreversible` → `ask + defer`
+
+4. ステータス
+- `DONE`
+
+補足: 対象 2 ファイルは現状 `git` 上では未追跡です。

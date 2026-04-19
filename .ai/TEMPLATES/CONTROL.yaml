@@ -59,7 +59,7 @@ owner_review_policy:
 # advanced: 開発者向け（専門用語をそのまま使用）
 owner_literacy_level: "intermediate"
 
-# Codex worker 設定 (OpenAI Codex CLI)
+# Codex worker 設定 (OpenAI Codex CLI 0.121+)
 codex:
   # true: Manager が codex exec を自動実行
   # false: Ownerが手動で codex exec を実行（デフォルト、推奨）
@@ -67,16 +67,24 @@ codex:
 
   # sandbox ポリシー (-s, --sandbox)
   # read-only: 読み取りのみ（最も安全）
-  # workspace-write: ワークスペース書き込み許可（推奨）
+  # workspace-write: ワークスペース書き込み許可（推奨、--full-auto の既定）
   # danger-full-access: フルアクセス（危険）
   sandbox: "workspace-write"
 
-  # 承認ポリシー (-a, --ask-for-approval)
-  # untrusted: 毎回確認（最も安全）
-  # on-failure: 失敗時のみ確認
-  # on-request: 要求時のみ確認（推奨）
-  # never: 確認なし（CI環境のみ）
+  # 承認ポリシー
+  # 注意: `codex exec`（非対話）には -a/--ask-for-approval は存在しない。
+  #       対話 `codex` / `codex resume` のみで有効。
+  #       非対話は `--full-auto` または `-c approval_policy=<...>` で制御する。
+  # 値:
+  #   untrusted  : 毎回確認（最も安全・対話用）
+  #   on-failure : DEPRECATED (Codex 0.102+)。使用しない
+  #   on-request : 要求時のみ確認（推奨・対話用）
+  #   never      : 確認なし（CI/非対話用）
   approval: "on-request"
+
+  # モデル指定は行わない。config.toml のデフォルトを尊重。
+  # model: ""
+  profile: ""  # 必要時のみ `-p <profile>`
 
 # ランタイム設定
 runtime:

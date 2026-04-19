@@ -1,0 +1,139 @@
+vision:
+  id: V-ORGOS
+  statement: Chief of Staff OrgOS as an integrated operating model that compounds memory, optionality, intake discipline, handoff reliability, and authority-aware execution without storing secrets in tracked state.
+  created_at: 2026-04-19
+  updated_at: 2026-04-19
+
+milestones:
+  - id: M-PHASE-1
+    title: Memory
+    description: Establish a safe fact registry and lifecycle so the system can remember relevant context without leaking secrets.
+    target_date: 2026-04-30
+    status: achieved
+    vision_ref: V-ORGOS
+    acceptance:
+      - USER_PROFILE schema and lifecycle rule exist.
+      - Secret material is represented by pointers, not plaintext.
+  - id: M-PHASE-2
+    title: Optionality
+    description: Build capability discovery and evaluation primitives so the manager can choose tools instead of asking the owner prematurely.
+    target_date: 2026-05-07
+    status: active
+    vision_ref: V-ORGOS
+    acceptance:
+      - Capability manifest is machine-readable and reusable.
+      - Quality eval can score capability reuse and context binding.
+  - id: M-PHASE-3
+    title: Intake
+    description: Make the request intake loop deterministic, including active work graph binding and coherence mode selection.
+    target_date: 2026-05-14
+    status: active
+    vision_ref: V-ORGOS
+    acceptance:
+      - Request Intake Loop is defined as an Iron Law.
+      - GOALS registry and coherence rubric remove subjective context handling.
+  - id: M-PHASE-4
+    title: Handoff
+    description: Standardize delegation and completion packets so parallel work preserves assumptions, risks, and follow-up actions.
+    target_date: 2026-05-21
+    status: active
+    vision_ref: V-ORGOS
+    acceptance:
+      - Handoff packet schema exists.
+      - Downstream memory updates are explicit and safe.
+  - id: M-PHASE-5
+    title: Authority
+    description: Integrate autonomy and approval logic so execution respects risk and ownership boundaries deterministically.
+    target_date: 2026-05-31
+    status: active
+    vision_ref: V-ORGOS
+    acceptance:
+      - Authority layer schemas and rules exist.
+      - Risk and approval decisions can be audited.
+
+projects:
+  - id: T-OS-150
+    title: Manager Quality Eval regression suite and metrics base
+    milestone_ref: M-PHASE-2
+    status: done
+    priority: P0
+    tasks_ref:
+      - T-OS-150
+  - id: T-OS-151
+    title: Safe Memory fact registry
+    milestone_ref: M-PHASE-1
+    status: done
+    priority: P0
+    tasks_ref:
+      - T-OS-151
+      - T-OS-151F
+      - T-OS-151R
+  - id: T-OS-153
+    title: Capability Preflight tool manifest
+    milestone_ref: M-PHASE-2
+    status: done
+    priority: P1
+    tasks_ref:
+      - T-OS-153
+      - T-OS-153F
+      - T-OS-153R
+  - id: T-OS-154
+    title: Request Intake State Machine
+    milestone_ref: M-PHASE-3
+    status: done
+    priority: P0
+    tasks_ref:
+      - T-OS-154
+      - T-OS-154F
+      - T-OS-154R
+  - id: T-OS-155
+    title: Handoff Packet protocol and schema
+    milestone_ref: M-PHASE-4
+    status: done
+    priority: P1
+    tasks_ref:
+      - T-OS-155
+      - T-OS-155F
+      - T-OS-155R
+  - id: T-OS-158
+    title: Manager Quality Eval runtime wiring
+    milestone_ref: M-PHASE-2
+    status: active
+    priority: P0
+    tasks_ref:
+      - T-OS-158
+  - id: T-OS-160
+    title: Safety hardening scripts and hooks
+    milestone_ref: M-PHASE-1
+    status: active
+    priority: P0
+    tasks_ref:
+      - T-OS-160
+  - id: T-OS-161
+    title: Awareness reinforcement with GOALS and coherence rubric
+    milestone_ref: M-PHASE-3
+    status: active
+    priority: P1
+    tasks_ref:
+      - T-OS-161
+  - id: T-OS-170
+    title: Authority and risk layer design
+    milestone_ref: M-PHASE-5
+    status: backlog
+    priority: P0
+    tasks_ref:
+      - T-OS-170
+
+active_graph:
+  current_phase: IMPLEMENTATION
+  running_tasks:
+    - T-OS-158
+    - T-OS-160
+    - T-OS-161
+  blocked_tasks: []
+  recent_decisions:
+    - DECISION-SELFREVIEW-001
+    - DECISION-AWARENESS-BASELINE
+    - DECISION-REQUEST-INTAKE-IRON-LAW
+    - DECISION-HANDOFF-PACKET-REQUIRED
+    - DECISION-AUTHORITY-LAYER-SPLIT

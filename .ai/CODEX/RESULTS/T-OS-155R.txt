@@ -1,0 +1,9 @@
+**Findings**
+
+1. HIGH: `.claude/schemas/handoff-packet.yaml` is not valid YAML. Actual parse test failed with `Psych::SyntaxError` at line 39, so the schema is unusable as written.
+2. HIGH: `memory_updates` is specified for mechanical application, but its contract is too weak: `content: any` and `scope: string` without target-specific validation or quarantine/reject rules creates a destructive update risk for shared memory/decision state.
+3. MEDIUM: `trace_id` propagation is underspecified for parallelism and retries. Allowing either UUID or `T-OS-XXX-<timestamp>` without uniqueness/attempt rules leaves collision and mis-grouping risk.
+4. MEDIUM: backward compatibility is not actually guaranteed yet. The protocol defines two new packet-embedding formats, but does not define migration handling for legacy result Markdown with no packet.
+5. MEDIUM: T-OS-155b guidance is still too abstract. It names target files, but not concrete retrofit steps or parser behavior.
+
+総合判定は `× (差し戻し)`、ステータスは `CHANGES_REQUESTED` です。レビュー報告は [T-OS-155R.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-155R.md) に保存しました。

@@ -1,0 +1,11 @@
+`bind-request.sh` の multibyte 対応を追加で潰しました。外部入力の入口を UTF-8 に統一して、`parse_decisions` と YAML 読み込みの両方で `US-ASCII`/不定 encoding が残らないようにしています。Python3 への書き換えは不要でした。
+
+変更ファイルは [scripts/session/bind-request.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/bind-request.sh) と、結果レポートの [T-OS-181F2.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-181F2.md) です。  
+4 ケースはすべて成功確認済みです。
+
+- `echo "このログから error 抽出して" | bash scripts/session/bind-request.sh`
+- `echo "T-OS-180 の設計を確認したい" | bash scripts/session/bind-request.sh`
+- `echo "新しいサービス X を作りたい" | bash scripts/session/bind-request.sh`
+- `echo "check status" | bash scripts/session/bind-request.sh`
+
+いずれも例外なしで JSON を返しました。

@@ -1,0 +1,105 @@
+# Approval Workflow Schema
+#
+# Purpose:
+# - define owner approval flow for operations above execute_with_report
+# - separate normal manager initiated approval from emergency handling
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - approval_workflow
+
+approval_workflow:
+  type: object
+  additional_properties: false
+  required:
+    - manager_initiated
+    - emergency
+  fields:
+    manager_initiated:
+      type: object
+      additional_properties: false
+      required:
+        - trigger_levels
+        - steps
+        - timeout
+      fields:
+        trigger_levels:
+          type: array
+          item:
+            type: enum
+            values:
+              - ask_before_execute
+              - owner_only
+        steps:
+          type: object
+          additional_properties: false
+          required:
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+          fields:
+            "1":
+              type: string
+              min_length: 1
+            "2":
+              type: string
+              min_length: 1
+            "3":
+              type: string
+              min_length: 1
+            "4":
+              type: string
+              min_length: 1
+        timeout:
+          type: string
+          min_length: 1
+        timeout_behavior:
+          type: string
+          min_length: 1
+    emergency:
+      type: object
+      additional_properties: false
+      required:
+        - condition
+        - action
+        - log
+      fields:
+        condition:
+          type: string
+          min_length: 1
+        action:
+          type: string
+          min_length: 1
+        guardrails:
+          type: array
+          default: []
+          item:
+            type: string
+        log:
+          type: string
+          min_length: 1
+
+examples:
+  - approval_workflow:
+      manager_initiated:
+        trigger_levels:
+          - ask_before_execute
+          - owner_only
+        steps:
+          "1": Manager creates Work Order and impact summary.
+          "2": Manager writes review request to OWNER_INBOX.
+          "3": Owner responds in OWNER_COMMENTS with approve, reject, or modify.
+          "4": Manager executes or defers based on Owner decision.
+        timeout: 24h
+        timeout_behavior: downgrade only when target level is silent_execute or lower.
+      emergency:
+        condition: P0 incident and Owner unavailable.
+        action: allow minimal auto-recovery only.
+        guardrails:
+          - No destructive data mutation.
+          - No kernel file edits.
+        log: Record EMERGENCY-XXX in DECISIONS.md.

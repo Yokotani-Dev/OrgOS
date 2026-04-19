@@ -1,0 +1,26 @@
+T-OS-154b 完了しました。
+
+実施内容:
+- [manager.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/agents/manager.md:161) の Tick フローを `request-intake-loop.md` Step 1-10 に統合
+- Tick 先頭の Iron Law として `bootstrap.sh`、`USER_PROFILE.yaml`、`CAPABILITIES.yaml`、Work Graph bind、Step 1-10 実施を明記
+- 旧 Tick Step 1-6/7 を Request Intake Loop の各 Step に再マッピング
+- [CLAUDE.md](/Users/youyokotani/Dev/Private/OrgOS/CLAUDE.md:8) に最高位 Iron Law を追加
+- [CLAUDE.md](/Users/youyokotani/Dev/Private/OrgOS/CLAUDE.md:50) の「守るべきこと」テーブル先頭に以下を追加:
+  - `.claude/rules/request-intake-loop.md`
+  - `.claude/rules/session-bootstrap.md`
+  - `.claude/rules/authority-layer.md`
+- バックアップ作成:
+  - `.ai/BACKUPS/manager.md.2026-04-19.bak`
+  - `.ai/BACKUPS/CLAUDE.md.2026-04-19.bak`
+- 結果レポート作成: [T-OS-154b.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-154b.md)
+
+検証:
+- `bash .claude/evals/manager-quality/run.sh --json`
+  - `19/20` pass
+  - `critical_failure: false`
+- `bash scripts/eval/generate-regression-report.sh --json`
+  - `status: stable`
+  - regressions: none
+  - metric_regressions: none
+
+ステータスは `DONE` です。なお、`git status` 上は既存の未コミット変更が多数ありますが、このタスクで触った主要差分は `manager.md`、`CLAUDE.md`、指定バックアップ、RESULT レポートです。

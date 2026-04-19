@@ -1,0 +1,31 @@
+**変更ファイル一覧**
+- [.claude/schemas/user-profile.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/user-profile.yaml:1)
+- [.claude/rules/memory-lifecycle.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/memory-lifecycle.md:1)
+- [.ai/USER_PROFILE.example.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/USER_PROFILE.example.yaml:1)
+- [.ai/USER_PROFILE.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/USER_PROFILE.yaml:1)
+- [.gitignore](/Users/youyokotani/Dev/Private/OrgOS/.gitignore:1)
+- [.ai/CODEX/RESULTS/T-OS-151.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-151.md:1)
+
+**A1〜A8 対応表**
+- `A1`: `owner / facts / secrets / preferences` を必須化し、`scope / source / source_ref / confidence / expires_at / pii_level / secret` を含む schema を追加
+- `A2`: commit-safe な `.ai/USER_PROFILE.example.yaml` を作成し、既知 owner 情報と preference を初期投入
+- `A3`: `.ai/USER_PROFILE.yaml` を example 同内容で作成し、`.gitignore` に追加
+- `A4`: 6 段階の Iron Law と Red Flag、Manager 強制ステップを `.claude/rules/memory-lifecycle.md` に追加
+- `A5`: `past_qa` を独立配列ではなく `fact_qa_*` 形式の fact として schema と rule に明記
+- `A6`: `.gitignore` に `# Safe Memory - secret 混入事故防止` と `.ai/USER_PROFILE.yaml` を追加
+- `A7`: example 冒頭に `cp` 手順、secret 実体禁止、pointer URI 例を記載
+- `A8`: `./.claude/evals/manager-quality/run.sh` を 1 回実行し、`.ai/METRICS/manager-quality/2026-04-18.jsonl` が `20 -> 40` 行に増加したことを確認
+
+**schema の主要判断**
+- 必須にしたのは `owner` 全項目、`facts` の provenance/validity 一式、`secrets` の pointer 運用一式、`preferences` の学習根拠一式です。
+- `facts[].secret` を残しつつ、実体保存は禁止にして `secrets[]` 側の pointer を必須にしました。
+- `past_qa` は別トップレベルを増やさず、`facts[].value_ref` の variant として統一しました。
+
+**memory-lifecycle Iron Law の要約**
+- 操作は `capture -> normalize -> scope -> retrieve -> validate -> retire/promote` の 6 段階のみです。
+- `retrieve` は Request Intake Loop の Step 2 で強制、`validate` は `expires_at` と `confidence` を必ず見る運用です。
+- Red Flag は「secret 実体保存」「scope/source 欠落」「期限切れ fact の無検証再利用」「low-confidence の断定」「past_qa の独立配列化」です。
+
+`YAML.load_file` で 3 YAML の parse は通しています。`manager-quality` は baseline mock judge のため exit code は非 0 のままですが、suite 自体は壊れておらず metrics 追記は確認済みです。`.claude/memory/MEMORY.md` はこの repo に存在しなかったため、初期 preference は ToBe 文書と現行 rule から採っています。
+
+**ステータス**: DONE_WITH_CONCERNS

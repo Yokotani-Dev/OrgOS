@@ -1,0 +1,61 @@
+metrics:
+  - id: repeated_question_rate
+    description: "同じことを二度聞く率"
+    formula: "count(questions in past_qa asked again) / count(total questions)"
+    target: "< 5%"
+    priority: P0
+    weight: 2.0
+    direction: lower_is_better
+  - id: context_miss_rate
+    description: "文脈を外した応答の率"
+    formula: "count(responses not binding active work graph) / count(total responses)"
+    target: "< 3%"
+    priority: P0
+    weight: 2.0
+    direction: lower_is_better
+  - id: unnecessary_owner_question_rate
+    description: "CLI/memory で解決できたのに Owner に聞く率"
+    formula: "count(questions answerable by CLI/memory) / count(total questions to owner)"
+    target: "< 10%"
+    priority: P1
+    weight: 1.5
+    direction: lower_is_better
+  - id: capability_reuse_rate
+    description: "登録済み手段の再利用率"
+    formula: "count(requests solved by CAPABILITIES.yaml) / count(total technical requests)"
+    target: "> 80%"
+    priority: P1
+    weight: 1.5
+    direction: higher_is_better
+  - id: owner_delegation_burden
+    description: "Owner に振られる作業量のトレンド"
+    formula: |
+      From the latest run for each day in the last 7 days:
+        owner_requests_per_day / total_tasks_per_day
+      Compute:
+        - 7d moving average across up to 7 daily ratios
+        - 3d moving average across the latest 3 daily ratios
+      "downward trend" if:
+        latest_3d_MA < latest_7d_MA
+      If fewer than 3 daily ratios exist:
+        status = pending (pass)
+    target: "downward trend"
+    priority: P1
+    weight: 1.0
+    direction: lower_is_better
+    baseline_note: "単日 baseline では burden proxy (failed burden-avoidance cases / total burden cases) を併記する"
+  - id: decision_trace_completeness
+    description: "判断の追跡可能性"
+    formula: |
+      A decision is "fully traced" if ALL of:
+        - has assumptions >= 1 (or explicit "no assumptions" acknowledgement)
+        - has decisions_made >= 1 (rationale + alternatives_considered filled)
+        - has verification (tests_run or eval_results non-empty)
+        - has memory_updates (or explicit "no updates" acknowledgement)
+        - trace.span_id, trace.request_trace_id present
+      full_trace_count / total_decisions
+      Legacy tasks without a machine-readable handoff packet may be excluded from the denominator.
+    target: "> 95%"
+    priority: P0
+    weight: 1.5
+    direction: higher_is_better

@@ -1,0 +1,18 @@
+id: "MQ-011"
+title: "プロジェクト phase を外さない"
+category: "context_miss"
+symptom: "症状 B: プロジェクト全体像の欠如"
+scenario: |
+  現在は REQUIREMENTS phase だが、Manager が実装前提の応答に飛ばないかを測る。
+input:
+  control:
+    stage: "REQUIREMENTS"
+  current_request: "認証まわりどう進める？"
+expected_behavior:
+  - "現フェーズを踏まえて要件整理として応答する"
+  - "いきなり実装手順に飛ばない"
+anti_pattern:
+  - "コード変更前提で話し始める"
+  - "現在フェーズへの言及がない"
+metric: "context_miss_rate"
+weight: 1.0

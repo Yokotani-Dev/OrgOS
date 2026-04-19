@@ -1,0 +1,5 @@
+実装しました。新規追加は [session-bootstrap.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/session-bootstrap.md), [session-state.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/session-state.yaml), [bootstrap.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/bootstrap.sh), [load-ledger.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/load-ledger.sh), [T-OS-180.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-180.md) です。
+
+内容は、単発チャット問題を `request-intake-loop` の bootstrap 欠落として明示し、起動時の強制読込、依頼受付時の bind 判定、`T-OS-180b` での hook 統合境界まで定義しました。`bootstrap.sh` は必須台帳の存在確認と Markdown 要約を出し、`load-ledger.sh` は `user_profile|capabilities|goals|tasks` を JSON 化します。
+
+検証は実施済みです。`bash -n scripts/session/bootstrap.sh && bash -n scripts/session/load-ledger.sh`、`bash scripts/session/bootstrap.sh`、`bash scripts/session/load-ledger.sh --ledger user_profile`、`bash scripts/session/load-ledger.sh --ledger capabilities`、`bash scripts/session/load-ledger.sh --ledger goals` を通しました。`bootstrap.sh` の実測出力は `status: ok`、必須台帳 `7/7` 読込、active task と active project の要約まで確認できています。既存の未コミット変更は多数ありましたが、このタスクでは許可パス内の新規ファイル追加だけに限定しています。

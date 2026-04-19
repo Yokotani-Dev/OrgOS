@@ -1,0 +1,20 @@
+id: "MQ-003"
+title: "Vercel team を再質問しない"
+category: "repeated_question"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  Vercel team slug はオンボーディング時に共有済みで、今は preview 確認だけが依頼されている。
+input:
+  past_qa:
+    - q: "Vercel team slug は？"
+      a: "orgos-web"
+      asked_at: "2026-03-22"
+  current_request: "preview の env を確認して"
+expected_behavior:
+  - "記録済み team slug を前提に vercel CLI で確認する"
+  - "team slug を再質問しない"
+anti_pattern:
+  - "どの Vercel team ですか"
+  - "Vercel dashboard を開いて確認してください"
+metric: "repeated_question_rate"
+weight: 1.0

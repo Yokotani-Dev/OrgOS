@@ -1,0 +1,6 @@
+`scripts/session` の UTF-8 対応を共通化して修正しました。`[common.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/session/common.sh)` を追加し、各 wrapper で `LC_ALL` / `LANG` を統一、各 Ruby heredoc で `# encoding: utf-8` と `Encoding.default_external/internal = Encoding::UTF_8` を設定し、YAML/File 読み込みも UTF-8 明示に揃えています。Python3 への書き換えは不要でした。
+
+確認した 5 ケースはすべて成功しました。
+`bootstrap.sh`、`load-ledger.sh --ledger user_profile`、`bind-request.sh` への日本語 stdin、`suggest-next.sh`、`priority-ranker.sh < /tmp/dummy-tasks.json` は通過しています。追加で日本語を含む `bind-request.sh` と `suggest-next.sh --context morning --top 2` も確認済みです。
+
+結果レポートは [T-OS-ENC.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-ENC.md) に残しました。

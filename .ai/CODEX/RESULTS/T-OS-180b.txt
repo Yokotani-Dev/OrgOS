@@ -1,0 +1,27 @@
+T-OS-180b is DONE.
+
+Updated [.claude/settings.json](/Users/youyokotani/Dev/Private/OrgOS/.claude/settings.json:42) by appending the graceful bootstrap command to the existing `SessionStart` hook:
+
+```json
+{
+  "type": "command",
+  "command": "bash scripts/session/bootstrap.sh 2>/dev/null || echo 'bootstrap skipped'"
+}
+```
+
+Preserved the existing `"$CLAUDE_PROJECT_DIR"/.claude/hooks/session_start_context.py` hook and did not change other settings.
+
+Created:
+
+- Backup: [.ai/BACKUPS/settings.json.2026-04-19.bak](/Users/youyokotani/Dev/Private/OrgOS/.ai/BACKUPS/settings.json.2026-04-19.bak)
+- Result report: [.ai/CODEX/RESULTS/T-OS-180b.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-180b.md)
+
+Verification passed:
+
+- `jq empty .claude/settings.json`
+- `cat .claude/settings.json | jq '.hooks.SessionStart'`
+- `bash scripts/session/bootstrap.sh`
+
+The bootstrap simulation returned `status: ok`, `Required ledgers loaded: 7/7`, and `Warnings: none`.
+
+One note: the Work Order said the existing SessionStart hook cats three files, but the actual current settings used `.claude/hooks/session_start_context.py`. I preserved the actual existing structure and appended the new bootstrap command to it.

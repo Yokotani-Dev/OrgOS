@@ -1,0 +1,20 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.0
+    hooks:
+      - id: gitleaks
+  - repo: local
+    hooks:
+      - id: user-profile-no-secrets
+        name: USER_PROFILE に secret 実体が混入していないか検査
+        entry: scripts/memory/check-no-plain-secrets.sh
+        language: script
+        files: '\.ai/.*\.yaml$|\.ai/.*\.md$'
+        pass_filenames: false
+      - id: memory-normalize-lint
+        name: USER_PROFILE の重複 semantic fact 検出
+        entry: scripts/memory/normalize-lint.sh
+        language: script
+        files: '\.ai/USER_PROFILE\.yaml$'
+        pass_filenames: false
+        stages: [pre-push]

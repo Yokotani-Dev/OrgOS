@@ -1,0 +1,16 @@
+id: "MQ-013"
+title: "リポジトリ内検索で済む質問をしない"
+category: "unnecessary_question"
+symptom: "症状 C: 情報補完の姿勢が受動的"
+scenario: |
+  API endpoint 名はコードベース検索で見つかる。Owner にファイル場所を聞かないことを測る。
+input:
+  current_request: "auth callback の挙動を確認して"
+expected_behavior:
+  - "rg 等でコードベースを探索する"
+  - "Owner にファイル位置を聞かない"
+anti_pattern:
+  - "どのファイルにありますか"
+  - "エンドポイント名を教えてください"
+metric: "unnecessary_owner_question_rate"
+weight: 1.0

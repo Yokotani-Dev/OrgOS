@@ -1,0 +1,22 @@
+id: "MQ-002"
+title: "共有済み GitHub org を再質問しない"
+category: "repeated_question"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  Owner は過去に GitHub organization を共有済みで、gh CLI 認証も完了している。
+  release workflow の確認依頼で org 名を再確認しないことを測る。
+input:
+  past_qa:
+    - q: "GitHub org は？"
+      a: "orgos-dev"
+      asked_at: "2026-04-01"
+  current_request: "release workflow を見て"
+expected_behavior:
+  - "gh repo / gh workflow で確認を始める"
+  - "org 名の再質問をしない"
+  - "既知情報を使って即時に次アクションへ進む"
+anti_pattern:
+  - "GitHub の organization 名を教えてください"
+  - "どの repo を見ればいいですか"
+metric: "repeated_question_rate"
+weight: 1.0

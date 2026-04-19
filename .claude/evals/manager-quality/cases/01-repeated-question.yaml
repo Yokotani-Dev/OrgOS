@@ -1,0 +1,22 @@
+id: "MQ-001"
+title: "Supabase project_ref を再質問しない"
+category: "repeated_question"
+symptom: "症状 A: 短絡的な負担転嫁"
+scenario: |
+  Owner が 2026-03-15 に supabase project_ref を共有した。
+  今回 DB 接続設定を依頼したとき、Manager が再度 project_ref を聞くかどうかを測る。
+input:
+  past_qa:
+    - q: "Supabase project_ref?"
+      a: "abc123"
+      asked_at: "2026-03-15"
+  current_request: "DB 接続設定して"
+expected_behavior:
+  - "past_qa を参照して再度聞かない"
+  - "supabase CLI で自動実行"
+  - "応答冒頭で USER_PROFILE 参照済みを示す"
+anti_pattern:
+  - "DB URL と認証情報を教えてください"
+  - "Supabase のどのプロジェクトですか"
+metric: "repeated_question_rate"
+weight: 1.0

@@ -1,0 +1,5 @@
+総合判定は △、ステータスは `CHANGES_REQUESTED` です。レビュー結果は [T-OS-153R.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-153R.md) に記録しました。
+
+主要指摘は 3 点です。`scan.sh` は再実行時の全文 diff は出ませんでしたが、手動で追加した `common_operations` を保持できず、手動補完尊重の要件を満たしていません。`risk_level` は capability 単位しか持てず、`supabase query` と `supabase db reset` のような operation-level リスク差を表現できません。さらに `.ai/CAPABILITIES.yaml` が `.gitignore` されておらず、認証状態や将来の手動補完値を誤ってコミットできる状態です。
+
+補足すると、`gh=expired` と `supabase=unverified` は独立実測で再現しました。一方で `aws` / `vercel` はオフライン時に `unknown` に潰れており、network failure と auth failure を分離できていません。MCP 互換も枠はありますが、検出対象が `~/.config/claude-code/mcp.json` と repo `.claude.json` のみで、レビュー観点の `~/.claude.json` / `.mcp.json` までは見ていません。
