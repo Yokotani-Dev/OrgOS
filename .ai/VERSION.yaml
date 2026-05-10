@@ -1,10 +1,13 @@
 # OrgOS WebConsole Version
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "0.23.0"
-released_at: "2026-04-19"
+current: "0.24.0"
+released_at: "2026-05-10"
 
 history:
+  - version: "0.24.0"
+    date: "2026-05-10"
+    description: "Pre-Implementation Quality + Self-Evolution Engine + Concurrent Safety + SELFREVIEW-002. M-PHASE-6 (Quality Contract / Journey-First / Domain Constraint / Pre-Risk Profile / Acceptance Pre-Write / 4 Specialist subagents). Phase 2 complete (DNA / Synthesis / Validation / Application engine / Capability Probe / Intelligence pipeline / Always-On scheduler / Evolution Dashboard). M-PHASE-7 (parallel-session-policy / branch consistency check / Codex worktree wrapper / git lock). T-OS-370 critical review (4 specialists in parallel) detected 8 CRITICAL issues, all resolved by T-OS-371-378. Document → enforcement phase shift complete: KERNEL_FILES extended 4→13 with runtime block, Codex Worker enforcement layer (pre-exec validate + post-exec audit + autonomy_level runtime gate), Self-Evolution circuit breaker, secret scanner pre-commit hook, JOURNEYS ledger, Anthropic AUP rule. 25+ tasks completed in single autonomous session."
   - version: "0.23.0"
     date: "2026-04-19"
     description: "Chief of Staff Edition: ToBe v2 complete (Manager Quality Eval 0/20→19/20, Safe Memory, Capability Preflight, Request Intake State Machine, Handoff Packet, Authority Layer with RBAC/OS Mutation/Approval Workflow, Session Bootstrap, Proactive Manager, Self-Improvement Loop)"
