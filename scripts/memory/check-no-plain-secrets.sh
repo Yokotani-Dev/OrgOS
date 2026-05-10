@@ -1,150 +1,230 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$ROOT_DIR/scripts/security/common.sh"
 
-if ! command -v python3 >/dev/null 2>&1; then
-  log_warn "python3 が見つからないため secret scan をスキップします"
-  exit 0
+if [[ -f "$ROOT_DIR/scripts/security/common.sh" ]]; then
+  # shellcheck source=../security/common.sh
+  source "$ROOT_DIR/scripts/security/common.sh"
 fi
 
-python3 - "$ROOT_DIR" <<'PY'
-from __future__ import annotations
-
-import pathlib
-import re
-import sys
-
-root = pathlib.Path(sys.argv[1])
-ai_dir = root / ".ai"
-if not ai_dir.exists():
-    print("[WARN] .ai ディレクトリが見つからないため secret scan をスキップします", file=sys.stderr)
-    sys.exit(0)
-
-scan_files = []
-for path in sorted(ai_dir.rglob("*")):
-    if not path.is_file():
-        continue
-    if path.suffix.lower() not in {".yaml", ".yml", ".md"}:
-        continue
-    if any(part in {"_archive"} for part in path.parts):
-        continue
-    scan_files.append(path)
-
-field_pattern = re.compile(r"^\s*(api_key|password|token|secret)\s*:\s*(.+?)\s*$", re.IGNORECASE)
-inline_patterns = [
-    ("OpenAI/Stripe style secret", re.compile(r"\b(?:sk|pk)_(?:live|test)_[A-Za-z0-9]{8,}\b")),
-    ("Slack bot token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{10,}\b")),
-    ("GitHub token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b")),
-    ("GitHub fine-grained token", re.compile(r"\bgithub_pat_[A-Za-z0-9_]{20,}\b")),
-    ("AWS access key", re.compile(r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b")),
-    ("Stripe restricted key", re.compile(r"\brk_(?:live|test)_[A-Za-z0-9]{8,}\b")),
-]
-field_value_patterns = [
-    re.compile(r"^(?:['\"])?(?:sk|pk)_(?:live|test)_[A-Za-z0-9]{8,}(?:['\"])?$"),
-    re.compile(r"^(?:['\"])?xox[baprs]-[A-Za-z0-9-]{10,}(?:['\"])?$"),
-    re.compile(r"^(?:['\"])?gh[pousr]_[A-Za-z0-9]{20,}(?:['\"])?$"),
-    re.compile(r"^(?:['\"])?github_pat_[A-Za-z0-9_]{20,}(?:['\"])?$"),
-    re.compile(r"^(?:['\"])?(?:AKIA|ASIA)[A-Z0-9]{16}(?:['\"])?$"),
-    re.compile(r"^(?:['\"])?rk_(?:live|test)_[A-Za-z0-9]{8,}(?:['\"])?$"),
-]
-
-placeholder_tokens = {
-    "",
-    "xxx",
-    "yyy",
-    "zzz",
-    "dummy",
-    "dummytoken",
-    "placeholder",
-    "changeme",
-    "set_me",
-    "<set_me>",
-    "<redacted>",
-    "[redacted]",
-    "redacted",
-    "example",
-    "example.com",
-    "example@example.com",
-    "env://var_name",
-    "keychain://service/name",
-    "1password://vault/item",
-    "sops://path/to/secret",
-    "env://supabase_access_token",
+json_escape() {
+  local value=${1-}
+  value=${value//\\/\\\\}
+  value=${value//\"/\\\"}
+  value=${value//$'\n'/\\n}
+  value=${value//$'\r'/\\r}
+  value=${value//$'\t'/\\t}
+  printf '%s' "$value"
 }
 
-safe_substrings = (
-    "example.com",
-    "example.org",
-    "example.net",
-    "<set_me>",
-    "[redacted",
-    "redacted",
-    "dummy",
-    "placeholder",
-    "changeme",
-    "env://",
-    "1password://",
-    "keychain://",
-    "sops://",
-    "vault://",
-)
+log_event() {
+  local level=$1
+  local event=$2
+  local message=$3
+  printf '{"level":"%s","event":"%s","message":"%s"}\n' \
+    "$(json_escape "$level")" \
+    "$(json_escape "$event")" \
+    "$(json_escape "$message")" >&2
+}
 
-def normalize_value(value: str) -> str:
-    value = value.split(" #", 1)[0].strip()
-    value = value.strip("'\"")
-    return value.strip()
+log_finding() {
+  local path=$1
+  local line=$2
+  local label=$3
+  local token=$4
+  printf '{"level":"error","event":"secret_candidate","path":"%s","line":%s,"pattern":"%s","match":"%s"}\n' \
+    "$(json_escape "$path")" \
+    "$line" \
+    "$(json_escape "$label")" \
+    "$(json_escape "$(redact_token "$token")")" >&2
+}
 
-def is_placeholder(value: str) -> bool:
-    lowered = normalize_value(value).lower()
-    compact = re.sub(r"[\s_\-]+", "", lowered)
-    if lowered in placeholder_tokens or compact in {"xxx", "yyy", "zzz", "setme"}:
-        return True
-    return any(token in lowered for token in safe_substrings)
+handle_error() {
+  local status=$?
+  local line=${BASH_LINENO[0]:-unknown}
+  log_event "error" "script_error" "scanner failed at line $line with exit $status"
+  exit 2
+}
 
-def likely_real_secret_field(name: str, value: str) -> bool:
-    normalized = normalize_value(value)
-    if not normalized or is_placeholder(normalized):
-        return False
-    if normalized.lower() in {"true", "false", "null", "none"}:
-        return False
-    if len(normalized) < 8:
-        return False
-    if any(pattern.search(normalized) for pattern in field_value_patterns):
-        return True
-    if name.lower() == "api_key":
-        return True
-    return bool(re.search(r"[A-Za-z]", normalized) and re.search(r"\d", normalized))
+trap handle_error ERR
 
-findings: list[tuple[pathlib.Path, int, str, str]] = []
+redact_token() {
+  local token=$1
+  local length=${#token}
+  if (( length <= 12 )); then
+    printf '[redacted]'
+    return
+  fi
+  printf '%s...%s' "${token:0:4}" "${token:length-4:4}"
+}
 
-for path in scan_files:
-    for lineno, raw_line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-        line = raw_line.rstrip()
-        field_match = field_pattern.match(line)
-        if field_match:
-            field_name, field_value = field_match.groups()
-            if likely_real_secret_field(field_name, field_value):
-                findings.append((path, lineno, "secret-like field value", line))
-                continue
+relative_path() {
+  local path=$1
+  case "$path" in
+    "$ROOT_DIR"/*) printf '%s' "${path#"$ROOT_DIR"/}" ;;
+    *) printf '%s' "$path" ;;
+  esac
+}
 
-        for label, pattern in inline_patterns:
-            match = pattern.search(line)
-            if not match:
-                continue
-            token = match.group(0)
-            if is_placeholder(token):
-                continue
-            findings.append((path, lineno, label, line))
-            break
+should_skip_path() {
+  local path=$1
+  local rel
+  rel=$(relative_path "$path")
 
-if findings:
-    print("[ERROR] plain secret candidate detected in .ai files", file=sys.stderr)
-    for path, lineno, label, line in findings:
-        rel = path.relative_to(root)
-        print(f"{rel}:{lineno}: {label}: {line}", file=sys.stderr)
-    sys.exit(1)
+  case "$rel" in
+    *.example.*|*.template.*|tests/fixtures/*|*/tests/fixtures/*)
+      return 0
+      ;;
+  esac
 
-print("[OK] no plain secret candidates detected")
-PY
+  return 1
+}
+
+is_allowlisted_line() {
+  local line=$1
+
+  case "$line" in
+    *"secret-scan: allow"*|*"gitleaks:allow"*|*"pragma: allowlist secret"*)
+      return 0
+      ;;
+  esac
+
+  return 1
+}
+
+collect_staged_files() {
+  if ! git -C "$ROOT_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    log_event "error" "script_error" "not inside a git work tree"
+    exit 2
+  fi
+
+  git -C "$ROOT_DIR" diff --cached --name-only --diff-filter=ACMRT
+}
+
+scan_file_patterns() {
+  local path=$1
+  local rel=$2
+  local line
+  local line_no=0
+  local found=0
+  local patterns=(
+    "OpenAI/Anthropic sk token|sk-[a-zA-Z0-9]{40,}"
+    "Anthropic sk-ant token|sk-ant-[a-zA-Z0-9-]{50,}"
+    "GitHub PAT|ghp_[a-zA-Z0-9]{36}"
+    "GitHub OAuth token|gho_[a-zA-Z0-9]{36}"
+    "Slack token|xox[baprs]-[a-zA-Z0-9-]{20,}"
+    "AWS access key|AKIA[0-9A-Z]{16}"
+    "PEM private key|-----BEGIN ([A-Z]+ )*PRIVATE KEY-----"
+    "JWT|eyJ[a-zA-Z0-9_-]{20,}\\.[a-zA-Z0-9_-]{20,}\\.[a-zA-Z0-9_-]{20,}"
+  )
+  local spec
+  local label
+  local regex
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line_no=$((line_no + 1))
+
+    if is_allowlisted_line "$line"; then
+      continue
+    fi
+
+    for spec in "${patterns[@]}"; do
+      label=${spec%%|*}
+      regex=${spec#*|}
+      if [[ $line =~ $regex ]]; then
+        log_finding "$rel" "$line_no" "$label" "${BASH_REMATCH[0]}"
+        found=1
+        break
+      fi
+    done
+  done < "$path"
+
+  return "$found"
+}
+
+run_gitleaks_if_available() {
+  local path=$1
+  local rel=$2
+
+  if [[ ${SECRET_SCAN_GITLEAKS:-1} == "0" ]]; then
+    return 0
+  fi
+
+  if ! command -v gitleaks >/dev/null 2>&1; then
+    return 0
+  fi
+
+  if gitleaks detect --no-git --redact --source "$path" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log_event "error" "gitleaks_candidate" "gitleaks reported a secret candidate in $rel"
+  return 1
+}
+
+main() {
+  local input_files=()
+  local path
+  local rel
+  local scan_count=0
+  local secret_found=0
+
+  if (( "$#" > 0 )); then
+    input_files=("$@")
+  else
+    while IFS= read -r path; do
+      [[ -n "$path" ]] && input_files+=("$path")
+    done < <(collect_staged_files)
+  fi
+
+  if (( ${#input_files[@]} == 0 )); then
+    log_event "info" "scan_passed" "no staged files to scan"
+    exit 0
+  fi
+
+  for path in "${input_files[@]}"; do
+    [[ -n "$path" ]] || continue
+
+    if [[ "$path" != /* ]]; then
+      path="$ROOT_DIR/$path"
+    fi
+
+    rel=$(relative_path "$path")
+
+    if should_skip_path "$path"; then
+      log_event "info" "file_skipped" "skipped allowlisted path $rel"
+      continue
+    fi
+
+    if [[ ! -f "$path" ]]; then
+      log_event "info" "file_skipped" "skipped missing or non-regular path $rel"
+      continue
+    fi
+
+    if [[ -s "$path" ]] && ! LC_ALL=C grep -Iq . "$path"; then
+      log_event "info" "file_skipped" "skipped binary path $rel"
+      continue
+    fi
+
+    scan_count=$((scan_count + 1))
+
+    if ! scan_file_patterns "$path" "$rel"; then
+      secret_found=1
+    fi
+
+    if ! run_gitleaks_if_available "$path" "$rel"; then
+      secret_found=1
+    fi
+  done
+
+  if (( secret_found == 1 )); then
+    log_event "error" "scan_failed" "plain secret candidate detected; commit blocked"
+    exit 1
+  fi
+
+  log_event "info" "scan_passed" "no plain secret candidates detected in $scan_count file(s)"
+  exit 0
+}
+
+main "$@"

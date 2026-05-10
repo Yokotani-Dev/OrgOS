@@ -1,8 +1,35 @@
-# Autonomy Level Schema
+# Autonomy Metadata Schema
 #
 # Purpose:
 # - define allowed autonomy levels for task / work order metadata
 # - provide deterministic mapping inputs for Step 5 -> Step 6 reduction
+
+$schema: orgos/autonomy/v1
+fields:
+  autonomy_level:
+    type: enum
+    values: [silent_execute, execute_with_report, ask_before_execute, owner_only]
+    required: true
+  blast_radius:
+    type: enum
+    values: [single_file, multi_file, schema_change, iron_law, kernel]
+    required: true
+  owner_input_needed:
+    type: array_of_enum
+    values: [vision, budget, compliance, credentials, destructive_approval, none]
+    required: true
+  risk_level:
+    type: enum
+    values: [low, medium, high, critical]
+    required: true
+  default_if_no_response:
+    type: enum
+    values: [auto_apply, defer, escalate, no_op]
+    required: false
+  reversibility:
+    type: enum
+    values: [reversible, irreversible]
+    required: true
 
 schema:
   version: "1.0"

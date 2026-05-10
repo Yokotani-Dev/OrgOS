@@ -1,0 +1,48 @@
+# Example JOURNEYS.yaml
+# This file is commit-safe sample data. Runtime project data should live in .ai/JOURNEYS.yaml.
+
+journeys:
+  - id: J-ORGOS-001
+    title: "OrgOS でプロジェクトを立ち上げる業務"
+    persona: "Owner"
+    related_milestone: M-ORGOS-JOURNEY-SYNC
+    related_tasks:
+      - T-OS-310
+      - T-OS-311
+      - T-OS-312
+      - T-OS-313
+    current_flow:
+      - step: "Owner が作りたいものを BRIEF.md に書く"
+        pain_point: "実際の業務手順や操作順が明文化されない"
+      - step: "Manager が BRIEF から要件とタスクを作る"
+        pain_point: "何を作るかに寄り、何を実現したいかの確認が薄い"
+      - step: "DESIGN と IMPLEMENTATION に進む"
+        pain_point: "動くものはできても、Owner の業務フローに合わないリスクが残る"
+    target_flow:
+      - step: "Owner が実現したい業務と現在の As-Is 手順を共有する"
+        enabled_by: "BRIEF と User Journey Mapping"
+      - step: "Manager が To-Be 手順、happy_path、error_paths を Journey draft として整理する"
+        enabled_by: ".ai/JOURNEYS.yaml と journey schema"
+      - step: "Owner が To-Be の業務フローを確認し、必要な差分を返す"
+        enabled_by: "REQUIREMENTS gate の Journey sync"
+      - step: "Journey が confirmed になった後、DESIGN とタスク分解へ進む"
+        enabled_by: "user-journey-sync Iron Law"
+    happy_path:
+      - "Owner が目的、As-Is 手順、痛点を伝える"
+      - "Manager が To-Be 手順を 3-5 ステップに整理する"
+      - "Manager が代表的な error_paths を 2-3 件提示する"
+      - "Owner が target_flow を確認し、confirmed として合意する"
+      - "Manager が confirmed Journey を根拠に DESIGN と実装タスクへ進む"
+    error_paths:
+      - condition: "Owner が As-Is 手順をまだ説明できない"
+        handling: "Manager は仮説を draft として置き、confirmed にせず確認質問を最大 3 問に絞る"
+      - condition: "追加機能依頼が既存 target_flow を変える"
+        handling: "After Journey を作り、Owner 合意まで実装を defer する"
+      - condition: "実装中に UX または操作順の変更が必要になった"
+        handling: "Journey を更新し、confirmed の再取得または superseded 化を行う"
+    sync_status: confirmed
+    confirmed_at: 2026-05-01
+    confirmed_by: "Owner"
+    created_at: 2026-05-01
+    updated_at: 2026-05-01
+    notes: "OrgOS 自身の User Journey Sync 導入例。Before/After を current_flow と target_flow に分け、REQUIREMENTS gate の合意対象を示す。"

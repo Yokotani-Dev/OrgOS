@@ -1,0 +1,165 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+$id: "https://orgos.local/schemas/application-record.yaml"
+title: OrgOS Application Record
+description: "Record written by scripts/evolution/apply.sh for shadow and canary rollout attempts."
+type: object
+additionalProperties: false
+required:
+  - record_id
+  - proposal_ref
+  - target_file
+  - before_checksum
+  - after_checksum
+  - rollout_stage
+  - autonomy_level_at_apply
+  - applied_at
+  - applied_by
+  - eval_results
+  - rollback_ref
+  - iron_law_check
+properties:
+  record_id:
+    type: string
+    pattern: "^AR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+  schema:
+    type: string
+    const: "orgos/application-record/v1"
+  proposal_ref:
+    type: string
+    pattern: "^P-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+  target_file:
+    type: string
+    minLength: 1
+  before_checksum:
+    type: string
+    pattern: "^[0-9a-f]{64}$"
+  after_checksum:
+    type: string
+    pattern: "^[0-9a-f]{64}$"
+  before_exists:
+    type: boolean
+  backup_ref:
+    type: string
+    minLength: 1
+  rollout_stage:
+    type: string
+    enum: [shadow, canary, progressive, full]
+  autonomy_level_at_apply:
+    type: string
+    enum: [silent_execute, execute_with_report, ask_before_execute, owner_only]
+  applied_at:
+    type: string
+    format: date-time
+  applied_by:
+    type: string
+    const: system
+  eval_results:
+    type: object
+    additionalProperties: false
+    required: [pre, post]
+    properties:
+      pre:
+        $ref: "#/$defs/eval_result"
+      post:
+        $ref: "#/$defs/eval_result"
+  rollback_ref:
+    oneOf:
+      - type: "null"
+      - type: string
+        pattern: "^RB-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+  iron_law_check:
+    type: object
+    additionalProperties: false
+    required: [status, checked_at, forbidden_targets, violations]
+    properties:
+      status:
+        type: string
+        const: passed
+      checked_at:
+        type: string
+        format: date-time
+      forbidden_targets:
+        type: array
+        items:
+          type: string
+      violations:
+        type: array
+        maxItems: 0
+  canary_monitor_ref:
+    oneOf:
+      - type: "null"
+      - type: string
+        minLength: 1
+  iteration_counter:
+    type: object
+    additionalProperties: false
+    required:
+      - current_cycle_apply_count
+      - max_apply_per_cycle
+      - today_apply_count
+      - max_apply_per_day
+      - consecutive_revert_count
+      - consecutive_revert_threshold
+      - breaker_state
+    properties:
+      current_cycle_apply_count:
+        type: integer
+        minimum: 0
+      max_apply_per_cycle:
+        type: integer
+        minimum: 1
+      today_apply_count:
+        type: integer
+        minimum: 0
+      max_apply_per_day:
+        type: integer
+        minimum: 1
+      consecutive_revert_count:
+        type: integer
+        minimum: 0
+      consecutive_revert_threshold:
+        type: integer
+        minimum: 1
+      breaker_state:
+        type: string
+        enum: [closed, half_open, open]
+      tripped_at:
+        oneOf:
+          - type: "null"
+          - type: string
+            format: date-time
+      trip_reason:
+        oneOf:
+          - type: "null"
+          - type: string
+  apply_trace:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+  rollback_trace:
+    type: array
+    items:
+      type: object
+      additionalProperties: true
+$defs:
+  eval_result:
+    type: object
+    additionalProperties: false
+    required: [status, stage, target_file, checksum, checked_at]
+    properties:
+      status:
+        type: string
+        enum: [passed, failed, skipped]
+      stage:
+        type: string
+        minLength: 1
+      target_file:
+        type: string
+        minLength: 1
+      checksum:
+        type: string
+        pattern: "^[0-9a-f]{64}$"
+      checked_at:
+        type: string
+        format: date-time

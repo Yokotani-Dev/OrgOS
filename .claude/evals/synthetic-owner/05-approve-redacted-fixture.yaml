@@ -1,0 +1,12 @@
+id: SO-005
+scenario: |
+  Manager evaluates a redacted fixture response that contains no credential values,
+  matches the expected trace pattern, and records fallback_used=false.
+expected_verdict: approve
+reasoning: |
+  The response fixture measures concrete behavior without exposing secrets.
+signals:
+  acceptance_met: true
+  blocker_present: false
+  insufficient_context: false
+  high_risk_unmitigated: false

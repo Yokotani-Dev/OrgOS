@@ -1,0 +1,55 @@
+# JOURNEYS.yaml
+# Runtime project journey ledger. Template: .ai/JOURNEYS.example.yaml
+
+journeys:
+  - id: J-ORGOS-DEV-001
+    title: "OrgOS 自体を Journey-first で開発する業務"
+    persona: "ORG-OS-OWNER"
+    related_milestone: M-PHASE-6
+    related_tasks:
+      - T-OS-376
+    current_flow:
+      - step: "BRIEF や自己レビューから改善タスクを起票する"
+        pain_point: "Journey ledger がないため、業務フロー合意を台帳として検証できない"
+      - step: "Quality Contract や Domain/Risk/Design の各ゲートを個別に確認する"
+        pain_point: "どの順序で Owner と合意したかが Journey として追跡できない"
+      - step: "Codex Worker が Work Order を実装し、結果レポートを返す"
+        pain_point: "実装前の To-Be フロー根拠が validator で機械確認されない"
+    target_flow:
+      - step: "BRIEF を読み、Owner が実現したい目的と制約を確定する"
+        enabled_by: "BRIEF.md"
+      - step: "Journey を作成し、As-Is / To-Be / happy_path / error_paths を合意する"
+        enabled_by: ".ai/JOURNEYS.yaml"
+      - step: "Quality Contract を定義し、必要な品質水準を明示する"
+        enabled_by: ".claude/rules/quality-contract.md"
+      - step: "Domain 制約を確認し、業務上の前提を固定する"
+        enabled_by: ".claude/rules/domain-constraint-sync.md"
+      - step: "REQ を整理し、Journey step から機能と受入条件を導出する"
+        enabled_by: "Journey-first requirements gate"
+      - step: "Risk を確認し、実装前に失敗条件と回避策を明示する"
+        enabled_by: ".claude/rules/pre-implementation-risk-profile.md"
+      - step: "DESIGN を確定し、境界と変更範囲を明らかにする"
+        enabled_by: "pre-implementation design review"
+      - step: "IMPL を実行し、許可パス内で変更を完了する"
+        enabled_by: "Codex Work Order"
+      - step: "Verify で validator、lint、関連テストを通し、結果を handoff する"
+        enabled_by: "scripts/journeys/validate.sh and result packet"
+    happy_path:
+      - "Owner または Manager が BRIEF と自己レビューから対象 milestone を選ぶ"
+      - "Manager が Journey draft を作成し、Owner が target_flow を確認する"
+      - "Quality / Domain / REQ / Risk / DESIGN を Journey に沿って確定する"
+      - "Codex Worker が Work Order の allowed_paths 内で実装する"
+      - "Worker が validate と smoke check を実行し、結果を handoff する"
+    error_paths:
+      - condition: "Journey が draft のまま DESIGN または IMPL に進もうとする"
+        handling: "REQUIREMENTS gate で停止し、confirmed_at と confirmed_by を取得してから再開する"
+      - condition: "related_milestone または related_tasks が GOALS/TASKS に存在しない"
+        handling: "validator が exit 1 を返し、Manager が参照先の修正または Journey の差し戻しを判断する"
+      - condition: "実装中に target_flow の順序や例外処理が変わる"
+        handling: "既存 Journey を superseded にするか draft に戻し、Owner と After Journey を再合意する"
+    sync_status: confirmed
+    confirmed_at: 2026-05-10
+    confirmed_by: "ORG-OS-OWNER"
+    created_at: 2026-05-10
+    updated_at: 2026-05-10
+    notes: "SELFREVIEW-002 CRIT-7 対応。OrgOS 自体の開発フローを BRIEF -> Journey -> Quality -> Domain -> REQ -> Risk -> DESIGN -> IMPL -> Verify として固定する初期 ledger。"

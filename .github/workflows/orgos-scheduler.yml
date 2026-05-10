@@ -1,0 +1,37 @@
+name: OrgOS Scheduler
+
+"on":
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orgos-scheduler
+  cancel-in-progress: false
+
+jobs:
+  shadow-detection:
+    name: Shadow detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      ORGOS_SCHEDULER_TRIGGER: github-actions
+      ORGOS_SCHEDULER_STAGE: shadow
+      ORGOS_SCHEDULER_RETRIES: "1"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install runtime parser dependency
+        run: python -m pip install --disable-pip-version-check PyYAML
+
+      - name: Run scheduler in shadow mode
+        run: bash scripts/scheduler/run-detection.sh

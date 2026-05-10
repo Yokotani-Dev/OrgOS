@@ -1,0 +1,58 @@
+proposal_id: P-2026-05-10-001
+schema: orgos/evolution-proposal/v1
+status: proposed
+source_events:
+- EVO-2026-05-10-001
+- EVO-2026-05-10-002
+- EVO-2026-05-10-071
+- EVO-2026-05-10-072
+- EVO-2026-05-10-085
+problem_class: P1
+proposed_change:
+  target_file: .ai/METRICS/manager-quality/2026-05-01.jsonl
+  change_type: update
+  description: 'Fixture synthesis: update .ai/METRICS/manager-quality/2026-05-01.jsonl based on 85 matched eval_regression event(s). No automatic application is requested by this proposal.'
+  diff: null
+rationale:
+  summary: Run regression analysis for MQ-007 / owner_delegation_burden and create a minimal fix task if still failing.
+  evidence:
+  - MQ-007 metric=owner_delegation_burden passed=False target_met=True
+  - latest daily-health run_date=2026-04-19, age_days=21
+  - status=Draft, created=2026-01-23, age_days=107
+  - status=提案中, created=2026-01-23, age_days=107
+  - raw has no collected files while watch_topics=13
+estimated_blast_radius: shared
+estimated_risk_level: medium
+autonomy_recommendation: ask_before_execute
+iron_law_check:
+  status: passed
+  checked_at: '2026-05-10T09:08:39Z'
+  forbidden_patterns:
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - AGENTS.md
+  - CLAUDE.md
+  violations: []
+  self_check: No protected rule weakening detected.
+reviewer_a:
+  name: fixture-synthesizer-a
+  kind: stub
+  reviewed_at: '2026-05-10T09:08:39Z'
+  verdict: propose
+  confidence: 0.95
+  notes: LLM API intentionally not called for T-OS-324.
+reviewer_b: null
+agreement: null
+escalation_target: null
+proposal_trace:
+- at: '2026-05-10T09:08:39Z'
+  stage: synthesize
+  event_count: 85
+  filters:
+    last: 7d
+    problem_class: null
+    event_id: null
+    event_type: null
+    target_file: null
+  outcome: proposed
+review_trace: []

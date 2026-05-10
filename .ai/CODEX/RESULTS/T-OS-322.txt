@@ -1,0 +1,16 @@
+T-OS-322 completed.
+
+Changed:
+- [.ai/TASKS.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml): 48 active tasks backfilled with autonomy metadata only.
+- [.claude/schemas/autonomy.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/autonomy.yaml): added `orgos/autonomy/v1` field schema.
+- [scripts/authority/check-autonomy-coverage.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/authority/check-autonomy-coverage.sh): added coverage checker with `--json`.
+- [.ai/CODEX/RESULTS/T-OS-322.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-322.md): report written.
+
+Backfill count: 48 tasks  
+Rule breakdown: Rule 1 = 10, Rule 2 = 9, Rule 3 = 5, Rule 4 = 0, Rule 5 = 1, Rule 6 = 23.
+
+Validation passed:
+- `bash scripts/authority/check-autonomy-coverage.sh` → `100% (0 missing active tasks)`
+- `bash scripts/authority/check-autonomy-coverage.sh --json` → `missing_count: 0`
+- `.ai/TASKS.yaml` and autonomy schema both parse as YAML.
+- Diff against the pre-task snapshot confirms `.ai/TASKS.yaml` only received autonomy metadata additions.

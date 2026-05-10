@@ -1,0 +1,21 @@
+T-OS-375 実装完了です。許可範囲内で以下を更新しました。
+
+- [scripts/memory/check-no-plain-secrets.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/memory/check-no-plain-secrets.sh): staged file 対応、指定 secret pattern 検出、pointer 許可、allowlist、JSON-line log、optional gitleaks 併用
+- [.pre-commit-config.yaml](/Users/youyokotani/Dev/Private/OrgOS/.pre-commit-config.yaml): staged scanner hook 追加、gitleaks/local hook に skip pattern 追加
+- [.gitignore](/Users/youyokotani/Dev/Private/OrgOS/.gitignore) と [.ai/CODEX/.gitignore](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/.gitignore): Codex `.log` 等を除外
+- [scripts/memory/README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/memory/README.md): scanner 運用手順を追加
+- 結果: [.ai/CODEX/RESULTS/T-OS-375.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-375.md)
+- Handoff: [.ai/CODEX/RESULTS/T-OS-375.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-375.txt)
+
+検証済み:
+- `bash -n` passed
+- pointer fixture passed
+- required pattern-family smoke fixture blocked with exit `1`
+- `*.example.*` skip passed
+- line allowlist passed
+- 変更対象 7 ファイルの scanner passed
+- `.pre-commit-config.yaml` YAML parse passed
+- `.ai/CODEX/RESULTS/*.log` ignore と `.md`/`.txt` 非除外を確認
+
+未実行:
+- `shellcheck`, `pre-commit`, `gitleaks` はこの環境に未インストールだったため実行不可でした。コミットは作成していません。

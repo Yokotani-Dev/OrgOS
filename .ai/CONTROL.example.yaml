@@ -1,0 +1,64 @@
+# OrgOS Control Plane (example)
+# /org-start 実行時に .ai/CONTROL.yaml として初期化される設定例。
+
+# プロジェクト名（/org-start で BRIEF.md から設定）
+project_name: "<SET_ME>"
+
+# プラットフォーム (detect.sh で自動設定、手動上書き可)
+# enum: macos | linux | windows-msys | windows-wsl | windows-native
+platform: ""  # detect.sh 実行時に自動入力
+
+# ステージ
+# KICKOFF -> REQUIREMENTS -> DESIGN -> IMPLEMENTATION -> INTEGRATION -> RELEASE
+stage: KICKOFF
+
+# 制御フラグ
+autopilot: false
+paused: false
+awaiting_owner: false
+
+# Owner承認が必要な危険フラグ
+allow_push: false
+allow_push_main: false
+allow_main_mutation: false
+allow_deploy: false
+allow_destructive_ops: false
+allow_os_mutation: false
+
+# 保護対象ブランチ
+main_branch: "main"
+
+# OrgOS-Dev 開発モード
+is_orgos_dev: false
+
+# ゲート状態
+gates:
+  kickoff_complete: false
+  requirements_approved: false
+  design_approved: false
+  integration_approved: false
+  release_approved: false
+
+# Owner Review ポリシー
+owner_review_policy:
+  mode: "every_n_tasks"
+  every_n_tasks: 3
+  on_stage_transition: true
+  always_before_merge_to_main: true
+  always_before_release: true
+  tasks_since_last_review: 0
+
+# Owner の IT リテラシーレベル
+owner_literacy_level: "intermediate"
+
+# Codex worker 設定
+codex:
+  auto_exec: false
+  sandbox: "workspace-write"
+  approval: "on-request"
+  profile: ""
+
+# ランタイム設定
+runtime:
+  max_parallel_tasks: 6
+  tick_count: 0

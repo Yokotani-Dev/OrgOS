@@ -16,6 +16,18 @@ Yokotani-Dev/OrgOS (public)  ──→  Your Project
 
 ## 実行手順
 
+### 0. プラットフォーム検出（事前確認）
+
+`/org-import` の最初に `scripts/platform/detect.sh` を呼び、現在の実行環境を確認する。
+この時点では `.ai/CONTROL.yaml` が存在しない可能性があるため、まずは検出と audit ログのみ行う。
+
+```bash
+if [ -x "scripts/platform/detect.sh" ]; then
+  PLATFORM=$(scripts/platform/detect.sh --no-write)
+  echo "platform: $PLATFORM"
+fi
+```
+
 ### 1. バージョン解決
 
 ```bash
@@ -58,7 +70,8 @@ WORK_DIR=$(mktemp -d) && git clone --depth 1 --branch $VERSION https://github.co
 # プロジェクトディレクトリで必要なディレクトリを作成
 mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
   .ai/RESOURCES/designs .ai/RESOURCES/references \
-  .ai/RESOURCES/code-samples .claude/commands .claude/agents
+  .ai/RESOURCES/code-samples .claude/commands .claude/agents \
+  scripts/platform
 ```
 
 ### 5. ファイルコピー
@@ -95,6 +108,33 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
 - `.ai/TEMPLATES/DASHBOARD.md` → `.ai/DASHBOARD.md`
 - `.ai/TEMPLATES/OWNER_INBOX.md` → `.ai/OWNER_INBOX.md`
 - `.ai/TEMPLATES/OWNER_COMMENTS.md` → `.ai/OWNER_COMMENTS.md`
+
+**プラットフォーム検出ツール:**
+
+`scripts/platform/detect.sh` が取得元に存在する場合は、現在のプロジェクトにもコピーして実行権限を付与する。
+
+```bash
+if [ -f "$WORK_DIR/OrgOS/scripts/platform/detect.sh" ]; then
+  mkdir -p scripts/platform
+  cp "$WORK_DIR/OrgOS/scripts/platform/detect.sh" scripts/platform/detect.sh
+  chmod +x scripts/platform/detect.sh
+fi
+```
+
+### 5.5. platform の記録
+
+`.ai/CONTROL.yaml` が存在する状態になったら platform を確定して記録する。
+既に `platform` が設定済みの場合は上書きせず、警告のみ表示する。
+
+```bash
+if [ -x "scripts/platform/detect.sh" ]; then
+  PLATFORM=$(scripts/platform/detect.sh --control .ai/CONTROL.yaml --owner-inbox .ai/OWNER_INBOX.md)
+  echo "platform: $PLATFORM"
+fi
+```
+
+Windows 系 (`windows-*`) を検出した場合、`scripts/platform/detect.sh` は WSL 推奨セットアップを stderr に表示し、
+`.ai/OWNER_INBOX.md` にも案内を追記する。Owner が明示的に再検出を希望する場合のみ `--force` を使う。
 
 ### 6. 設定のマイグレーション（既存プロジェクト向け）
 

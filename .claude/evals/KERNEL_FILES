@@ -9,3 +9,12 @@
 .claude/skills/review-criteria.md
 .claude/rules/project-flow.md
 .ai/CONTROL.yaml
+.claude/rules/rationalization-prevention.md
+.claude/rules/authority-layer.md
+.claude/rules/memory-lifecycle.md
+.claude/rules/parallel-session-policy.md
+.claude/rules/request-intake-loop.md
+.claude/rules/handoff-protocol.md
+.claude/agents/manager.md
+AGENTS.md
+CLAUDE.md

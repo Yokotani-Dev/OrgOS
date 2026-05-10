@@ -1,0 +1,277 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://orgos.local/schemas/capability-roles.schema.json
+title: CapabilityRoles
+description: |
+  Requirement-characteristic based capability routing contract.
+  Candidate models are referenced only through semver-style aliases, never
+  provider model names. Runtime resolution of aliases is intentionally outside
+  this schema and must happen in a separate approved proposal.
+
+type: object
+required:
+  - schema_version
+  - model_aliases
+  - roles
+properties:
+  schema_version:
+    type: string
+    pattern: "^1\\.[0-9]+\\.[0-9]+$"
+  model_aliases:
+    type: object
+    description: Alias catalog. Keys are stable semver-style model aliases.
+    minProperties: 1
+    patternProperties:
+      "^[a-z][a-z0-9-]*@[~^]?[0-9]+\\.[0-9]+\\.[0-9]+$":
+        $ref: "#/$defs/model_alias"
+    additionalProperties: false
+  roles:
+    type: array
+    minItems: 1
+    items:
+      $ref: "#/$defs/capability_role"
+additionalProperties: false
+
+$defs:
+  model_alias:
+    type: object
+    required:
+      - provider_family
+      - capability_class
+      - characteristics
+    properties:
+      provider_family:
+        type: string
+        enum:
+          - openai-compatible
+          - anthropic-compatible
+          - vercel-gateway
+          - local-cli
+          - mcp-server
+      capability_class:
+        type: string
+        enum:
+          - reasoning
+          - classification
+          - code
+          - tool-use
+          - multimodal
+      characteristics:
+        $ref: "#/$defs/characteristics"
+      resolver_ref:
+        type: string
+        pattern: "^(registry|proposal)://[A-Za-z0-9._/-]+$"
+        description: Optional indirection to a future alias resolver. Not a model name.
+    additionalProperties: false
+
+  capability_role:
+    type: object
+    required:
+      - role_id
+      - required_characteristics
+      - candidate_models
+      - fallback_chain
+      - regression_test_ref
+    properties:
+      role_id:
+        type: string
+        pattern: "^[a-z][a-z0-9-]*$"
+        examples:
+          - deep-reasoning
+          - fast-classification
+          - code-generation
+      description:
+        type: string
+        minLength: 1
+      required_characteristics:
+        $ref: "#/$defs/required_characteristics"
+      candidate_models:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/model_alias_ref"
+        description: Ordered candidate aliases. Provider model identifiers are forbidden.
+      fallback_chain:
+        type: array
+        minItems: 1
+        items:
+          $ref: "#/$defs/model_alias_ref"
+      regression_test_ref:
+        type: string
+        pattern: "^(regression|manual)://[A-Za-z0-9._/-]+$"
+      semantic_equivalence_test_ref:
+        type: string
+        pattern: "^(semantic-equivalence|manual)://[A-Za-z0-9._/-]+$"
+    additionalProperties: false
+
+  model_alias_ref:
+    type: string
+    pattern: "^[a-z][a-z0-9-]*@[~^]?[0-9]+\\.[0-9]+\\.[0-9]+$"
+
+  characteristics:
+    type: object
+    required:
+      - context_window_tokens
+      - reasoning_quality
+      - latency_seconds
+      - tool_use_quality
+      - code_quality
+    properties:
+      context_window_tokens:
+        type: integer
+        minimum: 1
+      reasoning_quality:
+        type: number
+        minimum: 0
+        maximum: 1
+      latency_seconds:
+        type: number
+        exclusiveMinimum: 0
+      tool_use_quality:
+        type: number
+        minimum: 0
+        maximum: 1
+      code_quality:
+        type: number
+        minimum: 0
+        maximum: 1
+    additionalProperties: false
+
+  required_characteristics:
+    type: object
+    required:
+      - context_window_tokens_min
+      - reasoning_quality_min
+      - latency_seconds_max
+    properties:
+      context_window_tokens_min:
+        type: integer
+        minimum: 1
+        examples: [200000]
+      reasoning_quality_min:
+        type: number
+        minimum: 0
+        maximum: 1
+        examples: [0.85]
+      latency_seconds_max:
+        type: number
+        exclusiveMinimum: 0
+        examples: [2]
+      tool_use_quality_min:
+        type: number
+        minimum: 0
+        maximum: 1
+      code_quality_min:
+        type: number
+        minimum: 0
+        maximum: 1
+    additionalProperties: false
+
+x-orgos-default-instance:
+  schema_version: 1.0.0
+  model_aliases:
+    reasoning-primary@^1.0.0:
+      provider_family: openai-compatible
+      capability_class: reasoning
+      resolver_ref: registry://models/reasoning-primary
+      characteristics:
+        context_window_tokens: 200000
+        reasoning_quality: 0.92
+        latency_seconds: 8.0
+        tool_use_quality: 0.88
+        code_quality: 0.86
+    reasoning-fallback@^1.0.0:
+      provider_family: anthropic-compatible
+      capability_class: reasoning
+      resolver_ref: registry://models/reasoning-fallback
+      characteristics:
+        context_window_tokens: 180000
+        reasoning_quality: 0.89
+        latency_seconds: 9.0
+        tool_use_quality: 0.84
+        code_quality: 0.82
+    classifier-fast@^1.0.0:
+      provider_family: vercel-gateway
+      capability_class: classification
+      resolver_ref: registry://models/classifier-fast
+      characteristics:
+        context_window_tokens: 32000
+        reasoning_quality: 0.72
+        latency_seconds: 1.2
+        tool_use_quality: 0.65
+        code_quality: 0.52
+    classifier-safe@^1.0.0:
+      provider_family: openai-compatible
+      capability_class: classification
+      resolver_ref: registry://models/classifier-safe
+      characteristics:
+        context_window_tokens: 64000
+        reasoning_quality: 0.78
+        latency_seconds: 2.0
+        tool_use_quality: 0.7
+        code_quality: 0.58
+    codegen-primary@^1.0.0:
+      provider_family: openai-compatible
+      capability_class: code
+      resolver_ref: registry://models/codegen-primary
+      characteristics:
+        context_window_tokens: 128000
+        reasoning_quality: 0.84
+        latency_seconds: 5.0
+        tool_use_quality: 0.86
+        code_quality: 0.91
+    codegen-fallback@^1.0.0:
+      provider_family: anthropic-compatible
+      capability_class: code
+      resolver_ref: registry://models/codegen-fallback
+      characteristics:
+        context_window_tokens: 100000
+        reasoning_quality: 0.81
+        latency_seconds: 6.0
+        tool_use_quality: 0.82
+        code_quality: 0.87
+  roles:
+    - role_id: deep-reasoning
+      description: Long-context planning, architecture, and multi-step judgment.
+      required_characteristics:
+        context_window_tokens_min: 180000
+        reasoning_quality_min: 0.88
+        latency_seconds_max: 10
+        tool_use_quality_min: 0.8
+      candidate_models:
+        - reasoning-primary@^1.0.0
+        - reasoning-fallback@^1.0.0
+      fallback_chain:
+        - reasoning-fallback@^1.0.0
+        - codegen-primary@^1.0.0
+      regression_test_ref: regression://capability-roles/deep-reasoning
+      semantic_equivalence_test_ref: semantic-equivalence://capability-roles/deep-reasoning
+    - role_id: fast-classification
+      description: Low-latency labeling, routing, and triage.
+      required_characteristics:
+        context_window_tokens_min: 32000
+        reasoning_quality_min: 0.7
+        latency_seconds_max: 2
+      candidate_models:
+        - classifier-fast@^1.0.0
+        - classifier-safe@^1.0.0
+      fallback_chain:
+        - classifier-safe@^1.0.0
+        - reasoning-primary@^1.0.0
+      regression_test_ref: regression://capability-roles/fast-classification
+      semantic_equivalence_test_ref: semantic-equivalence://capability-roles/fast-classification
+    - role_id: code-generation
+      description: Implementation-heavy work with tests and tool usage.
+      required_characteristics:
+        context_window_tokens_min: 100000
+        reasoning_quality_min: 0.8
+        latency_seconds_max: 7
+        tool_use_quality_min: 0.8
+        code_quality_min: 0.86
+      candidate_models:
+        - codegen-primary@^1.0.0
+        - codegen-fallback@^1.0.0
+      fallback_chain:
+        - codegen-fallback@^1.0.0
+        - reasoning-primary@^1.0.0
+      regression_test_ref: regression://capability-roles/code-generation
+      semantic_equivalence_test_ref: semantic-equivalence://capability-roles/code-generation

@@ -3,14 +3,23 @@ repos:
     rev: v8.18.0
     hooks:
       - id: gitleaks
+        exclude: '(^|/)(tests/fixtures/|[^/]*\.example\.[^/]*|[^/]*\.template\.[^/]*)'
   - repo: local
     hooks:
+      - id: no-plain-secrets
+        name: staged file plain secret scanner
+        entry: scripts/memory/check-no-plain-secrets.sh
+        language: script
+        files: '.*'
+        exclude: '(^|/)(tests/fixtures/|[^/]*\.example\.[^/]*|[^/]*\.template\.[^/]*)'
+        pass_filenames: true
       - id: user-profile-no-secrets
         name: USER_PROFILE に secret 実体が混入していないか検査
         entry: scripts/memory/check-no-plain-secrets.sh
         language: script
         files: '\.ai/.*\.yaml$|\.ai/.*\.md$'
-        pass_filenames: false
+        exclude: '(^|/)(tests/fixtures/|[^/]*\.example\.[^/]*|[^/]*\.template\.[^/]*)'
+        pass_filenames: true
       - id: memory-normalize-lint
         name: USER_PROFILE の重複 semantic fact 検出
         entry: scripts/memory/normalize-lint.sh

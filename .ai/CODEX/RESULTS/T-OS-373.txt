@@ -1,0 +1,12 @@
+T-OS-373 の実装を完了しました。
+
+変更対象:
+- [.claude/hooks/pretool_policy.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/hooks/pretool_policy.py)
+- [scripts/git/check-branch-consistency.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/git/check-branch-consistency.sh)
+- [scripts/codex/run-in-worktree.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/codex/run-in-worktree.sh)
+
+成果物:
+- [.ai/CODEX/RESULTS/T-OS-373.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-373.md)
+- [.ai/CODEX/RESULTS/T-OS-373.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-373.txt)
+
+検証は `bash -n`、Python 構文 compile、branch mismatch fixture、lock 必須 fixture、pretool の `git commit --dry-run` hook fixture、worktree wrapper の一時 git repo fixture まで通しています。`shellcheck` は環境に入っておらず `command not found` だったため未実行です。

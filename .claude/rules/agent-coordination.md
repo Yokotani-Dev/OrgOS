@@ -218,19 +218,81 @@ BLOCKED: 進行不能
 
 ---
 
-## Codex 起動規約
+## Codex CLI 起動規約 (プラットフォーム分岐)
 
 ### codex-implementer の標準フラグ
 
 - `codex-implementer` の非対話起動は `--full-auto` を標準とする
 - `-s workspace-write -a on-request` の冗長指定は使わない
 - 結果は `--output-last-message` で `.ai/CODEX/RESULTS/` に保存する
+- Manager は Codex 起動前に `.ai/CONTROL.yaml` の `platform` 値を確認する
+- `platform` 未設定の場合、Manager は `scripts/platform/detect.sh` を呼び出して判定結果を `.ai/CONTROL.yaml` に記録してから Codex を起動する
+- Manager の Tick フローは `platform` 別の起動コマンド template を使い、Mac 前提の `/opt/homebrew/bin/codex` を全環境に固定しない
+
+`platform` の enum は T-OS-WIN-1 の `scripts/platform/detect.sh` に従う:
+
+```text
+macos | linux | windows-msys | windows-wsl | windows-native
+```
+
+### macos
+
+Homebrew で導入された Codex CLI を絶対パスで起動する。既存の Mac 用サンプルコマンドは、この分岐の標準例として扱う。
 
 ```bash
 /opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
   --output-last-message .ai/CODEX/RESULTS/<TASK_ID>.txt \
   - < .ai/CODEX/ORDERS/<TASK_ID>.md
 ```
+
+### linux
+
+Linux では `PATH` 解決に任せる。
+
+```bash
+codex exec --full-auto --skip-git-repo-check \
+  --output-last-message .ai/CODEX/RESULTS/<TASK_ID>.txt \
+  - < .ai/CODEX/ORDERS/<TASK_ID>.md
+```
+
+### windows-wsl (推奨)
+
+Windows 上の Codex 実行は WSL Ubuntu 経由を推奨する。Manager が Windows 側から起動する場合は、T-OS-WIN-3 で実装される wrapper を経由する。
+
+```bash
+bash .ai/CODEX/codex-wsl.sh exec --full-auto --skip-git-repo-check \
+  --output-last-message .ai/CODEX/RESULTS/<TASK_ID>.txt \
+  - < .ai/CODEX/ORDERS/<TASK_ID>.md
+```
+
+wrapper は内部で `wsl -d Ubuntu -- bash -c '...'` に変換する。T-OS-WIN-3 の `codex-wsl.sh` は少なくとも以下を満たすこと:
+
+- `codex exec` 以降の引数を欠落・再解釈せずに WSL 側へ転送する
+- Windows パスと WSL パスを相互変換し、Work Order、結果ファイル、作業ディレクトリの参照を壊さない
+- Windows 側 `~/.codex/auth.json` を WSL 側 `~/.codex/auth.json` に同期する
+- `shellcheck .ai/CODEX/codex-wsl.sh` を T-OS-WIN-3 の検証対象に含める
+
+Manager 自身がすでに WSL 内で動作している場合は、`linux` と同じ `codex exec ...` template を使ってよい。ただし `CONTROL.yaml` の `platform` は `windows-wsl` のまま維持する。
+
+### windows-msys
+
+`scripts/platform/detect.sh` は Git Bash / MSYS / Cygwin 系を `windows-msys` として検出する。この環境から Codex を直接起動することは避け、`windows-wsl` と同じ wrapper 経由へ誘導する。
+
+```bash
+bash .ai/CODEX/codex-wsl.sh exec --full-auto --skip-git-repo-check \
+  --output-last-message .ai/CODEX/RESULTS/<TASK_ID>.txt \
+  - < .ai/CODEX/ORDERS/<TASK_ID>.md
+```
+
+### windows-native (非推奨)
+
+```text
+[!] WSL の導入を強く推奨します。
+    workspace-write sandbox が動作せず、read-only fallback のみとなります。
+    OpenAI codex#15850, #17179, #18821 参照。
+```
+
+`windows-native` では実装タスクを開始しない。Manager は Owner へ WSL 移行を案内し、`platform` を `windows-wsl` に更新できる状態になってから Codex worker を起動する。
 
 ---
 

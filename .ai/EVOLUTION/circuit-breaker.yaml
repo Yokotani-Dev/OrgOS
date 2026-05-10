@@ -1,0 +1,14 @@
+version: '1.0'
+limits:
+  max_apply_per_cycle: 3
+  max_apply_per_day: 10
+  consecutive_revert_threshold: 3
+  scheduler_timeout_minutes: 30
+state:
+  current_cycle_apply_count: 2
+  today_apply_count: 2
+  consecutive_revert_count: 0
+  last_apply_at: '2026-05-10T09:59:34Z'
+  breaker_state: closed
+  tripped_at: null
+  trip_reason: null

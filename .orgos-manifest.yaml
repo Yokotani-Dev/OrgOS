@@ -3,6 +3,32 @@
 
 version_file: ".ai/VERSION.yaml"
 
+# rules: /org-import metadata (alphabetical)
+rules:
+  - agent-coordination
+  - ai-driven-development
+  - authority-layer
+  - capability-preflight
+  - coherence-mode
+  - cross-session-consistency
+  - design-documentation
+  - eval-loop
+  - handoff-protocol
+  - literacy-adaptation
+  - memory-lifecycle
+  - next-step-guidance
+  - output-management
+  - owner-task-minimization
+  - patterns
+  - performance
+  - plan-sync
+  - proactive-mode
+  - project-flow
+  - rationalization-prevention
+  - request-intake-loop
+  - session-bootstrap
+  - session-management
+
 # publish: 公開リポジトリに同期するファイル
 publish:
   # コア設定
@@ -36,13 +62,12 @@ publish:
   - ".claude/commands/org-dashboard.md"
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
-  # エージェント（13エージェント）
+  # エージェント（12エージェント）
   - ".claude/agents/org-planner.md"
   - ".claude/agents/org-architect.md"
   - ".claude/agents/org-integrator.md"
   - ".claude/agents/org-scribe.md"
   - ".claude/agents/org-os-maintainer.md"
-  - ".claude/agents/org-implementer.md"
   - ".claude/agents/org-reviewer.md"
   - ".claude/agents/org-security-reviewer.md"
   - ".claude/agents/org-build-fixer.md"
@@ -65,20 +90,30 @@ publish:
   - ".claude/skills/testing.md"
   - ".claude/skills/review-criteria.md"
   - ".claude/skills/literacy-reference.md"
-  # Rules（品質基準: 14ファイル）
+  # Rules（品質基準: 23ファイル）
   - ".claude/rules/agent-coordination.md"
-  - ".claude/rules/performance.md"
-  - ".claude/rules/literacy-adaptation.md"
-  - ".claude/rules/owner-task-minimization.md"
   - ".claude/rules/ai-driven-development.md"
-  - ".claude/rules/eval-loop.md"
+  - ".claude/rules/authority-layer.md"
+  - ".claude/rules/capability-preflight.md"
+  - ".claude/rules/coherence-mode.md"
+  - ".claude/rules/cross-session-consistency.md"
   - ".claude/rules/design-documentation.md"
-  - ".claude/rules/output-management.md"
+  - ".claude/rules/eval-loop.md"
+  - ".claude/rules/handoff-protocol.md"
+  - ".claude/rules/literacy-adaptation.md"
+  - ".claude/rules/memory-lifecycle.md"
   - ".claude/rules/next-step-guidance.md"
+  - ".claude/rules/output-management.md"
+  - ".claude/rules/owner-task-minimization.md"
+  - ".claude/rules/patterns.md"
+  - ".claude/rules/performance.md"
   - ".claude/rules/plan-sync.md"
+  - ".claude/rules/proactive-mode.md"
   - ".claude/rules/project-flow.md"
-  - ".claude/rules/session-management.md"
   - ".claude/rules/rationalization-prevention.md"
+  - ".claude/rules/request-intake-loop.md"
+  - ".claude/rules/session-bootstrap.md"
+  - ".claude/rules/session-management.md"
   # Evals
   - ".claude/evals/run-all.sh"
   - ".claude/evals/check-security.sh"

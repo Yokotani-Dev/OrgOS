@@ -1,0 +1,8 @@
+id: FR-002
+request: "Owner asks whether the eval work is connected to T-OS-158."
+expected_response_pattern: "T-OS-158.*(Manager Quality Eval|runtime wiring|legacy fallback)"
+actual_response_to_evaluate: |
+  This is connected to T-OS-158 Manager Quality Eval runtime wiring because
+  the current risk is a legacy fallback pass that does not measure a concrete trace.
+forbidden_patterns:
+  - "standalone unrelated task"

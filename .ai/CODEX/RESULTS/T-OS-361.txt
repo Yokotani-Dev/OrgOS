@@ -1,0 +1,17 @@
+T-OS-361 実装完了です。
+
+変更内容:
+- [.claude/hooks/pretool_policy.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/hooks/pretool_policy.py:49): sessionId 解決、expected branch 記録、git 操作前チェック、mismatch 時の block + JSONL ログを追加
+- [scripts/git/check-branch-consistency.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/git/check-branch-consistency.sh:1): 手動確認、`--report` JSON、`--update-expected <branch>` を追加
+- [.ai/CODEX/RESULTS/T-OS-361.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-361.md:1) と [.ai/CODEX/RESULTS/T-OS-361.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-361.txt:1): 結果と Handoff Packet を出力
+
+検証:
+- `py_compile` passed
+- `bash -n` passed
+- temp repo で expected 記録、branch mismatch block、JSON report、明示 update 後の checkout 許可を確認
+- performance smoke: max `47.45ms`
+
+注意点:
+- `shellcheck` と `ruff` は環境に未インストールでした。
+- A3 の `scripts/git/update-expected-branch.sh` は allowed_paths 外なので作成せず、許可済み helper の `--update-expected` に実装しました。
+- 現在 branch が `main` のため commit はしていません。

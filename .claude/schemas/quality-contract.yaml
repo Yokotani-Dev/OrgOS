@@ -1,0 +1,189 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: QualityContract
+description: |
+  Owner との品質目標の事前合意を記録する。
+  「サクッと作る」「PoC のつもり」言い訳の構造的封じ込め。
+  BRIEF または REQUIREMENTS フェーズで Owner と擦り合わせ、sync_status=confirmed になるまで IMPLEMENTATION に進めない。
+
+type: object
+required:
+  - id
+  - related_milestone
+  - quality_level
+  - definition_of_done
+  - sync_status
+  - created_at
+properties:
+  id:
+    type: string
+    pattern: "^QC-[A-Z0-9-]+$"
+    description: Quality Contract ID. e.g., QC-AUTH-001
+  related_milestone:
+    type: string
+    description: GOALS.yaml の milestone id
+  related_tasks:
+    type: array
+    items:
+      type: string
+    description: TASKS.yaml の task id 群
+  related_journey:
+    type: string
+    description: JOURNEYS.yaml の journey id (推奨)
+
+  quality_level:
+    type: string
+    enum:
+      - prototype
+      - poc
+      - mvp
+      - production
+    description: |
+      prototype: 動作確認用、捨てる前提
+      poc: 概念実証、limited scope で動く
+      mvp: 最小限の本番運用可能、特定 user に提供可能
+      production: フル本番運用、全 user 対象、SLA あり
+
+  definition_of_done:
+    type: object
+    required:
+      - functionality
+      - error_handling
+      - security
+      - performance
+      - observability
+      - documentation
+    properties:
+      functionality:
+        type: object
+        required: [target, level]
+        properties:
+          level:
+            type: string
+            enum: [happy_path_only, happy_path_plus_main_errors, full_coverage]
+          target:
+            type: string
+            description: 達成すべき機能範囲の自然言語記述
+          must_demonstrate:
+            type: array
+            items: { type: string }
+            description: Owner が「動いた」と認める具体行動
+
+      error_handling:
+        type: object
+        required: [level]
+        properties:
+          level:
+            type: string
+            enum: [none, log_only, user_visible_messages, classified_with_recovery]
+            description: |
+              none: エラーは無視 (prototype のみ可)
+              log_only: ログ出力のみ
+              user_visible_messages: User に分かるメッセージ
+              classified_with_recovery: transient/permanent/domain 分類 + recovery
+          required_classifications:
+            type: array
+            items:
+              type: string
+              enum: [transient, permanent, domain, security]
+
+      security:
+        type: object
+        required: [level]
+        properties:
+          level:
+            type: string
+            enum: [none, basic_auth, full_authz_authn, audited_with_threat_model]
+          required_controls:
+            type: array
+            items:
+              type: string
+              description: e.g., RLS, CSRF, rate_limit, input_validation, secret_rotation
+
+      performance:
+        type: object
+        properties:
+          level:
+            type: string
+            enum: [none, smoke_check, target_metrics, sla_with_monitoring]
+          target_metrics:
+            type: object
+            description: e.g., { p95_latency_ms: 200, throughput_rps: 100 }
+          sla:
+            type: string
+            description: e.g., "99.9% availability"
+
+      observability:
+        type: object
+        properties:
+          level:
+            type: string
+            enum: [none, console_logs, structured_logs, metrics_traces_alerts]
+          required_signals:
+            type: array
+            items: { type: string }
+
+      documentation:
+        type: object
+        properties:
+          level:
+            type: string
+            enum: [none, code_comments, readme, full_user_and_ops_docs]
+          required_artifacts:
+            type: array
+            items: { type: string }
+
+  scope_boundary:
+    type: object
+    description: 何が in-scope / out-of-scope かを明示
+    properties:
+      in_scope:
+        type: array
+        items: { type: string }
+      out_of_scope:
+        type: array
+        items: { type: string }
+        description: 明示的に「やらない」リスト。後出し scope 追加を防ぐ
+
+  upgrade_path:
+    type: object
+    description: 上位 quality_level への昇格条件
+    properties:
+      next_level:
+        type: string
+        enum: [poc, mvp, production]
+      trigger_conditions:
+        type: array
+        items: { type: string }
+        description: e.g., "10 user で運用開始", "Owner が production 要求"
+      estimated_additional_work:
+        type: string
+
+  sync_status:
+    type: string
+    enum:
+      - draft
+      - confirmed
+      - superseded
+    description: |
+      draft: Manager が書いた、Owner 未確認
+      confirmed: Owner が確認済み、IMPLEMENTATION に進める
+      superseded: 古くなった、後継 contract に置き換え
+
+  created_at:
+    type: string
+    format: date-time
+  confirmed_at:
+    type: string
+    format: date-time
+  confirmed_by:
+    type: string
+    description: Owner identifier
+  superseded_by:
+    type: string
+    description: 後継 QC ID
+
+  notes:
+    type: string
+    description: 自由記述。なぜこの level を選んだかなど
+
+additionalProperties: false

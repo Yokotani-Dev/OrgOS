@@ -1,0 +1,255 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+title: DomainConstraint
+description: |
+  Regulated domain projects require an Owner-confirmed protocol for legal,
+  industry, and platform constraints before DESIGN can proceed.
+  This schema records the protocol result. It does not encode legal advice,
+  connect to external law databases, or replace expert review.
+
+type: object
+required:
+  - id
+  - related_milestone
+  - related_tasks
+  - domain_category
+  - regulations
+  - platform_policies
+  - prohibited_practices
+  - required_practices
+  - knowledge_gaps
+  - sync_status
+  - confirmed_at
+  - confirmed_by
+  - expires_at
+  - notes
+properties:
+  id:
+    type: string
+    pattern: "^DC-[A-Z0-9]+-[A-Z0-9]+$"
+    description: Domain Constraint ID. e.g., DC-ADS-001
+
+  related_milestone:
+    type: string
+    minLength: 1
+    description: GOALS.yaml の milestone id
+
+  related_tasks:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    description: TASKS.yaml の task id 群
+
+  domain_category:
+    type: string
+    enum:
+      - advertising
+      - medical
+      - financial
+      - real_estate
+      - education
+      - gaming
+      - dating
+      - crypto
+      - b2b_general
+      - b2c_general
+      - internal_tool
+      - other
+    description: |
+      Project domain category. Regulated categories trigger
+      Domain Analysis Workshop before DESIGN.
+
+  regulations:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - summary
+        - source_url
+        - last_verified_at
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: Regulation or rule identifier. e.g., JP-PREMIUMS-001
+        name:
+          type: string
+          minLength: 1
+        summary:
+          type: string
+          minLength: 1
+          description: Project-specific impact summary, not full legal text.
+        source_url:
+          type: string
+          format: uri
+          description: Official or authoritative source URL when available.
+        last_verified_at:
+          type: string
+          format: date-time
+          description: Last time the source and project interpretation were checked.
+      additionalProperties: false
+
+  platform_policies:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - name
+        - provider
+        - summary
+        - source_url
+        - last_verified_at
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: Platform policy identifier. e.g., META-HOUSING-001
+        name:
+          type: string
+          minLength: 1
+        provider:
+          type: string
+          minLength: 1
+          description: e.g., Meta, Apple, Google, Stripe
+        summary:
+          type: string
+          minLength: 1
+          description: Project-specific impact summary, not full policy text.
+        source_url:
+          type: string
+          format: uri
+        last_verified_at:
+          type: string
+          format: date-time
+      additionalProperties: false
+
+  prohibited_practices:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    description: 明示的にやってはいけないこと。Implementation Work Order で禁止事項として参照する。
+
+  required_practices:
+    type: array
+    items:
+      type: string
+      minLength: 1
+    description: 必ず実装・運用・表示・確認すべきこと。
+
+  knowledge_gaps:
+    type: array
+    items:
+      type: object
+      required:
+        - id
+        - description
+        - status
+        - recovery_action
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: e.g., KG-001
+        description:
+          type: string
+          minLength: 1
+          description: Manager/Owner が未確認の領域。
+        status:
+          type: string
+          enum:
+            - open
+            - research_task_created
+            - expert_review_requested
+            - resolved
+        recovery_action:
+          type: string
+          minLength: 1
+          description: WebSearch, expert consultation, Owner input, or scope exclusion.
+        follow_up_task:
+          type: string
+          description: TASKS.yaml の調査・確認タスク id
+        resolved_at:
+          type: string
+          format: date-time
+      additionalProperties: false
+    description: |
+      Manager/Owner が未確認の領域。open の gap がある場合は DESIGN に進めない。
+
+  sync_status:
+    type: string
+    enum:
+      - draft
+      - confirmed
+      - superseded
+    description: |
+      draft: Manager が作成し、Owner 未確認
+      confirmed: Owner が確認済み、DESIGN gate を通過可能
+      superseded: 古くなった、後継 Domain Constraint に置き換え
+
+  confirmed_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: confirmed 時の ISO-8601 timestamp。draft では null。
+
+  confirmed_by:
+    type:
+      - string
+      - "null"
+    description: Owner identifier。draft では null。
+
+  expires_at:
+    type:
+      - string
+      - "null"
+    format: date-time
+    description: |
+      法令・policy は変わるため有効期限を必ず記録する。
+      confirmed では non-null。draft では null 可。
+
+  superseded_by:
+    type: string
+    description: 後継 Domain Constraint ID
+
+  notes:
+    type: string
+    description: 自由記述。判断根拠、scope exclusion、Owner 合意メモなど。
+
+allOf:
+  - if:
+      properties:
+        sync_status:
+          const: confirmed
+      required:
+        - sync_status
+    then:
+      properties:
+        confirmed_at:
+          type: string
+          format: date-time
+        confirmed_by:
+          type: string
+          minLength: 1
+        expires_at:
+          type: string
+          format: date-time
+        knowledge_gaps:
+          not:
+            contains:
+              type: object
+              properties:
+                status:
+                  const: open
+              required:
+                - status
+      required:
+        - confirmed_at
+        - confirmed_by
+        - expires_at
+
+additionalProperties: false

@@ -5,6 +5,10 @@
 # プロジェクト名（/org-start で BRIEF.md から設定）
 project_name: "<SET_ME>"
 
+# プラットフォーム (detect.sh で自動設定、手動上書き可)
+# enum: macos | linux | windows-msys | windows-wsl | windows-native
+platform: "macos"
+
 # プロジェクトスコープ（このリポジトリで受け付ける作業の範囲）
 # OrgOS 開発ディレクトリでは "OrgOS development only" に設定
 # 一般プロジェクトでは BRIEF.md のスコープに設定

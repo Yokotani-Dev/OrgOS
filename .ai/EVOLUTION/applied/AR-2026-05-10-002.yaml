@@ -1,0 +1,67 @@
+record_id: AR-2026-05-10-002
+schema: orgos/application-record/v1
+proposal_ref: P-2026-05-10-005
+target_file: .ai/INTELLIGENCE/config.yaml
+before_checksum: a12756c5d6ac868b982c8cb69b2695490b2ee5d6f0dab06ab2ce50004090bf30
+after_checksum: a12756c5d6ac868b982c8cb69b2695490b2ee5d6f0dab06ab2ce50004090bf30
+before_exists: true
+backup_ref: .ai/EVOLUTION/applied/AR-2026-05-10-002.before
+rollout_stage: shadow
+autonomy_level_at_apply: execute_with_report
+applied_at: '2026-05-10T09:59:34Z'
+applied_by: system
+eval_results:
+  pre:
+    status: passed
+    stage: pre
+    target_file: .ai/INTELLIGENCE/config.yaml
+    checksum: a12756c5d6ac868b982c8cb69b2695490b2ee5d6f0dab06ab2ce50004090bf30
+    checked_at: '2026-05-10T09:59:34Z'
+  post:
+    status: passed
+    stage: post_shadow
+    target_file: .ai/INTELLIGENCE/config.yaml
+    checksum: a12756c5d6ac868b982c8cb69b2695490b2ee5d6f0dab06ab2ce50004090bf30
+    checked_at: '2026-05-10T09:59:34Z'
+rollback_ref: null
+iron_law_check:
+  status: passed
+  checked_at: '2026-05-10T09:59:34Z'
+  forbidden_targets:
+  - .ai/CONTROL.yaml
+  - .claude/agents/manager.md
+  - .claude/rules/acceptance-pre-write.md
+  - .claude/rules/authority-layer.md
+  - .claude/rules/domain-constraint-sync.md
+  - .claude/rules/handoff-protocol.md
+  - .claude/rules/memory-lifecycle.md
+  - .claude/rules/parallel-session-policy.md
+  - .claude/rules/pre-implementation-risk-profile.md
+  - .claude/rules/project-flow.md
+  - .claude/rules/quality-contract.md
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - .claude/rules/user-journey-sync.md
+  - .claude/skills/review-criteria.md
+  - .claude/skills/security.md
+  - AGENTS.md
+  - CLAUDE.md
+  - manager.md
+  violations: []
+canary_monitor_ref: null
+iteration_counter: &id001
+  current_cycle_apply_count: 2
+  max_apply_per_cycle: 3
+  today_apply_count: 2
+  max_apply_per_day: 10
+  consecutive_revert_count: 0
+  consecutive_revert_threshold: 3
+  breaker_state: closed
+  tripped_at: null
+  trip_reason: null
+apply_trace:
+- at: '2026-05-10T09:59:34Z'
+  event: record_created
+  stage: shadow
+  file_changed: false
+  iteration_counter: *id001

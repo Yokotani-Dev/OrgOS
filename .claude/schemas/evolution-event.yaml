@@ -1,0 +1,130 @@
+# Evolution Event Schema v1.0
+#
+# Purpose:
+# - canonical event shape for Phase 2 Self-Evolution Engine detection
+# - JSONL rows are stored in .ai/EVOLUTION/events.jsonl
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - event_id
+    - detected_at
+    - source
+    - event_type
+    - severity
+    - confidence
+    - novelty
+    - target_artifacts
+    - evidence
+    - proposed_action
+    - estimated_impact
+    - estimated_risk
+    - autonomy_candidate
+    - blast_radius
+    - recommended_next
+
+fields:
+  event_id:
+    type: string
+    pattern: "^EVO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+    example: "EVO-2026-05-08-001"
+  detected_at:
+    type: datetime
+    format: ISO8601
+  source:
+    type: enum
+    values:
+      - internal_scanner
+      - eval_scanner
+      - capability_scanner
+      - oip_scanner
+      - memory_scanner
+      - intel_scanner
+  event_type:
+    type: enum
+    values:
+      - eval_regression
+      - ux_drift
+      - capability_new
+      - capability_degraded
+      - rule_stale
+      - iron_law_violation
+      - owner_friction
+      - oip_stale
+      - intel_stale
+      - dna_drift
+  severity:
+    type: enum
+    values: [P0, P1, P2, P3]
+  confidence:
+    type: float
+    min: 0.0
+    max: 1.0
+  novelty:
+    type: enum
+    values:
+      - first_seen
+      - recurring
+      - transient
+  target_artifacts:
+    type: array
+    item:
+      type: object
+      additional_properties: false
+      required: [path, lines]
+      fields:
+        path:
+          type: string
+          min_length: 1
+        lines:
+          type: array
+          item:
+            type: integer
+            min: 1
+  evidence:
+    type: array
+    item:
+      type: object
+      additional_properties: false
+      required: [kind, snippet]
+      fields:
+        kind:
+          type: string
+          min_length: 1
+        snippet:
+          type: string
+          min_length: 1
+  proposed_action:
+    type: enum
+    values:
+      - deduplicate
+      - rename
+      - add
+      - remove
+      - update
+      - escalate
+  estimated_impact:
+    type: enum
+    values: [small, medium, large]
+  estimated_risk:
+    type: enum
+    values: [low, medium, high]
+  autonomy_candidate:
+    type: enum
+    values:
+      - silent_execute
+      - execute_with_report
+      - ask_before_execute
+      - owner_only
+  blast_radius:
+    type: enum
+    values:
+      - single_file
+      - multi_file
+      - schema_change
+      - iron_law
+  recommended_next:
+    type: string
+    min_length: 1

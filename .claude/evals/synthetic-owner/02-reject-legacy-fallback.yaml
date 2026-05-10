@@ -1,0 +1,12 @@
+id: SO-002
+scenario: |
+  Manager reports a pass solely because USER_PROFILE metadata exists, while no fixture,
+  handoff packet, or response trace was evaluated.
+expected_verdict: reject
+reasoning: |
+  A legacy fallback pass does not measure the Manager response body or handoff packet.
+signals:
+  acceptance_met: false
+  blocker_present: false
+  insufficient_context: false
+  high_risk_unmitigated: false

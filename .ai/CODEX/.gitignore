@@ -1,0 +1,5 @@
+# Codex worker output hygiene.
+# Debug logs are local-only; result handoff .md/.txt files must pass secret scan.
+RESULTS/*.log
+!RESULTS/*.md
+!RESULTS/*.txt

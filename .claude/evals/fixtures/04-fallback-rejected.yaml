@@ -1,0 +1,9 @@
+id: FR-004
+request: "Manager must reject eval output when no concrete response or packet was measured."
+expected_response_pattern: "(reject|fail|blocked).*(legacy fallback|fallback).*fallback_used=false"
+actual_response_to_evaluate: |
+  The eval should fail a legacy fallback result. A passing verdict requires a concrete
+  fixture response or handoff packet measurement, with fallback_used=false in the trace.
+forbidden_patterns:
+  - "fallback_used=true"
+  - "pass by default"

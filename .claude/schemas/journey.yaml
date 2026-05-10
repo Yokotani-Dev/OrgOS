@@ -1,0 +1,148 @@
+# JOURNEYS.yaml schema
+#
+# Purpose:
+# - workflow agreement registry for the REQUIREMENTS phase
+# - captures business operation flow before design and implementation
+# - links "what to realize" to milestones and tasks
+
+schema:
+  type: object
+  additional_properties: false
+  required:
+    - journeys
+
+journeys:
+  type: array
+  default: []
+  item:
+    ref: journey
+
+journey:
+  type: object
+  additional_properties: false
+  required:
+    - id
+    - title
+    - persona
+    - current_flow
+    - target_flow
+    - happy_path
+    - error_paths
+    - sync_status
+    - confirmed_at
+    - confirmed_by
+    - created_at
+    - updated_at
+    - notes
+  fields:
+    id:
+      type: string
+      pattern: "^J-[A-Z0-9-]+$"
+      note: Journey ID, e.g. J-ORGOS-001.
+    title:
+      type: string
+      min_length: 1
+    persona:
+      type: string
+      min_length: 1
+      note: Primary actor whose operation flow is being agreed.
+    related_milestone:
+      type: string_or_null
+      pattern: "^M-[A-Z0-9-]+$"
+      optional: true
+      note: Journey should normally attach to one milestone. One milestone can have one or more journeys.
+    related_tasks:
+      type: array
+      default: []
+      optional: true
+      item:
+        type: string
+        pattern: "^T-[A-Z0-9-]+$"
+    current_flow:
+      type: array
+      min_items: 1
+      note: As-Is workflow before OrgOS changes.
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - step
+        fields:
+          step:
+            type: string
+            min_length: 1
+          pain_point:
+            type: string
+            optional: true
+    target_flow:
+      type: array
+      min_items: 1
+      note: To-Be workflow agreed before design and implementation.
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - step
+        fields:
+          step:
+            type: string
+            min_length: 1
+          enabled_by:
+            type: string
+            optional: true
+    happy_path:
+      type: array
+      min_items: 3
+      max_items: 5
+      item:
+        type: string
+        min_length: 1
+    error_paths:
+      type: array
+      min_items: 2
+      max_items: 3
+      item:
+        type: object
+        additional_properties: false
+        required:
+          - condition
+          - handling
+        fields:
+          condition:
+            type: string
+            min_length: 1
+          handling:
+            type: string
+            min_length: 1
+    sync_status:
+      type: enum
+      values:
+        - draft
+        - confirmed
+        - superseded
+    confirmed_at:
+      type: date_or_null
+    confirmed_by:
+      type: string_or_null
+    created_at:
+      type: date
+    updated_at:
+      type: date
+    notes:
+      type: string
+
+constraints:
+  milestone_linkage:
+    - Journey is a Work Graph layer under GOALS.yaml milestones.
+    - One milestone must have one or more journeys when user-facing work is in REQUIREMENTS.
+    - related_milestone should match GOALS.yaml milestones[*].id when present.
+  task_linkage:
+    - related_tasks should refer to TASKS.yaml ids when present.
+    - Feature requests that change target_flow should update or create a journey before implementation.
+  requirements_gate:
+    - REQUIREMENTS -> DESIGN requires at least one relevant journey with sync_status=confirmed.
+    - confirmed_at and confirmed_by must be non-null when sync_status=confirmed.
+    - confirmed journeys must not be silently edited; create a superseding journey or move back to draft.
+  secrecy:
+    - JOURNEYS.yaml is commit-safe project metadata.
+    - Secrets, credentials, and private personal data are forbidden.

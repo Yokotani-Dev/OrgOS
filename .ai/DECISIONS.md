@@ -35,6 +35,158 @@
 
 ## Decided
 
+- ID: SELFREVIEW-002-COMPLETE
+  Title: SELFREVIEW-002 対応 全 8 タスク完了 (CRITICAL 8 + HIGH 8 構造的解消)
+  Decision: |
+    SELFREVIEW-002 で発見した 8 CRITICAL と関連 HIGH/MEDIUM 課題に対し、T-OS-371〜378 の 8 タスクを
+    1 セッション (約 1 時間) で全完了。Codex 並列委任 + Manager 直接実装 + verify を継続。
+
+    解消マトリクス:
+    | CRIT | 対応 | 解消方法 |
+    |------|------|----------|
+    | CRIT-1 (autonomy_level runtime 未強制) | T-OS-372 | pre-exec-validate.sh + check-autonomy-runtime.sh |
+    | CRIT-2 (KERNEL_FILES 不足) | T-OS-371 | KERNEL_FILES 4→13 + pretool runtime block |
+    | CRIT-3 (parallel-session detection only) | T-OS-373 | --block-if-mismatch + git.lock 前提化 + worktree integrate |
+    | CRIT-4 (Codex hook bypass) | T-OS-372 | run-in-worktree.sh から pre/post call 必須化 |
+    | CRIT-5 (Self-Evolution 無限再帰) | T-OS-374 | circuit-breaker.sh + iteration limit + Iron Law reject |
+    | CRIT-6 (Codex output secret 漏洩) | T-OS-375 | check-no-plain-secrets.sh + .gitignore 整理 + pre-commit |
+    | CRIT-7 (JOURNEYS ledger 不在) | T-OS-376 | .ai/JOURNEYS.yaml 初期生成 + validate.sh |
+    | CRIT-8 (Iron Law 自己改修) | T-OS-371+372+374 | KERNEL block + Codex enforcement + Self-Evolution iron law reject の三段防御 |
+    | HIGH-5 (Stale OIP/capability) | T-OS-377 | scan-stale.sh で 39 findings 検出 + integrity report |
+    | HIGH-8 (Anthropic AUP) | T-OS-378 | anthropic-aup-compliance.md rule 新設 |
+
+    効果: OrgOS は **document → enforcement** フェーズ移行が完了。
+    Iron Law が「書面上の約束」から「runtime で deterministic に enforce される境界」になった。
+
+    Codex worker の取扱いは A 案 (Wrapper enforcement) で確定:
+    - run-in-worktree.sh が pre-exec-validate と post-exec-audit を必ず call
+    - allowed_paths 範囲外の変更は post-exec で revert
+    - autonomy_level=owner_only は委任禁止
+
+    残課題 (将来):
+    - T-OS-364 (concurrency 再設計、長期 backlog)
+    - shellcheck 環境整備 (全 Codex タスクで未実行)
+    - Manager の Tick フローへの enforcement script 統合 (本タスクは script 整備のみ)
+  Decided by: Manager (Owner 包括承認 「任せる」)
+  Date: 2026-05-10
+  Rationale: |
+    SELFREVIEW-002 の構造的提言「document → enforcement」を完遂。
+    Codex 4 並列 + Manager 1 + Owner 0 介入で約 1 時間で全 8 タスクを実装し、
+    全 verify pass。OrgOS の安全境界が実体を持った。
+
+- ID: SELFREVIEW-002
+  Title: T-OS-370 OrgOS 設計全体 critical review (4 specialists 並列実施) — 8 CRITICAL + 8 HIGH 発見
+  Decision: |
+    Phase 2 + M-PHASE-6 + M-PHASE-7 全完了直後の OrgOS 全体を 4 specialist subagent (threat-modeler /
+    data-modeler / security-architect / domain-analyst の role を Explore で並列実行) でレビュー。
+
+    全 specialist が独立に同じ結論: 「ルールは書かれているが、強制機構がない」。
+
+    最も深刻: CRIT-4 (Codex --full-auto は Claude Code hook を bypass) + CRIT-8 (Iron Law 自己改修脆弱性)。
+    これらが残る限り OrgOS の安全境界は書面上の約束に過ぎない。
+
+    対策タスク T-OS-371〜378 を生成 (P0: 371/372/373/374、P1: 375/376/377、P2: 378)。
+    詳細: .ai/REVIEW/T-OS-370/SELFREVIEW.md
+
+    構造的提言:
+    1. document → enforcement フェーズ移行 (ルール→hook/validator/gate 変換)
+    2. Codex を「外部 worker」として扱う (起動前後 wrapper enforcement)
+    3. Self-Evolution Engine に「自己制限」(iteration limit + circuit breaker + Iron Law 永久禁止)
+    4. 整合性 validator を毎 Tick / 毎日実行
+  Decided by: Manager (Owner Request 2026-05-10)
+  Date: 2026-05-10
+  Rationale: |
+    Owner Request: 「今あるタスクが終わったら、orgOS の設計を全体的にもう一回見直して critical がないか確認して」。
+    M-PHASE-6 で作成した 4 specialist agents の実戦投入機会として、OrgOS 自身を review。
+    結果: 4 specialist が独立に「設計と強制の gap」を critical として検出した、強い相互検証。
+
+- ID: PLAN-UPDATE-M-PHASE-6-COMPLETE
+  Title: M-PHASE-6 完全達成 (T-OS-350〜355 全 6 タスク done)
+  Decision: |
+    M-PHASE-6 を 1 セッション (2026-05-10) で完全達成。milestone status を achieved に更新。
+    F (Quality Contract) と E (Journey-First) は Manager 直接実装、A/B/C/D は Codex CLI 並列委任。
+
+    成果物 (15 ファイル新規 + 1 既存強化):
+    - .claude/schemas/quality-contract.yaml (T-OS-350)
+    - .claude/rules/quality-contract.md (T-OS-350)
+    - .claude/rules/user-journey-sync.md 強化 (T-OS-351, Iron Law 3→6, Workshop, Derivation)
+    - .claude/rules/domain-constraint-sync.md (T-OS-352, Iron Law 8)
+    - .claude/schemas/domain-constraint.yaml (T-OS-352)
+    - .ai/TEMPLATES/DOMAIN_ANALYSIS.md (T-OS-352)
+    - .claude/rules/pre-implementation-risk-profile.md (T-OS-353, Iron Law 7, Threats 8)
+    - .claude/rules/design-documentation.md +109 行 (T-OS-353)
+    - .ai/TEMPLATES/THREAT_MODEL.md (T-OS-353)
+    - .ai/TEMPLATES/DATA_MODEL_FULL.md (T-OS-353)
+    - .ai/TEMPLATES/AUTHORITY_BOUNDARY.md (T-OS-353)
+    - .claude/rules/acceptance-pre-write.md (T-OS-354, Iron Law 8, 6 sources)
+    - .ai/TEMPLATES/ACCEPTANCE_CHECKLIST.md (T-OS-354)
+    - .claude/agents/org-domain-analyst.md (T-OS-355)
+    - .claude/agents/org-threat-modeler.md (T-OS-355)
+    - .claude/agents/org-data-modeler.md (T-OS-355)
+    - .claude/agents/org-security-architect.md (T-OS-355)
+    - .claude/rules/specialist-subagents.md (T-OS-355)
+
+    全 Codex worker output が Quality Contract の out_of_scope を厳守し、OS 中核ファイル
+    (CLAUDE.md, AGENTS.md, manager.md) を編集していないことを verify 済み。
+    全 Handoff Packet が schema 準拠で返却。
+
+    OrgOS は今後、以下のフローで動作する:
+    BRIEF → Journey Workshop (E) → Quality Contract sync (F) → Domain Analysis (A: regulated only)
+    → REQUIREMENTS → Pre-Implementation Risk Profile (B) → Acceptance Pre-Write (C)
+    → DESIGN (4 specialists 並列起動 D) → IMPLEMENTATION (Codex に Quality Contract + Acceptance 渡し)
+    → Verification (acceptance 漏れチェック)
+
+    Phase 2 SYNTHESIS (T-OS-300) の自律進化 Engine と直交、両者で閉ループ完成:
+    - M-PHASE-6: 実装前の品質保証層 (CRITICAL の事前封じ込め)
+    - Phase 2: 実装後の自律進化層 (改善の自動消化)
+  Decided by: Manager (Owner 包括承認 "全部進めていいよ")
+  Date: 2026-05-10
+  Rationale: |
+    Owner Feedback (2026-05-10): セルフレビューで CRITICAL 永遠と発掘問題 + ToBe 業務フロー先行欠落 +
+    PoC 言い訳問題への構造的対応。
+    Owner 提示の 6 案を依存順で並列実行 (F+E は Manager、A/B は Codex 並列、C/D は Codex 並列)。
+    実行時間: 約 30 分 (Codex 4 タスク並列 + Manager 直接 2 タスク)。
+
+- ID: PLAN-UPDATE-M-PHASE-6
+  Title: M-PHASE-6 (Pre-Implementation Quality & Owner Sync) を新設、6 タスク追加、F+E を即時実装
+  Decision: |
+    M-PHASE-6 を GOALS.yaml に追加し、T-OS-350〜355 の 6 projects/tasks を登録。
+    F (Quality Contract: T-OS-350) と E (Journey-First: T-OS-351) を Manager 権限で即時実装。
+    A/B/C/D (T-OS-352〜355) は queued、依存解消後に Codex worker に委任。
+  Decided by: Owner (選択 [A]: 全タスク全登録 + FE 実装)
+  Date: 2026-05-10
+  Rationale: |
+    Owner Feedback (2026-05-10): セルフレビューで CRITICAL 問題が永遠と発掘される根本原因報告。
+    本来あるべき順序「ドメイン分析 → データモデル → 脅威モデル → 設計レビュー → 実装」に対し、
+    OrgOS は実装から始めて事後セルフレビューに依存。観点を絞ったレビューが順番に当たるため、
+    そのレビューが見ていない観点は次のレビューで初めて出る = permanent CRITICAL backlog。
+
+    追加 Owner 指摘 2 点:
+    ① ToBe 業務フローのユーザー擦り合わせなしに機能ベース思考に流れる
+    ② 「サクッと作る」「PoC のつもり」言い訳が多すぎる
+
+    対応:
+    - F (Quality Contract): 品質目標 (prototype/poc/mvp/production + 6 軸 DoD) を Owner と事前合意。
+      Manager の「自律実行 > 確認待ち」preference は『進め方』に適用、『ゴール基準』は分離。
+    - E (Journey-First 強化): 既存 user-journey-sync.md の Iron Law を拡張、Workshop Process と
+      機能 Derivation Rule を追加。「Journey 後付け、機能リスト先行」を構造的に封じる。
+    - A (Domain Constraint): regulated domain で法令・業界 policy を Owner 擦り合わせ必須化。
+    - B (Pre-Risk Profile): DESIGN で THREAT_MODEL/DATA_MODEL_FULL/AUTHORITY_BOUNDARY 必須。
+    - C (Acceptance Pre-Write): セルフレビュー観点を実装前に acceptance に固定。
+    - D (Specialist Subagents): DESIGN フェーズの並列専門家エージェント。
+
+    実装順 (Owner 推奨確認後): F → E (即時完了) → A/B/C/D (Codex worker 委任、依存順)。
+
+    変更ファイル:
+    - 新規: .claude/schemas/quality-contract.yaml
+    - 新規: .claude/rules/quality-contract.md
+    - 強化: .claude/rules/user-journey-sync.md (Iron Law 3→6、Workshop Process、Derivation Rule)
+    - 追加: .ai/GOALS.yaml (M-PHASE-6 + 6 projects)
+    - 追加: .ai/TASKS.yaml (T-OS-350〜355)
+
+    Phase 2 SYNTHESIS (T-OS-300) との関係: Phase 2 が「実装後の自律進化」を担うのに対し、
+    M-PHASE-6 は「実装前の品質保証層」を担い、両者で閉ループになる。直交ではなく補完。
+
 - ID: D-SKILLS-001
   Title: skills.sh 調査に基づくスキル強化
   Decision: Anthropic/Vercel/GitHub 公式スキルを精査し、7つのギャップを特定。新規2ファイル作成 + 既存4ファイル強化を実施
@@ -1316,3 +1468,103 @@ Owner 承認 [A] + Batch 1/2 (T-OS-180b/154b/155b-111/171/172/173) 完遂
 
 ### トリガー
 Owner 依頼（Codex CLI 最新版取り込み）
+
+---
+
+## PLAN-UPDATE-019: Issue #4 受領 - Windows プラットフォームサポート (2026-04-27)
+
+### 変更内容
+- 追加: T-OS-WIN-1 (プラットフォーム検出 + CONTROL.yaml 記録, P1)
+- 追加: T-OS-WIN-2 (agent-coordination.md の Codex 起動規約をプラットフォーム分岐対応, P1, deps: T-OS-WIN-1)
+- 追加: T-OS-WIN-3 (WSL ラッパースクリプトテンプレート, P2, deps: T-OS-WIN-2)
+
+### 理由
+GitHub Issue #4 (Hibiki-Isogai 起票, enhancement)。Windows 環境で Codex CLI の
+`workspace-write` / `full-auto` sandbox が 2026-04 時点でも動作せず
+(OpenAI codex#15850, #17179, #18821)、Manager が実装を横取りする
+「意図しないフォールバック」が発生する問題を根本解消する。
+
+### 影響
+- `/org-start` / `/org-import` の起動シーケンスにプラットフォーム検出ステップを追加
+- agent-coordination.md の Codex 起動規約が Mac 前提から多 OS 分岐に変更
+- Windows ユーザー向けに WSL ラッパー (.ai/CODEX/codex-wsl.sh) を標準提供
+- `CONTROL.yaml` schema に `platform` フィールド追加
+
+### トレードオフ
+- macOS / Linux ユーザーには直接的な変更なし（後方互換）
+- Windows-native (WSL なし) は read-only fallback 警告のみで、フル実装は WSL 必須とする
+  (Issue 提案者の検証済み構成に合わせる)
+
+### トリガー
+GitHub Issue #4 受領 + Owner 承認
+
+---
+
+## PLAN-UPDATE-020: GitHub Issues #1/#2/#3 OrgOS タスク化 (2026-05-01)
+
+### 変更内容
+Owner 承認 [A] で残る GitHub Issues #1/#2/#3 をタスク化:
+
+- **T-OS-200** [P1]: Issue #3 — RESOURCES 受領フロー (書込禁止 + 台帳登録 + リネーム)
+- **T-OS-202** [P2]: Issue #1 — document-design スキルの OrgOS コア統合
+- **T-OS-203** [P2]: Issue #2 — document-design 機能強化 (テンプレート選択 + エージェント化, deps: T-OS-202)
+
+注: Issue #4 は既に PLAN-UPDATE-019 で T-OS-WIN-1/2/3 として登録済み。
+
+### 戦略
+**Phase α (即効性高い)**: T-OS-200 + T-OS-WIN-1
+- 衝突なし: T-OS-200 = output-management/project-flow/RESOURCES、T-OS-WIN-1 = scripts/platform/+commands+CONTROL.example
+- 並列実行可能
+
+**Phase β (Windows 完遂)**: T-OS-WIN-2 → T-OS-WIN-3 (順次, deps あり)
+
+**Phase γ (document-design)**: T-OS-202 → T-OS-203 (順次, deps あり)
+
+### 完了後の Issue close
+各タスク DONE 後に gh issue close で対応済みクローズ + 該当 OrgOS タスク ID を引用。
+
+### トリガー
+Owner 確認 (2026-05-01): 「issues に上がってた件って解決したんだっけ？」+ 承認 [A]
+
+---
+
+## PLAN-UPDATE-021: User Journey Sync Phase 導入 (2026-05-01)
+
+### Owner 発言 (原文)
+> システム開発において重要なのは何を作るか、ではなくて、何を実現したいか
+> 要するにいまのorgは開発前にユーザーと業務の流れや何を実現したいのかをすり合わせするのが不十分
+> 故に、とりあえず動くものを作ってしまって明後日の方向なシステムになる
+> システムを作る前にこういう流れで操作するよね＝こういう手順の業務だよね、みたいなのをすり合わせすステップを作ってほしい
+> これはorg-startから始まる場合だけでなく、追加機能とかでもそう
+
+### Manager の理解
+OrgOS の REQUIREMENTS フェーズには現状ユーザージャーニー (業務フロー) のすり合わせが欠落。
+BRIEF (ペルソナ・動機・成功基準) は聞くが、「実際の操作手順 = 業務の流れ」が明示化されていない。
+結果として「動くが業務にハマらないシステム」になる。
+
+### 解決方針
+新しい Work Graph レイヤーとして JOURNEYS.yaml を導入し、REQUIREMENTS gate で合意必須化。
+
+### 追加タスク
+- **T-OS-300** [P1]: Journey 基盤 (Iron Law + skill + schema + templates)
+- **T-OS-301** [P1, deps: T-OS-300]: BRIEF.md + /org-brief で業務フローヒアリング
+- **T-OS-302** [P1, deps: T-OS-300]: /org-tick の REQUIREMENTS gate で Journey 合意必須化
+- **T-OS-303** [P1, deps: T-OS-300]: request-intake-loop Step 3 で Journey 影響判定
+
+### 適用される 2 つの場面
+1. **/org-start 時**: REQUIREMENTS → DESIGN gate で Journey 合意必須 (T-OS-302)
+2. **追加機能依頼時**: request-intake-loop Step 3 で Journey 影響判定 (T-OS-303) → 影響あれば After Journey を Owner と確認してから着手
+
+### Before / After
+| シナリオ | Before | After |
+|---------|--------|-------|
+| 新規プロジェクト | BRIEF 記入 → 即 DESIGN → 実装 → 業務にハマらない | BRIEF + Journey 合意 → DESIGN → 実装 → 業務に沿う |
+| 追加依頼 | 即実装 | Journey 影響判定 → 必要なら Owner 確認 → 実装 |
+
+### 進行戦略
+- T-OS-WIN-2 と T-OS-300 を並列起動 (allowed_paths 衝突なし)
+- T-OS-300 完了後に T-OS-301/302/303 を並列実行
+- 全完了 + Issue #3/#4 完了で v0.24.0 リリース
+
+### トリガー
+Owner 発言 (2026-05-01) + 「任せる」承認

@@ -1,0 +1,29 @@
+T-OS-330 完了しました。
+
+実装・初回アーカイブ・追加分アーカイブ・Runbook・結果レポートまで反映済みです。
+
+主な成果物:
+- [archive-done.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/tasks/archive-done.sh)
+- [scripts/tasks/README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/tasks/README.md)
+- [archive-tasks.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/RUNBOOKS/archive-tasks.md)
+- [T-OS-330.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-330.md)
+- [T-OS-330.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-330.txt)
+
+結果:
+- `done|archived|superseded` を合計 86 件 archive へ移動
+- `.ai/TASKS.yaml` に対象 status 残存なし
+- M-PHASE-6 の `T-OS-350`〜`T-OS-355` は archive 側に存在
+- 冪等性確認済み: 2 回目 dry-run は 0 件、通常実行は `noop`、checksum 変化なし
+- バックアップ作成済み:
+  - `.ai/TASKS.yaml.bak.20260510172928`
+  - `.ai/TASKS.yaml.bak.20260510184016`
+  - `.ai/TASKS.yaml.bak.20260510184226`
+
+検証:
+- `bash -n scripts/tasks/archive-done.sh`: pass
+- YAML parse: pass
+- archive duplicate ID: なし
+- section header 保持: pass
+- `shellcheck`: 環境になく未実行
+
+`main` ブランチ上で、AGENTS.md が main/master 直接コミットを禁止しているため commit はしていません。

@@ -1,0 +1,17 @@
+Implemented T-OS-362.
+
+Changed:
+- [run-in-worktree.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/codex/run-in-worktree.sh)
+- [cleanup-worktrees.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/codex/cleanup-worktrees.sh)
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/codex/README.md)
+- [T-OS-362.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-362.md)
+- [T-OS-362.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-362.txt)
+
+`.gitignore` already contained `.worktrees/`, so I did not add a duplicate entry.
+
+Verification:
+- `bash -n` passed for both scripts.
+- `/opt/homebrew/bin/codex --version` works: `codex-cli 0.125.0`.
+- `/tmp` minimal repo smoke passed for worktree create, command invocation, cleanup, 2 parallel worktrees, stale cleanup, `--dry-run`, and `--all`.
+- `shellcheck` is not installed in this environment, so that check could not be run.
+- Current OrgOS repo `git worktree add` is blocked by sandbox writes to `.git/worktrees` with `Operation not permitted`; this is documented in the handoff packet.

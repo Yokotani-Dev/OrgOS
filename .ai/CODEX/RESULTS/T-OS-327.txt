@@ -1,0 +1,19 @@
+T-OS-327 is implemented and verified in the allowed task files.
+
+Artifacts present:
+- [capability-roles.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/capability-roles.yaml)
+- [probe-new.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/probe-new.sh)
+- [role-routing.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/role-routing.sh)
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/capabilities/README.md)
+- [T-OS-327.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-327.md)
+- [T-OS-327.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-327.txt)
+
+Verification passed:
+- `bash -n` for both scripts
+- JSON Schema 2020-12 validation with `Draft202012Validator`
+- default role catalog validates against the schema
+- `role-routing.sh` works for `deep-reasoning`, `fast-classification`, and `code-generation`
+- `probe-new.sh` writes 3 proposal files to a temp output directory
+- missing fixture path exits gracefully with structured warning logs
+
+Caveat: `shellcheck` is not installed in this environment, so that specific acceptance check could not be executed. No shared ledger files were edited, and no real provider API calls were made.

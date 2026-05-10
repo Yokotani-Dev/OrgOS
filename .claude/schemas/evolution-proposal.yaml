@@ -1,0 +1,188 @@
+# Evolution Proposal Schema v1.0
+#
+# Purpose:
+# - canonical proposal shape for Phase 2 Self-Evolution synthesis
+# - proposal YAMLs are stored in .ai/EVOLUTION/proposals/P-YYYY-MM-DD-NNN.yaml
+# - LLM calls are intentionally out of scope for T-OS-324; reviewer fields may use stubs
+
+schema:
+  version: "1.0"
+  type: object
+  additional_properties: false
+  required:
+    - proposal_id
+    - source_events
+    - problem_class
+    - proposed_change
+    - rationale
+    - estimated_blast_radius
+    - estimated_risk_level
+    - autonomy_recommendation
+    - iron_law_check
+    - reviewer_a
+    - reviewer_b
+    - agreement
+    - escalation_target
+
+fields:
+  proposal_id:
+    type: string
+    pattern: "^P-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+    example: "P-2026-05-10-001"
+  schema:
+    type: string
+    optional: true
+    example: "orgos/evolution-proposal/v1"
+  status:
+    type: enum
+    optional: true
+    values: [proposed, rejected]
+  source_events:
+    type: array
+    min_items: 1
+    item:
+      type: string
+      pattern: "^EVO-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+  problem_class:
+    type: enum
+    values: [P0, P1, P2]
+  proposed_change:
+    type: object
+    additional_properties: false
+    required: [target_file, change_type, description, diff]
+    fields:
+      target_file:
+        type: string
+        min_length: 1
+      change_type:
+        type: enum
+        values: [add, remove, update, rename, deduplicate, escalate]
+      description:
+        type: string
+        min_length: 1
+      diff:
+        type: string
+        nullable: true
+        description: "Unified diff if available; null when the fixture synthesizer only provides a description."
+  rationale:
+    type: object
+    additional_properties: false
+    required: [summary, evidence]
+    fields:
+      summary:
+        type: string
+        min_length: 1
+      evidence:
+        type: array
+        item:
+          type: string
+  estimated_blast_radius:
+    type: enum
+    values: [silent, local, shared, external]
+  estimated_risk_level:
+    type: enum
+    values: [low, medium, high, critical]
+  autonomy_recommendation:
+    type: enum
+    values:
+      - silent_execute
+      - execute_with_report
+      - ask_before_execute
+      - owner_only
+  iron_law_check:
+    type: object
+    additional_properties: false
+    required: [status, checked_at, forbidden_patterns, violations, self_check]
+    fields:
+      status:
+        type: enum
+        values: [passed, rejected]
+      checked_at:
+        type: datetime
+        format: ISO8601
+      forbidden_patterns:
+        type: array
+        item:
+          type: string
+      violations:
+        type: array
+        item:
+          type: string
+      self_check:
+        type: string
+        min_length: 1
+  reviewer_a:
+    type: object
+    nullable: false
+    description: "Synthesizer LLM or fixture stub."
+    required: [name, kind, reviewed_at, verdict, confidence, notes]
+    fields:
+      name:
+        type: string
+      kind:
+        type: enum
+        values: [llm, stub]
+      reviewed_at:
+        type: datetime
+        format: ISO8601
+      verdict:
+        type: enum
+        values: [propose, reject]
+      confidence:
+        type: float
+        min: 0.0
+        max: 1.0
+      notes:
+        type: string
+  reviewer_b:
+    type: object
+    nullable: true
+    description: "Independent reviewer LLM or fixture stub. Null before peer review."
+    required: [name, kind, reviewed_at, verdict, confidence, notes]
+    fields:
+      name:
+        type: string
+      kind:
+        type: enum
+        values: [llm, stub]
+      reviewed_at:
+        type: datetime
+        format: ISO8601
+      verdict:
+        type: enum
+        values: [agree, disagree]
+      confidence:
+        type: float
+        min: 0.0
+        max: 1.0
+      notes:
+        type: string
+  agreement:
+    type: enum
+    nullable: true
+    values: [agree, disagree]
+  escalation_target:
+    type: string
+    nullable: true
+    pattern: "^D-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{3}$"
+  proposal_trace:
+    type: array
+    optional: true
+    item:
+      type: object
+  review_trace:
+    type: array
+    optional: true
+    item:
+      type: object
+
+iron_law:
+  forbidden_targets:
+    - AGENTS.md
+    - CLAUDE.md
+    - .claude/rules/rationalization-prevention.md
+    - .claude/rules/request-intake-loop.md
+  forbidden_text_patterns:
+    - "(disable|bypass|ignore|weaken|remove).*Iron Law"
+    - "(disable|bypass|ignore|weaken|remove).*rationalization"
+    - "(disable|bypass|ignore|weaken|remove).*Owner approval"

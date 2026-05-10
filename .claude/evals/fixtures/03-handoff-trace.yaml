@@ -1,0 +1,28 @@
+id: FR-003
+request: "Worker returns a result that Manager can audit for trace completeness."
+expected_response_pattern: "handoff_packet:.*request_trace_id:.*span_id:.*decisions_made:.*verification:"
+actual_response_to_evaluate: |
+  ```yaml
+  handoff_packet:
+    schema_version: "1.0"
+    task_id: T-OS-325
+    agent: codex-worker
+    status: DONE
+    trace:
+      request_trace_id: trace-T-OS-325-fixture
+      span_id: span-fixture-response
+      attempt: 1
+    decisions_made:
+      - decision: Use fixture response matching instead of a legacy pass.
+        rationale: It measures concrete Manager output.
+        alternatives_considered:
+          - Keep metadata fallback only.
+    verification:
+      tests_run:
+        - scripts/eval/fixture-response.sh .claude/evals/fixtures/03-handoff-trace.yaml
+      eval_results:
+        fallback_used: false
+      self_check: no memory updates
+  ```
+forbidden_patterns:
+  - "legacy fallback pass accepted"

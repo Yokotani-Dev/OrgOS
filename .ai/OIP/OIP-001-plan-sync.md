@@ -1,8 +1,9 @@
 # OIP-001: Plan Sync 強化（依頼を必ず全体計画に組み込む）
 
-> Status: Draft
+> Status: expired
 > Created: 2026-01-23
 > Author: Manager
+> Expired: 2026-05-10
 
 ---
 

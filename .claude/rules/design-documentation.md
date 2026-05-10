@@ -243,3 +243,112 @@ DESIGN ステージの /org-tick で以下を自動実行:
 - [.claude/skills/research-skill.md](../skills/research-skill.md) - 最新情報取得スキル
 - [.claude/rules/plan-sync.md](plan-sync.md) - 計画の継続的更新
 - [.ai/DESIGN/](../../.ai/DESIGN/) - 設計ドキュメント格納先
+
+---
+
+## Pre-Implementation Risk Profile 追加ルール
+
+`.claude/rules/pre-implementation-risk-profile.md` に従い、DESIGN フェーズでは実装前リスクを固定する 3 文書を必須成果物として扱う。
+
+### 追加必須ドキュメントタスク
+
+DESIGN ステージに遷移した時点で、既存の必須ドキュメントタスクに加えて以下を TASKS.yaml に自動追加する:
+
+```yaml
+# 5. 脅威モデル
+- id: T-DESIGN-THREAT
+  title: "設計ドキュメント: 脅威モデル"
+  status: queued
+  deps: ["T-DESIGN-CONTRACT"]
+  owner_role: "org-architect"
+  notes: |
+    Race condition、重複、権限漏れ、認証回避、データ漏洩、暴走、
+    入力検証欠落、エラー隠蔽の 8 カテゴリを全て評価する。
+    結果を .ai/DESIGN/THREAT_MODEL.md に記録し、該当なしの場合も理由を書く。
+
+# 6. データモデル全体図
+- id: T-DESIGN-DATAMODEL-FULL
+  title: "設計ドキュメント: データモデル全体図"
+  status: queued
+  deps: ["T-DESIGN-CONTRACT"]
+  owner_role: "org-architect"
+  notes: |
+    全テーブル、ER 図、主要 entity の状態遷移、不変条件、
+    トランザクション境界、冪等性 key、削除戦略を .ai/DESIGN/DATA_MODEL_FULL.md に記録する。
+
+# 7. 権限境界マップ
+- id: T-DESIGN-AUTHORITY
+  title: "設計ドキュメント: 権限境界マップ"
+  status: queued
+  deps: ["T-DESIGN-THREAT", "T-DESIGN-DATAMODEL-FULL"]
+  owner_role: "org-architect"
+  notes: |
+    ロール一覧、CRUD x role の権限マトリクス、RLS policy、RPC / Function 権限、
+    認証境界、セッション管理、監査ログ要件を .ai/DESIGN/AUTHORITY_BOUNDARY.md に記録する。
+```
+
+### プロジェクト種別判定ルールの更新
+
+既存の種別判定に加えて、以下に該当する project / milestone では 3 文書を必須生成する:
+
+| 判定 | 条件 | 追加で必須になる文書 |
+|---|---|---|
+| regulated | PII、契約、金銭、法務、監査、広告表現、権限付き操作を扱う | THREAT_MODEL + DATA_MODEL_FULL + AUTHORITY_BOUNDARY |
+| transactional | create / update / delete、決済類似処理、予約、申請、状態遷移、webhook、retryable job がある | THREAT_MODEL + DATA_MODEL_FULL + AUTHORITY_BOUNDARY |
+| multi-user | anonymous / authenticated / admin / tenant / owner など複数 actor が同じ resource に触る | THREAT_MODEL + DATA_MODEL_FULL + AUTHORITY_BOUNDARY |
+
+判定は OR 条件である。1 つでも該当したら 3 文書は必須であり、`mvp` でも省略してはならない。
+
+### ドキュメント格納先の追加
+
+```
+.ai/
+  DESIGN/
+    THREAT_MODEL.md        # 脅威モデル（8 カテゴリ必須）
+    DATA_MODEL_FULL.md     # 全テーブル + ER + 状態遷移 + 不変条件 + transaction / idempotency
+    AUTHORITY_BOUNDARY.md  # role / CRUD / RLS / RPC / authn / session / audit
+```
+
+テンプレートは以下を使用する:
+
+- `.ai/TEMPLATES/THREAT_MODEL.md`
+- `.ai/TEMPLATES/DATA_MODEL_FULL.md`
+- `.ai/TEMPLATES/AUTHORITY_BOUNDARY.md`
+
+### /org-tick での自動実行の追加
+
+DESIGN ステージの `/org-tick` は、既存の参照調査、技術リサーチ、ARCH / CONTRACT / UI 生成に加えて以下を実行する:
+
+1. **THREAT_MODEL.md を生成**
+   - Journey の happy_path / error_paths と API / data contract から該当箇所を抽出
+   - 8 Threat Categories を全て評価
+   - 対策と検証方法を実装可能な粒度で記録
+
+2. **DATA_MODEL_FULL.md を生成**
+   - API / data contract から全テーブル、ER 図、状態遷移、不変条件を整理
+   - write 系操作の transaction boundary を固定
+   - retry / webhook / double-submit が起きる操作の idempotency key を固定
+
+3. **AUTHORITY_BOUNDARY.md を生成**
+   - actor / role を列挙
+   - resource ごとに CRUD x role の権限マトリクスを作成
+   - RLS、RPC / Function、認証境界、session、audit log を明示
+
+4. **DESIGN Gate を評価**
+   - 3 文書が confirmed でなければ IMPLEMENTATION へ進めない
+   - 不足があれば `blocked_by_design_gate` とし、Manager は不足文書と未決論点だけを Owner に提示する
+
+### IMPLEMENTATION Gate への接続
+
+IMPLEMENTATION Work Order には以下を必ず含める:
+
+```markdown
+## Pre-Implementation Risk Profile Reference
+- THREAT_MODEL: .ai/DESIGN/THREAT_MODEL.md (confirmed)
+- DATA_MODEL_FULL: .ai/DESIGN/DATA_MODEL_FULL.md (confirmed)
+- AUTHORITY_BOUNDARY: .ai/DESIGN/AUTHORITY_BOUNDARY.md (confirmed)
+- transaction_boundaries: confirmed
+- idempotency_strategy: confirmed
+```
+
+この参照が欠けている Work Order は受理せず、DESIGN gate violation として扱う。

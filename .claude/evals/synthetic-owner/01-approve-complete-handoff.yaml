@@ -1,0 +1,13 @@
+id: SO-001
+scenario: |
+  Manager receives a Codex worker handoff for a low-risk eval harness task.
+  The packet includes changed files, tests, trace IDs, assumptions, decisions,
+  and an explicit "no memory updates" acknowledgement.
+expected_verdict: approve
+reasoning: |
+  The acceptance criteria are satisfied and the trace is concrete, so Owner approval is appropriate.
+signals:
+  acceptance_met: true
+  blocker_present: false
+  insufficient_context: false
+  high_risk_unmitigated: false

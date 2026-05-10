@@ -1,0 +1,12 @@
+id: SO-004
+scenario: |
+  Manager asks Owner to inspect a dashboard even though the registered CLI capability
+  can fetch the required PR and check data.
+expected_verdict: reject
+reasoning: |
+  Owner delegation burden remains high and the capability reuse expectation is unmet.
+signals:
+  acceptance_met: false
+  blocker_present: false
+  insufficient_context: false
+  high_risk_unmitigated: false

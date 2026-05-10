@@ -1,0 +1,64 @@
+実装完了です。Issue #3 本文を確認し、T-OS-200 の report も [T-OS-200.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-200.md:1) に作成しました。
+
+主な変更:
+- [output-management.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/output-management.md:13): RESOURCES read-only Iron Law、受領フロー、チェックリスト追加
+- [project-flow.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/project-flow.md:45): Owner ファイル受領時の即時対応追加
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/RESOURCES/README.md:7): 台帳テーブルとサブディレクトリ説明追加
+- [RESOURCES_README.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/TEMPLATES/RESOURCES_README.md:1): 新規テンプレート追加
+
+検証:
+- `bash .claude/evals/check-security.sh`: pass
+- `bash .claude/evals/run-all.sh`: pass, `manager-quality` pass, 既存 duplicate-content warn 1件のみ
+- `git diff --check`: pass
+- 参照リンク確認済み
+
+補足: `git status` 上で `.ai/TASKS.yaml` と `.ai/DECISIONS.md` に変更がありますが、今回の作業では触っていません。
+
+```yaml
+handoff_packet:
+  schema_version: "1.0"
+  task_id: "T-OS-200"
+  agent: "codex-worker"
+  status: "DONE"
+  completed_at: "2026-05-01T01:30:45+09:00"
+  trace:
+    request_trace_id: "T-OS-200"
+    span_id: "codex-worker-T-OS-200-20260501"
+    attempt: 1
+    parent_span_id: null
+    resume_of: null
+  changed_files:
+    - path: ".claude/rules/output-management.md"
+      summary: "Added RESOURCES read-only Iron Law, input resource intake flow, and checklist items."
+    - path: ".claude/rules/project-flow.md"
+      summary: "Added immediate handling flow for Owner-supplied files before normal intake."
+    - path: ".ai/RESOURCES/README.md"
+      summary: "Added external input ledger and RESOURCES subdirectory guidance."
+    - path: ".ai/TEMPLATES/RESOURCES_README.md"
+      summary: "Added reusable RESOURCES README template."
+    - path: ".ai/CODEX/RESULTS/T-OS-200.md"
+      summary: "Recorded implementation report and handoff packet."
+  assumptions:
+    - statement: "Work Order allowed_paths authorizes this OrgOS core rule update."
+      confidence: 0.86
+      source: "owner_message:T-OS-200"
+  decisions_made:
+    - decision: "Moved temporary research output guidance from .ai/RESOURCES/research/ to outputs/YYYY-MM-DD/research/."
+      rationale: "Avoids contradicting the new RESOURCES read-only Iron Law."
+      alternatives_considered: ["Leave existing placement flow unchanged."]
+  unresolved_questions: []
+  downstream_impacts: []
+  memory_updates: []
+  verification:
+    tests_run:
+      - "bash .claude/evals/check-security.sh"
+      - "bash .claude/evals/run-all.sh"
+      - "git diff --check"
+      - "Manual reference-link checks"
+    eval_results:
+      security_rules: "pass"
+      manager_quality: "pass"
+      run_all: "pass with 1 duplicate-content warning, 0 failures"
+      reference_paths: "pass"
+    self_check: "Acceptance criteria A1-A6 satisfied."
+```

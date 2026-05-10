@@ -1,0 +1,20 @@
+Implemented T-OS-374.
+
+Changed:
+- [circuit-breaker.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/circuit-breaker.sh)
+- [circuit-breaker.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/EVOLUTION/circuit-breaker.yaml)
+- [apply.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/apply.sh)
+- [run-detection.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/scheduler/run-detection.sh)
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/README.md)
+- [T-OS-374.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-374.md)
+- [T-OS-374.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-374.txt)
+
+Verified:
+- `bash -n` passes for all changed shell scripts.
+- Breaker `check`, `increment-apply`, `trip`, `restore`, and `increment-revert` paths pass with isolated temp state.
+- Three isolated shadow applies succeed; fourth is rejected after `max_apply_per_cycle=3`.
+- `consecutive_revert_threshold=3` opens the breaker.
+- KERNEL_FILES target `.ai/CONTROL.yaml` is rejected.
+- Scheduler timeout smoke opens the breaker using isolated temp scheduler/breaker state.
+
+`rollback.sh` is outside the allowed write paths, so I implemented and tested `increment-revert` but did not wire rollback execution into that script. `shellcheck` is not installed in this environment, so I could not run it. No commits were created.

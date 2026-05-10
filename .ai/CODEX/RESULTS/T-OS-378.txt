@@ -1,0 +1,22 @@
+T-OS-378 completed.
+
+Added the new rule at [anthropic-aup-compliance.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/anthropic-aup-compliance.md), plus result and handoff files:
+
+- [T-OS-378.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-378.md)
+- [T-OS-378.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-378.txt)
+
+Coverage:
+- Iron Law: 8 items
+- Anthropic AUP / agentic-use official URL references
+- Preflight checklist for AUP violation, legal / ethical autonomous decision risk, and human oversight
+- Audit trail requirements for `DECISIONS.md` and `handoff_packet`
+- Red Flags and Violation Response
+- Structured log-only observability
+- Out-of-scope respected: no automated AUP monitoring, no legal review implementation, no policy text embedding
+
+Verified against official sources on 2026-05-10:
+- https://www.anthropic.com/legal/aup
+- https://support.claude.com/en/articles/12005017-using-agents-according-to-our-usage-policy
+- https://support.claude.com/en/articles/8241216-i-m-planning-to-launch-a-product-using-the-claude-api-what-steps-should-i-take-to-ensure-i-m-not-violating-anthropic-s-usage-policy
+
+Static checks passed. No commit was created. The worktree already had unrelated modified/untracked files; I left them untouched.

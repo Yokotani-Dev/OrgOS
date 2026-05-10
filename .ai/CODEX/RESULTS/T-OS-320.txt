@@ -1,0 +1,15 @@
+Implemented T-OS-320 and wrote the report at [.ai/CODEX/RESULTS/T-OS-320.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-320.md).
+
+Key outputs:
+- Added event schema: [.claude/schemas/evolution-event.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/evolution-event.yaml)
+- Added detector + scanners under [scripts/evolution/](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution)
+- Added docs under [.ai/EVOLUTION/README.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/EVOLUTION/README.md) and [scripts/evolution/README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/README.md)
+- First detector run appended 81 events to [.ai/EVOLUTION/events.jsonl](/Users/youyokotani/Dev/Private/OrgOS/.ai/EVOLUTION/events.jsonl)
+
+Verification:
+- `bash scripts/evolution/detect.sh --json --stdout` passed
+- Same-day rerun stayed at 81 lines, so append dedupe works
+- `list-events.sh`, `dedupe-events.sh`, scanner stdout, `bash -n`, and JSONL required-field validation passed
+- `shellcheck` was unavailable, so status is `DONE_WITH_CONCERNS` in the report
+
+I did not edit protected ledgers or existing OS core/rule files.

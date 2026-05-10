@@ -1,0 +1,16 @@
+T-OS-377 の実装とレポート出力まで完了しました。主な成果物は以下です。
+
+- OIP stale 解消: [OIP-001](/Users/youyokotani/Dev/Private/OrgOS/.ai/OIP/OIP-001-plan-sync.md), [OIP-006](/Users/youyokotani/Dev/Private/OrgOS/.ai/OIP/OIP-006-goal-hierarchy-management.md) を `expired` 化
+- proposal 化: [P-2026-05-10-003.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/EVOLUTION/proposals/P-2026-05-10-003.yaml), [P-2026-05-10-004.yaml](/Users/youyokotani/Dev/Private/OrgOS/.ai/EVOLUTION/proposals/P-2026-05-10-004.yaml)
+- integrity scan: [scan-stale.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/integrity/scan-stale.sh), [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/integrity/README.md)
+- scan report: [scan-20260510T094148Z.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/INTEGRITY/scan-20260510T094148Z.md)
+- result/handoff: [T-OS-377.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-377.md), [T-OS-377.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-377.txt)
+
+検証結果:
+- `oip-scanner.sh --json` は `[]`
+- capability scan は一時出力で成功、`.ai/CAPABILITIES.yaml` は未変更
+- integrity scan 成功、39 findings
+- `bash -n` 成功
+- `shellcheck` は環境に未インストールで実行不可
+
+A4 の shellcheck だけ未達なので、結果ステータスは `blocked_on_shellcheck_unavailable` として記録しています。

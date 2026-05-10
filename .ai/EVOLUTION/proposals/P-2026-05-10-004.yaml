@@ -1,0 +1,42 @@
+proposal_id: P-2026-05-10-004
+schema: orgos/evolution-proposal/v1
+status: proposed
+source_events:
+- EVO-2026-05-08-072
+problem_class: P1
+proposed_change:
+  target_file: .ai/OIP/OIP-006-goal-hierarchy-management.md
+  change_type: convert_expired_oip_to_proposal
+  description: Convert expired OIP-006 into a fresh evolution proposal for the next T-OS-324 synthesizer pass. No automatic OIP implementation is requested.
+  diff: null
+rationale:
+  summary: OIP-006 stayed proposed for 105 days and has now been marked expired. Its remaining value should be re-evaluated through the evolution proposal pipeline.
+  evidence:
+  - status=提案中, created=2026-01-23, age_days=105
+estimated_blast_radius: local
+estimated_risk_level: low
+autonomy_recommendation: ask_before_execute
+iron_law_check:
+  status: passed
+  checked_at: '2026-05-10T00:00:00Z'
+  forbidden_patterns:
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - AGENTS.md
+  - CLAUDE.md
+  violations: []
+  self_check: No protected rule weakening requested; this proposal only routes an expired OIP for review.
+reviewer_a: null
+reviewer_b: null
+agreement: null
+escalation_target: null
+proposal_trace:
+- at: '2026-05-10T00:00:00Z'
+  stage: stale_oip_conversion
+  event_count: 1
+  filters:
+    event_id: EVO-2026-05-08-072
+    event_type: oip_stale
+    target_file: .ai/OIP/OIP-006-goal-hierarchy-management.md
+  outcome: proposed
+review_trace: []

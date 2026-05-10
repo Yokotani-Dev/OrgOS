@@ -1,0 +1,15 @@
+# JOURNEYS.yaml
+# /org-import should copy this template to .ai/JOURNEYS.yaml.
+#
+# Add one journey per business workflow that must be agreed before DESIGN.
+# Recommended flow:
+# 1. Capture current_flow as As-Is.
+# 2. Draft target_flow as To-Be.
+# 3. Reduce happy_path to 3-5 steps.
+# 4. Add 2-3 error_paths.
+# 5. Keep sync_status=draft until Owner confirms the target workflow.
+#
+# Journey schema: .claude/schemas/journey.yaml
+# Rule: .claude/rules/user-journey-sync.md
+
+journeys: []

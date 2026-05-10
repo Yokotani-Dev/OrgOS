@@ -1,0 +1,9 @@
+id: FR-001
+request: "Owner asks Manager to continue deployment planning for the known project."
+expected_response_pattern: "(USER_PROFILE|既存|known).*(project|project_ref|deployment).*(再質問|ask again|without asking)"
+actual_response_to_evaluate: |
+  I will use the known project_ref from USER_PROFILE and continue deployment planning
+  without asking again. The response binds the existing deployment context.
+forbidden_patterns:
+  - "what is your project_ref"
+  - "please provide the project"

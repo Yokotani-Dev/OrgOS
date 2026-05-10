@@ -1,0 +1,9 @@
+event=git_lock_acquired pid=9202 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 acquired_at=2026-05-10T09:59:09Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_released pid=9202 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 released_at=2026-05-10T09:59:10Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_acquired pid=9313 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 acquired_at=2026-05-10T09:59:21Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_released pid=9313 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 released_at=2026-05-10T09:59:22Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_acquired pid=9419 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 acquired_at=2026-05-10T09:59:30Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_released pid=9419 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 released_at=2026-05-10T09:59:30Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_acquired pid=9561 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 acquired_at=2026-05-10T09:59:50Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_released pid=9561 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 released_at=2026-05-10T09:59:50Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock
+event=git_lock_acquired pid=27099 sessionId=414162af-2e59-4a6c-89f6-7e1fe2774c67 acquired_at=2026-05-10T12:19:55Z lock_file=/Users/youyokotani/Dev/Private/OrgOS/.claude/state/git.lock

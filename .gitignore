@@ -20,3 +20,9 @@
 .ai/AUDIT/
 .ai/APPROVALS/
 .ai/METRICS/daily-health/
+
+# Codex output secret hygiene (T-OS-375)
+.ai/CODEX/RESULTS/*.log
+.claude/state/git.lock
+.claude/state/expected_branch_*
+.worktrees/

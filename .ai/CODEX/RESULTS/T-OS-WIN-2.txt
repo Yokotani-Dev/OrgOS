@@ -1,0 +1,16 @@
+T-OS-WIN-2 の実装を完了し、結果は `DONE_WITH_CONCERNS` で記録しました。
+
+変更:
+- [agent-coordination.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/rules/agent-coordination.md:221): platform別 Codex CLI 起動規約を追加
+- [CODEX_WORKER_GUIDE.md](/Users/youyokotani/Dev/Private/OrgOS/.claude/agents/CODEX_WORKER_GUIDE.md:357): platform別トラブルシューティングを追加
+- [T-OS-WIN-2.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-WIN-2.md:1): Handoff Packet付き結果レポートを作成
+
+検証:
+- `bash .claude/evals/check-refs.sh` → pass
+- `bash .claude/evals/check-agent-defs.sh` → pass
+- `scripts/platform/detect.sh --no-write` → `macos`
+- `git diff --check` → pass
+- Handoff Packet frontmatter YAML parse → pass
+
+Concern:
+- Manager Quality Eval は repo外 `/tmp` 出力で実行し、現状 `18/20 pass`, `critical_failure=true`, exit 1 でした。静的検証と今回の文書変更は通っていますが、正式な「退行なし」判定は既存baselineとの比較が必要です。

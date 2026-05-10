@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  OrgOS launchd scheduler template.
+
+  Manual setup:
+    1. Replace __ORGOS_REPO_ROOT__ with the absolute OrgOS repository path.
+    2. Copy this file to:
+         ~/Library/LaunchAgents/com.orgos.scheduler.plist
+    3. Load it manually:
+         launchctl load ~/Library/LaunchAgents/com.orgos.scheduler.plist
+    4. Trigger a smoke run manually:
+         launchctl start com.orgos.scheduler
+    5. Inspect logs:
+         __ORGOS_REPO_ROOT__/.ai/SCHEDULER/runs/
+
+  This template contains no secrets and does not install itself.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.orgos.scheduler</string>
+
+  <key>WorkingDirectory</key>
+  <string>__ORGOS_REPO_ROOT__</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>__ORGOS_REPO_ROOT__/scripts/scheduler/run-detection.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>ORGOS_SCHEDULER_TRIGGER</key>
+    <string>launchd</string>
+    <key>ORGOS_SCHEDULER_STAGE</key>
+    <string>shadow</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key>
+    <integer>11</integer>
+    <key>Minute</key>
+    <integer>0</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string>__ORGOS_REPO_ROOT__/.ai/SCHEDULER/launchd.stdout.log</string>
+  <key>StandardErrorPath</key>
+  <string>__ORGOS_REPO_ROOT__/.ai/SCHEDULER/launchd.stderr.log</string>
+</dict>
+</plist>

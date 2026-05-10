@@ -1,0 +1,19 @@
+Implemented T-OS-326 and updated the handoff files:
+
+- [apply.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/apply.sh)
+- [rollback.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/rollback.sh)
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/README.md)
+- [application-record.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/application-record.yaml)
+- [T-OS-326.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-326.md)
+- [T-OS-326.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-326.txt)
+
+Verified:
+- `bash -n` passed for both scripts.
+- JSON Schema Draft 2020-12 validation passed.
+- Shadow apply leaves target unchanged.
+- Canary apply creates record and monitor marker.
+- Rollback restores prior content and back-writes `rollback_ref`.
+- Iron Law target is rejected before record creation.
+- `consecutive_reverts: 3` halts apply.
+
+One gap remains: `shellcheck` is not installed in `PATH`, so I could not run ShellCheck. No commit was made because the workspace is on `main`, and worker rules forbid direct commits to `main/master`.

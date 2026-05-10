@@ -1,0 +1,71 @@
+proposal_id: P-2026-05-10-001
+schema: orgos/evolution-proposal/v1
+status: proposed
+source_events:
+- EVO-2026-05-08-071
+- EVO-2026-05-08-072
+- EVO-2026-05-08-081
+- EVO-2026-05-08-001
+- EVO-2026-05-08-002
+problem_class: P1
+proposed_change:
+  target_file: .ai/OIP/OIP-001-plan-sync.md
+  change_type: escalate
+  description: 'Fixture synthesis: escalate .ai/OIP/OIP-001-plan-sync.md based on 5 matched oip_stale event(s). No automatic application is requested by this proposal.'
+  diff: null
+rationale:
+  summary: Escalate OIP-001-plan-sync.md to the next Decision Table pass or auto-generate a close/update proposal.
+  evidence:
+  - status=Draft, created=2026-01-23, age_days=105
+  - status=提案中, created=2026-01-23, age_days=105
+  - raw has no collected files while watch_topics=13
+  - MQ-007 metric=owner_delegation_burden passed=False target_met=True
+  - latest daily-health run_date=2026-04-19, age_days=19
+estimated_blast_radius: local
+estimated_risk_level: low
+autonomy_recommendation: ask_before_execute
+iron_law_check:
+  status: passed
+  checked_at: '2026-05-10T00:00:00Z'
+  forbidden_patterns:
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - AGENTS.md
+  - CLAUDE.md
+  violations: []
+  self_check: No protected rule weakening detected.
+reviewer_a:
+  name: fixture-synthesizer-a
+  kind: stub
+  reviewed_at: '2026-05-10T00:00:00Z'
+  verdict: propose
+  confidence: 0.95
+  notes: LLM API intentionally not called for T-OS-324.
+reviewer_b:
+  name: fixture-reviewer-b
+  kind: stub
+  reviewed_at: '2026-05-10T00:05:00Z'
+  verdict: agree
+  confidence: 0.82
+  notes: Reviewer B fixture forced agreement.
+agreement: agree
+escalation_target: null
+proposal_trace:
+- at: '2026-05-10T00:00:00Z'
+  stage: synthesize
+  event_count: 5
+  filters:
+    last: 7d
+    problem_class: P1
+    event_id: null
+    event_type: null
+    target_file: null
+  outcome: proposed
+review_trace:
+- at: '2026-05-10T00:05:00Z'
+  stage: peer_review
+  reviewer: fixture-reviewer-b
+  fixture_mode: agree
+  outcome: agree
+  escalation_target: null
+  inbox_call: false

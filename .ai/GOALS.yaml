@@ -50,6 +50,29 @@ milestones:
     acceptance:
       - Authority layer schemas and rules exist.
       - Risk and approval decisions can be audited.
+  - id: M-PHASE-7
+    title: Concurrent Execution Safety
+    description: Prevent unintended branch switches and commit-to-wrong-branch incidents when multiple Claude Code sessions or Codex processes operate on the same repository in parallel.
+    target_date: 2026-07-15
+    status: active
+    vision_ref: V-ORGOS
+    acceptance:
+      - parallel-session-policy rule defines safe operation modes for concurrent sessions.
+      - pretool hook detects unintended branch switches before destructive git operations.
+      - Codex CLI startup is wrapped to enforce git worktree isolation.
+      - Coordination lock prevents simultaneous git mutations from multiple sessions.
+  - id: M-PHASE-6
+    title: Pre-Implementation Quality and Owner Sync
+    description: Prevent the "implement-then-discover-CRITICAL" loop by forcing ToBe journey sync, quality contract, domain analysis, threat modeling, and acceptance pre-write before implementation begins.
+    target_date: 2026-06-30
+    status: achieved
+    vision_ref: V-ORGOS
+    acceptance:
+      - Quality Contract protocol exists and is required before IMPLEMENTATION.
+      - Journey-First protocol blocks function-list thinking before ToBe flow is confirmed.
+      - DESIGN gate requires explicit threat model, full data model, and authority boundary.
+      - Acceptance criteria are pre-written before Codex implementation.
+      - Owner is explicitly engaged at five high-leverage touchpoints (journey, quality, domain, design, acceptance).
 
 projects:
   - id: T-OS-150
@@ -123,6 +146,126 @@ projects:
     priority: P0
     tasks_ref:
       - T-OS-170
+  - id: T-OS-350
+    title: Quality Contract Protocol
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P0
+    tasks_ref:
+      - T-OS-350
+  - id: T-OS-351
+    title: Journey-First Protocol enforcement
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P0
+    tasks_ref:
+      - T-OS-351
+  - id: T-OS-352
+    title: Domain Constraint Sync
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P1
+    tasks_ref:
+      - T-OS-352
+  - id: T-OS-353
+    title: Pre-Implementation Risk Profile
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P1
+    tasks_ref:
+      - T-OS-353
+  - id: T-OS-354
+    title: Acceptance Pre-Write Protocol
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P1
+    tasks_ref:
+      - T-OS-354
+  - id: T-OS-355
+    title: Specialist Subagents for pre-implementation review
+    milestone_ref: M-PHASE-6
+    status: done
+    priority: P2
+    tasks_ref:
+      - T-OS-355
+  - id: T-OS-323
+    title: DNA v0.1 schema + manifest generation
+    milestone_ref: M-PHASE-2
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-323]
+  - id: T-OS-324
+    title: Synthesis proposal + peer review
+    milestone_ref: M-PHASE-2
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-324]
+  - id: T-OS-325
+    title: Validation harness (synthetic Owner + fixture-response)
+    milestone_ref: M-PHASE-2
+    status: backlog
+    priority: P0
+    tasks_ref: [T-OS-325]
+  - id: T-OS-326
+    title: Application engine (4-stage rollout)
+    milestone_ref: M-PHASE-5
+    status: backlog
+    priority: P0
+    tasks_ref: [T-OS-326]
+  - id: T-OS-327
+    title: Adaptive Capability Probe
+    milestone_ref: M-PHASE-2
+    status: backlog
+    priority: P1
+    tasks_ref: [T-OS-327]
+  - id: T-OS-328
+    title: Intelligence freshness pipeline
+    milestone_ref: M-PHASE-2
+    status: active
+    priority: P1
+    tasks_ref: [T-OS-328]
+  - id: T-OS-329
+    title: Always-On shadow scheduler
+    milestone_ref: M-PHASE-5
+    status: backlog
+    priority: P1
+    tasks_ref: [T-OS-329]
+  - id: T-OS-331
+    title: Evolution Dashboard + AI Evolution Trace
+    milestone_ref: M-PHASE-2
+    status: backlog
+    priority: P1
+    tasks_ref: [T-OS-331]
+  - id: T-OS-360
+    title: Parallel session policy rule
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P1
+    tasks_ref: [T-OS-360]
+  - id: T-OS-361
+    title: pretool branch consistency check
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P1
+    tasks_ref: [T-OS-361]
+  - id: T-OS-362
+    title: Codex worktree isolation wrapper
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P1
+    tasks_ref: [T-OS-362]
+  - id: T-OS-363
+    title: Git coordination lock
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P2
+    tasks_ref: [T-OS-363]
+  - id: T-OS-364
+    title: Concurrency architecture redesign (long-term)
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P2
+    tasks_ref: [T-OS-364]
 
 active_graph:
   current_phase: IMPLEMENTATION

@@ -101,6 +101,19 @@ AskUserQuestion で確認：
 
 既存プロジェクトを再開する場合、以下を実行する：
 
+### Step B-0: プラットフォーム検出
+
+起動時に現在の実行環境を検出し、`.ai/CONTROL.yaml` の `platform` に記録する。
+既に `platform` が設定済みの場合は上書きせず、警告のみ表示する。
+
+```bash
+PLATFORM=$(scripts/platform/detect.sh --control .ai/CONTROL.yaml --owner-inbox .ai/OWNER_INBOX.md)
+echo "platform: $PLATFORM"
+```
+
+Windows 系 (`windows-*`) を検出した場合、`scripts/platform/detect.sh` は WSL 推奨セットアップを stderr に表示し、
+`.ai/OWNER_INBOX.md` にも案内を追記する。Owner が明示的に再検出を希望する場合のみ `--force` を使う。
+
 ### Step B-1: 台帳の読み込み
 
 以下のファイルを読み込んで状況を把握：
@@ -185,6 +198,19 @@ DASHBOARD.md を以下のフォーマットで更新：
 ---
 
 ## 実行手順
+
+### Step 0: プラットフォーム検出（事前確認）
+
+`/org-start` の最初に `scripts/platform/detect.sh` を呼び、現在の実行環境を確認する。
+この時点では `.ai/CONTROL.yaml` が存在しない可能性があるため、まずは検出と audit ログのみ行う。
+
+```bash
+PLATFORM=$(scripts/platform/detect.sh --no-write)
+echo "platform: $PLATFORM"
+```
+
+`.ai/CONTROL.yaml` が存在する既存プロジェクトでは、フローBの Step B-0 で `platform` への記録も行う。
+新規プロジェクトでは、Step 3 で `.ai/CONTROL.yaml` を作成した後に記録する。
 
 ### Step 1: リポジトリ状態の確認
 
@@ -364,6 +390,19 @@ git push -u origin main
     REVIEW_QUEUE.md # 空
     PACKETS/        # 空
 ```
+
+#### Step 3-1: platform の記録
+
+`.ai/CONTROL.yaml` 作成後、Step 0 で検出した platform を確定して記録する。
+既に `platform` が設定済みの場合は上書きせず、警告のみ表示する。
+
+```bash
+PLATFORM=$(scripts/platform/detect.sh --control .ai/CONTROL.yaml --owner-inbox .ai/OWNER_INBOX.md)
+echo "platform: $PLATFORM"
+```
+
+Windows 系 (`windows-*`) を検出した場合、`scripts/platform/detect.sh` は WSL 推奨セットアップを stderr に表示し、
+`.ai/OWNER_INBOX.md` にも案内を追記する。
 
 ### Step 4: 対話形式でBRIEF.mdを作成（ヒアリング）
 

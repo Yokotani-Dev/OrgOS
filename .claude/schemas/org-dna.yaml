@@ -1,0 +1,127 @@
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://orgos.local/schemas/org-dna.schema.json
+title: OrgOSDNA
+description: |
+  OrgOS が保持する rules / agents / skills / capabilities / schemas / commands を
+  versioned component registry として自己記述する DNA schema。
+
+type: object
+required:
+  - version
+  - generated_at
+  - generator
+  - metadata
+  - components
+properties:
+  version:
+    type: string
+    pattern: "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+    description: Semver DNA registry version. e.g., 0.1.0
+  generated_at:
+    type: string
+    format: date-time
+  generator:
+    type: string
+    enum:
+      - manager
+      - codex
+      - owner
+    description: Actor class that generated or approved the current DNA view.
+  metadata:
+    type: object
+    required:
+      - project_name
+      - vision_ref
+      - primary_milestones
+    properties:
+      project_name:
+        type: string
+        minLength: 1
+      vision_ref:
+        type: string
+        minLength: 1
+      primary_milestones:
+        type: array
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      source_manifest:
+        type: string
+        description: Manifest used as the classification seed.
+      notes:
+        type: string
+    additionalProperties: false
+  components:
+    type: object
+    required:
+      - rules
+      - agents
+      - skills
+      - capabilities
+      - schemas
+      - commands
+    properties:
+      rules:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+      agents:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+      skills:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+      capabilities:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+      schemas:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+      commands:
+        type: array
+        items:
+          $ref: "#/$defs/component"
+    additionalProperties: false
+additionalProperties: false
+
+$defs:
+  component:
+    type: object
+    required:
+      - id
+      - path
+      - version
+      - classification
+      - checksum
+      - depends_on
+    properties:
+      id:
+        type: string
+        pattern: "^[a-z][a-z0-9_-]*:[A-Za-z0-9._/-]+$"
+        description: Stable component id. Prefix identifies component family.
+      path:
+        type: string
+        minLength: 1
+      version:
+        type: string
+        pattern: "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+      classification:
+        type: string
+        enum:
+          - generated
+          - managed
+          - owner-edited
+      checksum:
+        type: string
+        pattern: "^sha256:[a-f0-9]{64}$"
+      depends_on:
+        type: array
+        items:
+          type: string
+          pattern: "^[a-z][a-z0-9_-]*:[A-Za-z0-9._/-]+$"
+    additionalProperties: false

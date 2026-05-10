@@ -1,0 +1,17 @@
+T-OS-371 completed.
+
+変更:
+- [KERNEL_FILES](/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES:12) に指定 9 件を append、既存 4 件は保持
+- [pretool_policy.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/hooks/pretool_policy.py:68) に `load_kernel_files()` と path 正規化を追加
+- [pretool_policy.py](/Users/youyokotani/Dev/Private/OrgOS/.claude/hooks/pretool_policy.py:325) で `Write` / `Edit` の KERNEL_FILES 対象を `allow_os_mutation` 非依存で常時 block
+- 結果・Handoff を [T-OS-371.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-371.md:1) と [T-OS-371.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-371.txt:1) に出力
+
+検証:
+- `PYTHONPYCACHEPREFIX=/private/tmp/orgos-pycache python3 -m py_compile .claude/hooks/pretool_policy.py` passed
+- KERNEL_FILES duplicate check passed
+- KERNEL file `Edit` / `Write` fixtures blocked with required message
+- absolute `CLAUDE.md` path fixture blocked after normalization
+- non-kernel `README.md` edit fixture allowed
+- `git status --short` Bash fixture allowed
+
+コミットはしていません。

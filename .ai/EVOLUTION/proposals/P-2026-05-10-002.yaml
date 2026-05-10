@@ -1,0 +1,51 @@
+proposal_id: P-2026-05-10-002
+schema: orgos/evolution-proposal/v1
+status: rejected
+source_events:
+- EVO-2026-05-08-077
+problem_class: P2
+proposed_change:
+  target_file: .claude/rules/request-intake-loop.md
+  change_type: deduplicate
+  description: 'Fixture synthesis: deduplicate .claude/rules/request-intake-loop.md based on 1 matched rule_stale event(s). No automatic application is requested by this proposal.'
+  diff: null
+rationale:
+  summary: Bundle overlapping rule or memory semantics into a follow-up deduplication proposal with explicit rollback.
+  evidence:
+  - Duplicate rule heading 'Violation Detection' appears in .claude/rules/request-intake-loop.md, .claude/rules/user-journey-sync.md
+estimated_blast_radius: shared
+estimated_risk_level: critical
+autonomy_recommendation: owner_only
+iron_law_check:
+  status: rejected
+  checked_at: '2026-05-10T00:15:00Z'
+  forbidden_patterns:
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - AGENTS.md
+  - CLAUDE.md
+  violations:
+  - 'target_file is protected by Iron Law: .claude/rules/request-intake-loop.md'
+  self_check: Rejected before peer review.
+reviewer_a:
+  name: fixture-synthesizer-a
+  kind: stub
+  reviewed_at: '2026-05-10T00:15:00Z'
+  verdict: reject
+  confidence: 0.78
+  notes: LLM API intentionally not called for T-OS-324.
+reviewer_b: null
+agreement: null
+escalation_target: null
+proposal_trace:
+- at: '2026-05-10T00:15:00Z'
+  stage: synthesize
+  event_count: 1
+  filters:
+    last: null
+    problem_class: null
+    event_id: EVO-2026-05-08-077
+    event_type: null
+    target_file: null
+  outcome: rejected
+review_trace: []

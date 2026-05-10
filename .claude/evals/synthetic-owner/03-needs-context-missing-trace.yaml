@@ -1,0 +1,12 @@
+id: SO-003
+scenario: |
+  Manager claims a decision was made but omits request_trace_id and span_id,
+  making it impossible to connect the result to a request chain.
+expected_verdict: needs_more_context
+reasoning: |
+  The Owner needs a concrete trace source before judging the decision quality.
+signals:
+  acceptance_met: false
+  blocker_present: true
+  insufficient_context: true
+  high_risk_unmitigated: false

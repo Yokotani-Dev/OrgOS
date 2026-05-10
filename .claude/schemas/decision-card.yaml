@@ -1,0 +1,69 @@
+$schema: orgos/decision-card/v1
+fields:
+  id:
+    pattern: "^D-\\d{4}-\\d{2}-\\d{2}-\\d{3}$"
+    required: true
+  type:
+    enum:
+      - type_a_direction
+      - type_b_preference
+      - type_c_authentication
+      - type_d_notification
+    required: true
+  decision:
+    type: string
+    description: "1 行で何を決めるか"
+    required: true
+  recommendation:
+    enum:
+      - APPROVE
+      - DEFER
+      - REJECT
+    required: true
+  recommendation_reason:
+    type: string
+    required: true
+  risk:
+    enum:
+      - low
+      - medium
+      - high
+      - critical
+    required: true
+  options:
+    type: array
+    items:
+      - key: string
+        label: string
+        consequence: string
+        is_recommended: bool
+    required: true
+  default_if_no_response:
+    enum:
+      - auto_apply
+      - defer_7d
+      - escalate
+      - no_op
+    required: true
+  deadline:
+    type: ISO8601
+    required: true
+  synthetic_owner_judgment:
+    type: object
+    optional: true
+    fields:
+      verdict:
+        enum:
+          - approve
+          - reject
+          - needs_more_context
+      confidence: 0.0..1.0
+  status:
+    enum:
+      - pending
+      - approved
+      - rejected
+      - auto_applied
+      - expired
+    default: pending
+  resolved_at: ISO8601

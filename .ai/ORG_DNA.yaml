@@ -1,0 +1,593 @@
+version: 0.1.0
+generated_at: '2026-05-10T09:31:09Z'
+generator: codex
+metadata:
+  project_name: OrgOS
+  vision_ref: V-ORGOS
+  primary_milestones:
+  - M-PHASE-1
+  - M-PHASE-2
+  - M-PHASE-3
+  - M-PHASE-4
+  - M-PHASE-5
+  - M-PHASE-7
+  - M-PHASE-6
+  source_manifest: .orgos-manifest.yaml
+  notes: Manifest remains read-only in T-OS-323; this DNA is the source for future export views.
+components:
+  rules:
+  - id: rules:acceptance-pre-write
+    path: .claude/rules/acceptance-pre-write.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:c0b5a9728bebc07d5203ab3e4ca04ebe06253f9c8ac6b6f6cc1fecd29e69e5ea
+    depends_on: []
+  - id: rules:agent-coordination
+    path: .claude/rules/agent-coordination.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:c658d1e2eff32b0d47e4d2f74066a576fdaee9318cc5383231a22d02061cae8b
+    depends_on: []
+  - id: rules:ai-driven-development
+    path: .claude/rules/ai-driven-development.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:f774b665a6efc0f52703fc9f035ea5c633c8d2d28540e365059d4ec56b67b57b
+    depends_on: []
+  - id: rules:authority-layer
+    path: .claude/rules/authority-layer.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:0adc3c587adc89cab22836628b1b7789b0ff3fc635d373ff9d3d6433b4a5f0f9
+    depends_on: []
+  - id: rules:capability-preflight
+    path: .claude/rules/capability-preflight.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:da8b28573c437a72958bed2bf3891be226398f5f8c979e5d56d66235a1197e54
+    depends_on: []
+  - id: rules:coherence-mode
+    path: .claude/rules/coherence-mode.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:7cb30c7aee1d01f10cae6cd32604a232d24b5b6dd3ff3a30f010f3a58f074f5e
+    depends_on: []
+  - id: rules:cross-session-consistency
+    path: .claude/rules/cross-session-consistency.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:49b3d3507efe32d7b8951ce42e92d7805f00e91035932f1a066255fb74d517df
+    depends_on: []
+  - id: rules:design-documentation
+    path: .claude/rules/design-documentation.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:7f1d095e4949f782bf33b4ed13c2a7ee1030922f58c78de7b00f7651e7057649
+    depends_on: []
+  - id: rules:domain-constraint-sync
+    path: .claude/rules/domain-constraint-sync.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:8307dfee91ffd6c628627785ea72b8f7fe759904230e014a50da8a4c0dbb46e1
+    depends_on: []
+  - id: rules:eval-loop
+    path: .claude/rules/eval-loop.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:fb28c9022de48d3e19e903ec28d6bde9036a899f7e96ad763a2ac2f604ba952b
+    depends_on: []
+  - id: rules:handoff-protocol
+    path: .claude/rules/handoff-protocol.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:86b90f56375e425127a1c0f8f97d3ee12a3a1926e6f41b8fa89d934553d22115
+    depends_on: []
+  - id: rules:literacy-adaptation
+    path: .claude/rules/literacy-adaptation.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:9a374f59cb0be597997e08c3bee5de9835ba43e14ab8a4c556127dc771cf2400
+    depends_on: []
+  - id: rules:memory-lifecycle
+    path: .claude/rules/memory-lifecycle.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:2c7f9187b982cc2e4c00f0b08325e7276a3a08a02de46f5e534c513ea7ac40b1
+    depends_on: []
+  - id: rules:next-step-guidance
+    path: .claude/rules/next-step-guidance.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:953ae30fb26518542db8a73a513620d87588df011ee762286d28b2478361853e
+    depends_on: []
+  - id: rules:output-management
+    path: .claude/rules/output-management.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:59929af54f23f214a45a3ee4e0f0ae3ea88ce4c237f484175e3993a8bfef141d
+    depends_on: []
+  - id: rules:owner-task-minimization
+    path: .claude/rules/owner-task-minimization.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:b7035262028f563000e16e688388b27a02340aa4ac99434918a621e1c8fd59e5
+    depends_on: []
+  - id: rules:parallel-session-policy
+    path: .claude/rules/parallel-session-policy.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:8b344ca1126bb3278b3eefbd77f858c09b9a0c88606b6b3402f1633f92f8b8bc
+    depends_on: []
+  - id: rules:patterns
+    path: .claude/rules/patterns.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:7272ca1a3bd67328edc30f8273d3af1e8b5658a10454632f4161d5eb8ecf1848
+    depends_on: []
+  - id: rules:performance
+    path: .claude/rules/performance.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:0c74ea7f87c28eed208411f10f875693822a8958df87a18843073bef26814a7b
+    depends_on: []
+  - id: rules:plan-sync
+    path: .claude/rules/plan-sync.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:e398aef540c71d58e853047acb2aa364ac54a195753b30c2a2e85071881e183e
+    depends_on: []
+  - id: rules:pre-implementation-risk-profile
+    path: .claude/rules/pre-implementation-risk-profile.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:4bc4bc536f71c0aa166ef1ef869fa545f2066a598bc89bb34eab3955eef99d23
+    depends_on: []
+  - id: rules:proactive-mode
+    path: .claude/rules/proactive-mode.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:2a6f051eb6dfac36ebbadc7117ca66cd0af6b4498912e0a41c71ab68ebf5105f
+    depends_on: []
+  - id: rules:project-flow
+    path: .claude/rules/project-flow.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:b09bdd1615bea6b38d99ffd6d37b207e1dc2676ae0a312e78c0929fb31a1cfb4
+    depends_on: []
+  - id: rules:quality-contract
+    path: .claude/rules/quality-contract.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:07cc203c80e5549d74e0e1466c2c0428604aa58782d5f1c86d914a8dc8ed157f
+    depends_on: []
+  - id: rules:rationalization-prevention
+    path: .claude/rules/rationalization-prevention.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:f4b43972e91f31d2d3291e47f59940052cfac10759ea95a62b17fa0aed3de2fd
+    depends_on: []
+  - id: rules:request-intake-loop
+    path: .claude/rules/request-intake-loop.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:dfa670adca9b37bf82ffc53a2bb47df20947e6364e21918c0c14e979e454462a
+    depends_on: []
+  - id: rules:session-bootstrap
+    path: .claude/rules/session-bootstrap.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:e69f776c314dffe215619d90d49dae7c01d951438ad426037a4cbf1fa34d72d2
+    depends_on: []
+  - id: rules:session-management
+    path: .claude/rules/session-management.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:55ec6ed30cc00cdde57787bed269a69e5087789efc2650f4d9492ed6ddfe1342
+    depends_on: []
+  - id: rules:specialist-subagents
+    path: .claude/rules/specialist-subagents.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:4ca20a2dfe70cffe98f0b682d13d28d0ca9dd69e34d72186c970b16c2233861d
+    depends_on: []
+  - id: rules:user-journey-sync
+    path: .claude/rules/user-journey-sync.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:e654658ca721e80196506263cb6dd662c5db7e488c8ded9c92021370afa7e787
+    depends_on: []
+  agents:
+  - id: agents:CODEX_WORKER_GUIDE
+    path: .claude/agents/CODEX_WORKER_GUIDE.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:65ec961c4baa4995461bcbd5ae8b818c5d181b714983d3ddb86be00eb17a2269
+    depends_on: []
+  - id: agents:manager
+    path: .claude/agents/manager.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:c71d78e337024bd013a73b98723e6e57fc335d89326056d922bf8133063389ce
+    depends_on: []
+  - id: agents:org-architect
+    path: .claude/agents/org-architect.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:48fdc94a092da7edb93f1b6f0c1ea1d6ef844b2e6c04039bc986945c467c2371
+    depends_on: []
+  - id: agents:org-build-fixer
+    path: .claude/agents/org-build-fixer.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:7720ff3921f001f130a3427be86e1b298cb1006bd6f66263791fba6cbc07bd30
+    depends_on: []
+  - id: agents:org-data-modeler
+    path: .claude/agents/org-data-modeler.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:bfe38b671dc7c4d362d263ad8e5f2c5929756604979bb849a5a6c26307ca8043
+    depends_on: []
+  - id: agents:org-doc-updater
+    path: .claude/agents/org-doc-updater.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:4308535527d6521f947563d1e16017296c5cde14154630180726d787787552d2
+    depends_on: []
+  - id: agents:org-domain-analyst
+    path: .claude/agents/org-domain-analyst.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:9d844f5d0f15358211d5d4c8b4d21c6f39acd7dee216daf30e5cdfcddd018f21
+    depends_on: []
+  - id: agents:org-e2e-runner
+    path: .claude/agents/org-e2e-runner.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:288255ca4bb5f00f8a63033206215dd1faeda08648abd51875ae443f15742595
+    depends_on: []
+  - id: agents:org-integrator
+    path: .claude/agents/org-integrator.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:3c20496841c7710a4ca328869583c5f4f391969243cc8dd41495485de6b74e3e
+    depends_on: []
+  - id: agents:org-os-maintainer
+    path: .claude/agents/org-os-maintainer.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:21cdc18c9855a75d8300b6a6a63f804a51a251787313d1d1684baabaedb5ae5e
+    depends_on: []
+  - id: agents:org-planner
+    path: .claude/agents/org-planner.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:cb9f0c59d0344c99b6c7b6c39aaa3cbea864d8ecdb28e62631547da022795786
+    depends_on: []
+  - id: agents:org-refactor-cleaner
+    path: .claude/agents/org-refactor-cleaner.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:2af0de5ebcd887245eb8715c9c0448e5f93a6bc300bbeffd61bfa4612b12e24d
+    depends_on: []
+  - id: agents:org-reviewer
+    path: .claude/agents/org-reviewer.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:f1ec4d993674998efe0bc738c44e5ac5e76158a4be04ea06069535cad8b498f5
+    depends_on: []
+  - id: agents:org-scribe
+    path: .claude/agents/org-scribe.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:ddae9afea33e3d1ddab2f094093fd14df6e796fa00764cdca6ecc17033fb72d8
+    depends_on: []
+  - id: agents:org-security-architect
+    path: .claude/agents/org-security-architect.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:058a4c87be7daeb0fd6055072087f2e6fc0a2c83d866a629aa6452083cc251ed
+    depends_on: []
+  - id: agents:org-security-reviewer
+    path: .claude/agents/org-security-reviewer.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:5490f25e6b46714dfac5f99d1108fd1ca5f2ef6c7b9ecff7b2e9df0244b6ba04
+    depends_on: []
+  - id: agents:org-tdd-coach
+    path: .claude/agents/org-tdd-coach.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:fbfdc326471a7b512aa79e9ff5c36068c3572e7b2b27bce7ebf93924831a876a
+    depends_on: []
+  - id: agents:org-threat-modeler
+    path: .claude/agents/org-threat-modeler.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:03c0a8b7ee33f439f560575b658251a4ce243598b7ed3d7ab78d705bdfe027fb
+    depends_on: []
+  skills:
+  - id: skills:backend-patterns
+    path: .claude/skills/backend-patterns.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:2fc5b44353608d6a5d79964280441912cb2f3b5e4edb4e4ac6146117a9c13d1e
+    depends_on: []
+  - id: skills:coding-standards
+    path: .claude/skills/coding-standards.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:dbf6aaf69231839c5637d01d329a21cbe62be546679b046a46240f3e6de33628
+    depends_on: []
+  - id: skills:deployment-planning
+    path: .claude/skills/deployment-planning.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:f0116dcf3502c8344ac3cd3cebb29d26041fb4f7ce443479371d0d4d841ac052
+    depends_on: []
+  - id: skills:frontend-patterns
+    path: .claude/skills/frontend-patterns.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:6793e521e0a12c18dbb07efc4f759b6971a53405896ee9f8d2f1be8e96c8ab6a
+    depends_on: []
+  - id: skills:learned/.gitkeep
+    path: .claude/skills/learned/.gitkeep
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:aba06c718f5ab411e1cd23fb2c6e4b474faac191eb960bd129a458edc73bd98e
+    depends_on: []
+  - id: skills:literacy-reference
+    path: .claude/skills/literacy-reference.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:dcb6a23d26ff1714dcb584314ddff4b0c27a7d5dbf339c1c7b1ba150576ab1ca
+    depends_on: []
+  - id: skills:refactoring-patterns
+    path: .claude/skills/refactoring-patterns.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:28b704476f71e06e7c1fa3c19033097b3f9f328678d525af3694b16821f3423b
+    depends_on: []
+  - id: skills:requirements-specification
+    path: .claude/skills/requirements-specification.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:ada36966eac4b531c5a2c949d81b7993fcf404fd9ab2c38d09d20f03089dfff8
+    depends_on: []
+  - id: skills:research-skill
+    path: .claude/skills/research-skill.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:8fe6c52e28d185a6e6a405f0d4991a869f89d3a066d9876c3f50c0a5eef57c18
+    depends_on: []
+  - id: skills:review-criteria
+    path: .claude/skills/review-criteria.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:f34cddb60e42d27aed7412c5d6f8a8b50dca7a34b7547e303051e31b1e077b8f
+    depends_on: []
+  - id: skills:security
+    path: .claude/skills/security.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:73f956e4b245b4716857088f2ad1dfc52fe11bdaca076194028935adf60b58aa
+    depends_on: []
+  - id: skills:task-breakdown
+    path: .claude/skills/task-breakdown.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:68e9756db421eb51ce2ddd681b171da947563ec8c827c33363f5648efb06f241
+    depends_on: []
+  - id: skills:tdd-workflow
+    path: .claude/skills/tdd-workflow.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:c8d0b098271d10ad9c80b8cbaa627d7ef65ef74e572401603b00a24648c330fc
+    depends_on: []
+  - id: skills:testing
+    path: .claude/skills/testing.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:42ae879b3fbfea7bdc2e66eb97da06983a2a41e940fec9de25c9b3b92c1c0de6
+    depends_on: []
+  - id: skills:user-journey-mapping
+    path: .claude/skills/user-journey-mapping.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:1f9b06f48a6711028e6fb94f6b9272fa496e2f9246642f152e8170b12fc05ded
+    depends_on: []
+  - id: skills:web-design-guidelines
+    path: .claude/skills/web-design-guidelines.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:d03232cfc1869896f751802004b6353e0c9e25625c94e9bebc815005eca7a6fa
+    depends_on: []
+  capabilities:
+  - id: capabilities:CAPABILITIES.example
+    path: .ai/CAPABILITIES.example.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:16511a3f330a8b3b5f52ea88127327a3235bcf41127b4af667b4272154194e8d
+    depends_on: []
+  schemas:
+  - id: schemas:application-record
+    path: .claude/schemas/application-record.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:c793b73dcefd9daf1835851ddd9c8b2408395d35c1bec625a9d741e39c6fe599
+    depends_on: []
+  - id: schemas:approval-workflow
+    path: .claude/schemas/approval-workflow.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:483dfc5ea5d77389d274f0f4a1ca56367394ee96b8b4f3f8db15226b5c3b24f8
+    depends_on: []
+  - id: schemas:autonomy
+    path: .claude/schemas/autonomy.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:b7b7db44f138ec88ffa81f2532dea010cecc4a18d90946bae891a48675886e07
+    depends_on: []
+  - id: schemas:capability-roles
+    path: .claude/schemas/capability-roles.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:d7611febc69adb695edc53e0ef16c0f22387cf52ada6881fbf0542da084ce42d
+    depends_on: []
+  - id: schemas:capability
+    path: .claude/schemas/capability.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:d9dce6ee821e49f04ea3ec5a70be454b808594380c6d9d19fcb1549e0cd93a93
+    depends_on: []
+  - id: schemas:decision-card
+    path: .claude/schemas/decision-card.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:78ff656eaaf7aebd87ca3f6f7f8cfbb1840169b84cc7e6df948ac1407d88858b
+    depends_on: []
+  - id: schemas:domain-constraint
+    path: .claude/schemas/domain-constraint.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:ca0fa723230e8e1ac3caf9e6584747a32be253a61041b747ee15a54db0cfe232
+    depends_on: []
+  - id: schemas:evolution-event
+    path: .claude/schemas/evolution-event.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:98c868d2bec9f9d01bdb907eb70c4ddd9899859bf1c24da544bc1a68b016deb7
+    depends_on: []
+  - id: schemas:evolution-proposal
+    path: .claude/schemas/evolution-proposal.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:62dca05b67b487721825f4720e1ba0c3dd3e70573d92bbe946c9e8b78e7f6191
+    depends_on: []
+  - id: schemas:goals
+    path: .claude/schemas/goals.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:dab5a0aa9d50eba50a9258e71be84db10b14e1ac26544cf83d7ccc81ccb7445c
+    depends_on: []
+  - id: schemas:handoff-packet
+    path: .claude/schemas/handoff-packet.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:2a4c63c303b5bd1fcbb5ceaec9fc35d5bf804f35f53d38724daf4f957c0858bf
+    depends_on: []
+  - id: schemas:journey
+    path: .claude/schemas/journey.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:40fa8147d6e60cb4309eebea2428daec8bbdd465a36a4696f578cc9abe27b6d8
+    depends_on: []
+  - id: schemas:org-dna
+    path: .claude/schemas/org-dna.yaml
+    version: 0.1.0
+    classification: generated
+    checksum: sha256:13f6502243a316a29d03d6bf202b7e00b77fada49928fc366c50b6d8891ee6b2
+    depends_on: []
+  - id: schemas:quality-contract
+    path: .claude/schemas/quality-contract.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:5d10959876cdd8688db8840ed2102b4b1fc9cafbe3b47003b2e79efd118286fa
+    depends_on: []
+  - id: schemas:role-matrix
+    path: .claude/schemas/role-matrix.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:32036ef5f86d027046b83c31794555af1f6014d1a33e2d5b0c117fe423e02af3
+    depends_on: []
+  - id: schemas:session-state
+    path: .claude/schemas/session-state.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:ff91014d0c8f997215801431558e095a5a9725afdb4ea2940ce01897b74a6313
+    depends_on: []
+  - id: schemas:user-profile
+    path: .claude/schemas/user-profile.yaml
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:cdce7abe2d4e1a940b31b0f3e2f209b6081182af6f0acb77f1e6f7df79325e76
+    depends_on: []
+  commands:
+  - id: commands:issue
+    path: .claude/commands/issue.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:16d6af9ab162b25e5d7110db54a6fd153957bc67f75b1f98288791d84e91edce
+    depends_on: []
+  - id: commands:org-admin
+    path: .claude/commands/org-admin.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:96aca26a6b3bb14fdfcfc8e7b0c6a1746e2499b377003ee6556160eb3ff2d6d4
+    depends_on: []
+  - id: commands:org-brief
+    path: .claude/commands/org-brief.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:36228238da4fac5e07e41329a34fe6f69227c12e79f9c165c9e3d53c6f18bc79
+    depends_on: []
+  - id: commands:org-dashboard
+    path: .claude/commands/org-dashboard.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:935e5c79d28bfa5cb76bb11d0cca564695887db60f8bf58aea6e60509c36c045
+    depends_on: []
+  - id: commands:org-evolve
+    path: .claude/commands/org-evolve.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:915e7ea5616553636c7b5cb9d95cc9ddffd6635a9f3f0385a8ac9680b64818a6
+    depends_on: []
+  - id: commands:org-goals
+    path: .claude/commands/org-goals.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:6ec1444528e994dc35b3cd3875522b6c26f8222b4681e713406cad4d4d2303ec
+    depends_on: []
+  - id: commands:org-import
+    path: .claude/commands/org-import.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:65502ab9c524c9c6feb29e4472dd1acfe3c0e46244601bbe2778b89b500f1170
+    depends_on: []
+  - id: commands:org-learn
+    path: .claude/commands/org-learn.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:a4853b0c2eb80d4c9b518ae06bf6b617557d525cb4947fa4c606afae6c2967a9
+    depends_on: []
+  - id: commands:org-publish
+    path: .claude/commands/org-publish.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:10e19fe9461e1f9882cc5c9cd61353c0cd64f8c476de84f9daae719877cf2083
+    depends_on: []
+  - id: commands:org-release
+    path: .claude/commands/org-release.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:69b06178760038f54a7798dfda1c59513e0bfc0e79dcfac18383086453aab246
+    depends_on: []
+  - id: commands:org-settings
+    path: .claude/commands/org-settings.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:edec1208e9c561a7b1c6479d95bbbd3d39bea14a15d1c2d4c7684aab07ed7221
+    depends_on: []
+  - id: commands:org-start
+    path: .claude/commands/org-start.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:0bf2f076f55b58c8f702d615cbb373163785002d9bea6bed9016ab110e25ede3
+    depends_on: []
+  - id: commands:org-tick
+    path: .claude/commands/org-tick.md
+    version: 0.1.0
+    classification: managed
+    checksum: sha256:db424927bc50b9743fdc47d70bbbd8fffde0d20e4a6e9bb9ac9c0b308495a1c0
+    depends_on: []

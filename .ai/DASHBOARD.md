@@ -1,6 +1,66 @@
 # DASHBOARD
 
-> OrgOS プロジェクト状況の1枚絵。Owner はこのファイルを見て状況を把握する。
+<!-- ORGOS:RESULT-FIRST-DASHBOARD:BEGIN -->
+## Decision Table
+
+Pending Decision Cards from `.ai/OWNER_INBOX.md`.
+
+(なし)
+
+### Owner Bandwidth
+
+| Metric | Window | Value | Source |
+| --- | --- | --- | --- |
+| Owner decisions | 7d | 0 | .ai/OWNER_INBOX.md |
+| Autonomous applies | 30d | 1 | .ai/EVOLUTION/applied/ |
+| Questions by priority | 30d | P0:0 / P1:5 / P2:71 | .ai/EVOLUTION/events.jsonl |
+
+## Autonomous Results
+
+Recent application records from `.ai/EVOLUTION/applied/` within 7 days.
+
+| Record | Applied At | Stage | Autonomy | Applied By | Target |
+| --- | --- | --- | --- | --- | --- |
+| AR-2026-05-10-001 | 2026-05-10T08:57:37Z | shadow | ask_before_execute | system | .ai/OIP/OIP-001-plan-sync.md |
+
+## Blocked
+
+Current blocked tasks from `.ai/TASKS.yaml` after T-OS-322 autonomy backfill.
+
+(なし)
+
+## Evolution Trace
+
+Recent 30-day evolution signals from `.ai/EVOLUTION/events.jsonl`. When `problem_class` is not present, severity is used as the dashboard class.
+
+### Problem Class Counts
+
+| Problem Class | Count |
+| --- | --- |
+| P1 | 5 |
+| P2 | 71 |
+| P3 | 5 |
+
+### AI Capability Evolution
+
+| Capability Signal | Count |
+| --- | --- |
+| capability_degraded | 68 |
+
+| Autonomy Candidate | Capability Event Count |
+| --- | --- |
+| execute_with_report | 68 |
+
+### Recent Signals
+
+| Event | Priority | Type | Source | Target |
+| --- | --- | --- | --- | --- |
+| EVO-2026-05-08-071 | P1 | oip_stale | oip_scanner | .ai/OIP/OIP-001-plan-sync.md |
+| EVO-2026-05-08-072 | P1 | oip_stale | oip_scanner | .ai/OIP/OIP-006-goal-hierarchy-management.md |
+| EVO-2026-05-08-073 | P2 | rule_stale | memory_scanner | .claude/rules/performance.md |
+| EVO-2026-05-08-074 | P2 | rule_stale | memory_scanner | .claude/rules/capability-preflight.md |
+| EVO-2026-05-08-075 | P2 | rule_stale | memory_scanner | .claude/rules/capability-preflight.md |
+<!-- ORGOS:RESULT-FIRST-DASHBOARD:END -->
 
 ---
 

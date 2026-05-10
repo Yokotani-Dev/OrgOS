@@ -1,0 +1,19 @@
+Implemented and verified T-OS-324.
+
+Added/updated:
+- [synthesize.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/synthesize.sh)
+- [peer-review.sh](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/peer-review.sh)
+- [evolution-proposal.yaml](/Users/youyokotani/Dev/Private/OrgOS/.claude/schemas/evolution-proposal.yaml)
+- [README.md](/Users/youyokotani/Dev/Private/OrgOS/scripts/evolution/README.md)
+- Generated proposal fixtures in `.ai/EVOLUTION/proposals/`
+- Reports: [T-OS-324.md](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-324.md), [T-OS-324.txt](/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-324.txt)
+
+Verification passed:
+- `bash -n` for both scripts
+- proposal generation from `events.jsonl`
+- proposal schema smoke checks
+- peer-review `agree`
+- peer-review `disagree` escalation through `scripts/inbox/add-decision.sh` in an isolated `/tmp` repo
+- Iron Law forbidden target rejection with exit status `3`
+
+I also fixed a path logging bug so `/tmp` proposal paths work in structured logs. No commit was created because the current worktree is on `main`, and AGENTS prohibits direct commits to `main/master`.

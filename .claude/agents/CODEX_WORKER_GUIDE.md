@@ -354,6 +354,33 @@ Manager が統合を担当します。
 
 ---
 
+## プラットフォーム別トラブルシューティング
+
+### Windows-native で sandbox が動作しない
+
+- 症状: `workspace-write` が `read-only` にフォールバックする
+- 原因: OpenAI codex#15850 / #17179 / #18821 の Windows native sandbox 問題 (2026-04 時点未解決)
+- 対応: WSL Ubuntu に移行し、`.ai/CONTROL.yaml` の `platform` を `windows-wsl` に変更する
+
+Windows native では実装タスクを継続せず、Manager に WSL 移行が必要であることを報告してください。
+
+### Windows-WSL で auth.json が見つからない
+
+- 症状: `codex auth: not signed in`
+- 対応: Windows 側 `~/.codex/auth.json` を WSL 側 `~/.codex/auth.json` に同期する
+
+T-OS-WIN-3 の `.ai/CODEX/codex-wsl.sh` wrapper がこの同期を自動化する予定です。wrapper は引数転送、Windows/WSL パス変換、`auth.json` 同期を担当し、`shellcheck .ai/CODEX/codex-wsl.sh` で検証される必要があります。
+
+### Linux で codex CLI が見つからない
+
+- 症状: `command not found: codex`
+- 対応: Node.js 22+ を用意し、`npm i -g @openai/codex` で Codex CLI をインストールする
+
+### Windows-MSYS / Git Bash から起動している
+
+- 症状: `platform` が `windows-msys`、またはパス解決や sandbox が不安定になる
+- 対応: Windows native CLI を直接使わず、T-OS-WIN-3 の `.ai/CODEX/codex-wsl.sh` wrapper 経由で WSL Ubuntu 上の Codex CLI を起動する
+
 ## トラブルシューティング
 
 ### ブロッカーが発生した場合
