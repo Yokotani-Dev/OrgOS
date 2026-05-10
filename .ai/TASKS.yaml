@@ -14,6 +14,71 @@
 
 tasks:
 
+  # === SELFREVIEW-002 follow-up: Tick フロー統合 + 運用検証 (2026-05-10) ===
+
+  - id: T-OS-380
+    title: "[Follow-up] Tick フロー統合 - SELFREVIEW-002 で整備した script を Manager 自動呼び出しに統合"
+    status: queued
+    priority: P0
+    deps: []
+    owner_role: "codex-implementer"
+    allowed_paths:
+      - ".claude/agents/manager.md"
+      - ".claude/commands/org-tick.md"
+      - "scripts/tick/"
+    autonomy_level: "owner_only"
+    blast_radius: "kernel"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "high"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "Manager の毎 Tick 開始時に scan-stale.sh / capability scan / branch consistency を自動実行"
+      - "Codex 起動の標準フローを run-in-worktree.sh 経由に変更 (manager.md 更新)"
+      - "失敗時の自動 stop 機構"
+      - "manager.md 編集は OWNER_APPROVAL が必要 (KERNEL_FILES に含まれる)"
+    notes: |
+      SELFREVIEW-002 follow-up。整備された script を「Manager が思い出して呼ぶ」状態から
+      「自動呼び出し + 失敗で stop」状態に昇格させる。
+      manager.md は KERNEL_FILES に含まれるため、編集は明示的 Owner approval が必要。
+
+  - id: T-OS-381
+    title: "[Follow-up] 実プロジェクトでの運用検証 - M-PHASE-6/7 の script を実 OrgOS フローで実行"
+    status: queued
+    priority: P1
+    deps: ["T-OS-380"]
+    owner_role: "manager"
+    allowed_paths:
+      - ".ai/REVIEW/T-OS-381/"
+    autonomy_level: "execute_with_report"
+    blast_radius: "ledger_local"
+    owner_input_needed: ["none"]
+    risk_level: "low"
+    default_if_no_response: "auto_apply"
+    reversibility: "reversible"
+    acceptance:
+      - "次回 Owner 依頼時に Quality Contract / Journey-First / Pre-Risk Profile を実適用"
+      - "fixture と実運用の gap を .ai/REVIEW/T-OS-381/ に記録"
+      - "問題発見時は対策タスク化"
+
+  - id: T-OS-382
+    title: "[Follow-up] shellcheck 環境整備 - 全 Codex タスクで shellcheck 実行可能に"
+    status: queued
+    priority: P2
+    deps: []
+    owner_role: "manager"
+    allowed_paths:
+      - ".ai/RUNBOOKS/"
+    autonomy_level: "execute_with_report"
+    blast_radius: "ledger_local"
+    owner_input_needed: ["none"]
+    risk_level: "low"
+    default_if_no_response: "auto_apply"
+    reversibility: "reversible"
+    acceptance:
+      - "Owner に brew install shellcheck を提案"
+      - "Codex Work Order template に shellcheck 必須化を追加"
+      - "Runbook 化"
 
   # === OrgOS 自律改善ループ: org-evolve (2026-03-24) ===
 
