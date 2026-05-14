@@ -1,0 +1,55 @@
+Handoff Packet:
+
+```yaml
+schema_version: "1.0"
+task_id: T-OS-411
+agent: codex-implementer
+status: DONE_WITH_CONCERNS
+completed_at: "2026-05-14T15:24:53Z"
+trace:
+  request_trace_id: T-OS-411-day1-manifest
+  span_id: T-OS-411-day1-manifest-1
+  attempt: 1
+  parent_span_id: null
+  resume_of: null
+changed_files:
+  - path: .claude/schemas/artifact-manifest.v1.json
+    summary: "JSON Schema for artifact_manifest.v1"
+  - path: scripts/org/collect-artifacts.sh
+    summary: "Artifact collection for logs, diffs, untracked/generated files, sha256, manifest"
+  - path: scripts/org/verify-artifact-manifest.py
+    summary: "Full manifest verification replacing Day 0 minimal verifier"
+  - path: scripts/codex/run-in-worktree.sh
+    summary: "Integrated run_id, stdout/stderr tee capture, automatic collection, full verifier"
+  - path: tests/kernel/test-day0-cleanup.sh
+    summary: "Adjusted Day 0 tests for automatic manifest generation"
+  - path: tests/kernel/test-day1-manifest.sh
+    summary: "Added 6 Day 1 manifest tests"
+  - path: tests/kernel/run-kernel-tests.sh
+    summary: "Runs Day 0 and Day 1 kernel tests"
+assumptions:
+  - "Work Order allowed_paths are authoritative for adding the schema under .claude/schemas."
+  - "Handoff output remains main repo .ai/CODEX/RESULTS/<task>.txt; collector copies it into artifact store."
+decisions_made:
+  - "Used named pipes with tee instead of process substitution because this sandbox denied /dev/fd process substitution."
+  - "Generated .md/.json/.yaml/.yml/.txt untracked files are classified as generated_file."
+unresolved_questions: []
+downstream_impacts:
+  - task_id: T-OS-412
+    impact: "pretool_policy.py can now detect and require Day 1 artifact_manifest output."
+memory_updates: []
+verification:
+  tests_run: true
+  tests_passed: true
+  commands:
+    - "bash tests/kernel/run-kernel-tests.sh"
+    - "bash -n scripts/org/collect-artifacts.sh scripts/codex/run-in-worktree.sh tests/kernel/test-day0-cleanup.sh tests/kernel/test-day1-manifest.sh tests/kernel/run-kernel-tests.sh"
+    - "PYTHONPYCACHEPREFIX=/private/tmp/orgos-pycache python3 -m py_compile scripts/org/verify-artifact-manifest.py"
+    - "python3 -m json.tool .claude/schemas/artifact-manifest.v1.json >/dev/null"
+  notes:
+    - "shellcheck not installed in this environment."
+  self_check:
+    only_allowed_paths_changed: true
+    no_git_commit_executed: true
+    eleven_tests_pass: true
+```

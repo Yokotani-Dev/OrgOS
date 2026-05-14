@@ -1,0 +1,208 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orgos.artifact_manifest.v1",
+  "title": "OrgOS Artifact Manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "task_id",
+    "run_id",
+    "created_at",
+    "repo",
+    "actor",
+    "execution",
+    "artifacts",
+    "verification"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "orgos.artifact_manifest.v1"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_id": {
+      "type": "string",
+      "pattern": "^[0-9]{8}T[0-9]{6}Z-[A-Za-z0-9._-]+-[a-f0-9]{8}$"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo_root",
+        "worktree_path",
+        "branch",
+        "head_before",
+        "head_after"
+      ],
+      "properties": {
+        "repo_root": { "type": "string" },
+        "worktree_path": { "type": "string" },
+        "branch": { "type": "string" },
+        "head_before": { "type": "string" },
+        "head_after": { "type": "string" },
+        "dirty_after": { "type": "boolean" }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "id"],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": ["manager", "codex", "subagent", "integrator", "owner", "mock"]
+        },
+        "id": { "type": "string" },
+        "model": { "type": "string" },
+        "session_id": { "type": "string" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["command_label", "started_at", "ended_at", "exit_code"],
+      "properties": {
+        "command_label": { "type": "string" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "ended_at": { "type": "string", "format": "date-time" },
+        "exit_code": { "type": "integer" },
+        "wrapper_version": { "type": "string" }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "artifact_path",
+          "size_bytes",
+          "sha256",
+          "required",
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "stdout",
+              "stderr",
+              "transcript",
+              "output_last_message",
+              "git_diff",
+              "git_diff_cached",
+              "git_status",
+              "untracked_file",
+              "generated_file",
+              "audit_log",
+              "handoff_packet",
+              "metadata",
+              "truncated_log",
+              "skipped_large_file",
+              "symlink_metadata"
+            ]
+          },
+          "artifact_path": {
+            "type": "string",
+            "pattern": "^[^/].*"
+          },
+          "source_path": {
+            "type": "string"
+          },
+          "source_relpath": {
+            "type": "string"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["captured", "missing", "skipped", "truncated"]
+          },
+          "captured_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "truncation": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "original_size_bytes": { "type": "integer", "minimum": 0 },
+              "stored_size_bytes": { "type": "integer", "minimum": 0 },
+              "reason": { "type": "string" }
+            }
+          },
+          "symlink": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "target": { "type": "string" },
+              "followed": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_log_bytes": { "type": "integer" },
+        "max_file_bytes": { "type": "integer" },
+        "max_total_bytes": { "type": "integer" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "verified_at", "errors"],
+      "properties": {
+        "verified": { "type": "boolean" },
+        "verified_at": { "type": "string", "format": "date-time" },
+        "errors": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cleanup_allowed": { "type": "boolean" },
+        "cleanup_reason": { "type": "string" },
+        "cleanup_status": { "type": "string" }
+      }
+    }
+  }
+}

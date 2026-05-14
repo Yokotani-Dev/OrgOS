@@ -8,9 +8,11 @@ SCRIPT_UNDER_TEST=${SCRIPT_UNDER_TEST:-"$REPO_ROOT/scripts/codex/run-in-worktree
 
 pass_count=0
 fail_count=0
+current_test_failed=0
 
 fail() {
   printf 'not ok - %s\n' "$1" >&2
+  current_test_failed=1
   return 1
 }
 
@@ -46,6 +48,10 @@ setup_fixture() {
   mkdir -p "$repo/scripts/codex" "$repo/.ai/CODEX/ORDERS"
   cp "$SCRIPT_UNDER_TEST" "$repo/scripts/codex/run-in-worktree.sh"
   chmod +x "$repo/scripts/codex/run-in-worktree.sh"
+  mkdir -p "$repo/scripts/org"
+  cp "$REPO_ROOT/scripts/org/collect-artifacts.sh" "$repo/scripts/org/collect-artifacts.sh"
+  cp "$REPO_ROOT/scripts/org/verify-artifact-manifest.py" "$repo/scripts/org/verify-artifact-manifest.py"
+  chmod +x "$repo/scripts/org/collect-artifacts.sh" "$repo/scripts/org/verify-artifact-manifest.py"
 
   cat > "$repo/scripts/codex/pre-exec-validate.sh" <<'EOF'
 #!/usr/bin/env bash
@@ -64,7 +70,21 @@ EOF
   cat > "$codex_stub" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
+output_last_message=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --output-last-message)
+      output_last_message=$2
+      shift
+      ;;
+  esac
+  shift
+done
 cat >/dev/null
+if [ -n "$output_last_message" ]; then
+  mkdir -p "$(dirname "$output_last_message")"
+  printf 'mock final message\n' > "$output_last_message"
+fi
 exit 0
 EOF
   chmod +x "$codex_stub"
@@ -106,9 +126,9 @@ test_default_preserve() {
   rm -rf "$tmp_dir"
 }
 
-test_cleanup_without_manifest_quarantines() {
+test_cleanup_after_auto_manifest_removes() {
   local task_id="T-DAY0-NO-MANIFEST"
-  local fixture tmp_dir repo codex_stub stdout_path stderr_path worktree_path
+  local fixture tmp_dir repo codex_stub stdout_path stderr_path worktree_path artifact_root
   fixture=$(setup_fixture "$task_id")
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
@@ -116,12 +136,13 @@ test_cleanup_without_manifest_quarantines() {
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   worktree_path="$repo/.worktrees/$task_id"
+  artifact_root="$repo/.ai/artifacts/$task_id"
 
   run_wrapper "$repo" "$codex_stub" "$task_id" "$stdout_path" "$stderr_path" --cleanup-after-manifest
 
-  assert_exists "$worktree_path" "cleanup without manifest should preserve worktree"
-  assert_exists "$worktree_path/.orgos-quarantine" "cleanup without manifest should quarantine"
-  assert_contains "$stderr_path" "ORGOS_CLEANUP_BLOCKED" "cleanup without manifest should notify owner"
+  assert_not_exists "$worktree_path" "cleanup with auto manifest should remove worktree"
+  assert_exists "$artifact_root" "cleanup with auto manifest should preserve artifacts"
+  assert_contains "$stderr_path" "cleanup_status=removed_after_manifest" "cleanup with auto manifest should log removal"
   rm -rf "$tmp_dir"
 }
 
@@ -160,10 +181,35 @@ test_valid_manifest_allows_cleanup() {
   worktree_path="$repo/.worktrees/$task_id"
   cat > "$manifest_path" <<EOF
 {
-  "schema_version": "1.0",
+  "schema_version": "orgos.artifact_manifest.v1",
+  "project_id": "test",
   "task_id": "$task_id",
-  "run_id": "run-1",
-  "artifacts": []
+  "run_id": "20260514T000000Z-$task_id-1234abcd",
+  "created_at": "2026-05-14T00:00:00Z",
+  "repo": {
+    "repo_root": "$repo",
+    "worktree_path": "$worktree_path",
+    "branch": "main",
+    "head_before": "HEAD",
+    "head_after": "HEAD",
+    "dirty_after": false
+  },
+  "actor": {
+    "role": "mock",
+    "id": "test"
+  },
+  "execution": {
+    "command_label": "test",
+    "started_at": "2026-05-14T00:00:00Z",
+    "ended_at": "2026-05-14T00:00:00Z",
+    "exit_code": 0
+  },
+  "artifacts": [],
+  "verification": {
+    "verified": true,
+    "verified_at": "2026-05-14T00:00:00Z",
+    "errors": []
+  }
 }
 EOF
 
@@ -195,7 +241,9 @@ test_existing_keep_worktree_compat() {
 
 run_test() {
   local name="$1"
-  if "$name"; then
+  current_test_failed=0
+  "$name" || current_test_failed=1
+  if [ "$current_test_failed" -eq 0 ]; then
     pass_count=$((pass_count + 1))
     printf 'ok - %s\n' "$name"
   else
@@ -206,7 +254,7 @@ run_test() {
 
 main() {
   run_test test_default_preserve
-  run_test test_cleanup_without_manifest_quarantines
+  run_test test_cleanup_after_auto_manifest_removes
   run_test test_invalid_manifest_quarantines
   run_test test_valid_manifest_allows_cleanup
   run_test test_existing_keep_worktree_compat

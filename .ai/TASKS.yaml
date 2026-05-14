@@ -263,7 +263,7 @@ tasks:
 
   - id: T-OS-411
     title: "[Kernel-v2][Week 0 Day 1] Artifact manifest + capture + verification 実装"
-    status: queued
+    status: done
     priority: P0
     deps: ["T-OS-410"]
     owner_role: "codex-implementer"

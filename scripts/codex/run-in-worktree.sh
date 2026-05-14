@@ -8,7 +8,7 @@ Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree|--preser
 
 Creates .worktrees/<TASK_ID>, runs Codex inside that worktree, and removes the
 worktree after Codex exits only when --cleanup-after-manifest is set and the
-artifact manifest passes minimal validation. By default, worktrees are preserved.
+artifact manifest passes validation. By default, worktrees are preserved.
 USAGE
 }
 
@@ -110,7 +110,7 @@ cleanup_worktree() {
   fi
 
   set +e
-  verify_artifact_manifest_minimal
+  verify_artifact_manifest
   manifest_status=$?
   set -e
   if [ "$manifest_status" -ne 0 ]; then
@@ -147,7 +147,7 @@ notify_owner() {
   fi
 }
 
-verify_artifact_manifest_minimal() {
+verify_artifact_manifest() {
   if [ -z "${artifact_manifest_path:-}" ]; then
     return 10
   fi
@@ -160,24 +160,11 @@ verify_artifact_manifest_minimal() {
     return 12
   fi
 
-  python3 - "$artifact_manifest_path" <<'PY'
-import json
-import sys
+  if [ ! -x "$artifact_manifest_verifier" ]; then
+    return 13
+  fi
 
-path = sys.argv[1]
-with open(path, "r", encoding="utf-8") as handle:
-    data = json.load(handle)
-
-required = ("schema_version", "task_id", "run_id", "artifacts")
-missing = [key for key in required if key not in data]
-if missing:
-    print(f"missing required manifest keys: {', '.join(missing)}", file=sys.stderr)
-    sys.exit(3)
-
-if not isinstance(data["artifacts"], list):
-    print("manifest artifacts must be a list", file=sys.stderr)
-    sys.exit(3)
-PY
+  "$artifact_manifest_verifier" "$artifact_manifest_path"
 }
 
 mark_worktree_quarantined() {
@@ -199,6 +186,7 @@ EOF
 keep_worktree=1
 cleanup_after_manifest=0
 artifact_manifest_path=""
+artifact_manifest_override=0
 
 if [ "$#" -lt 1 ]; then
   usage
@@ -226,6 +214,7 @@ while [ "$#" -gt 0 ]; do
         exit 2
       fi
       artifact_manifest_path=$2
+      artifact_manifest_override=1
       shift
       ;;
     -h|--help)
@@ -259,6 +248,8 @@ result_path="$repo_root/.ai/CODEX/RESULTS/$task_id.txt"
 codex_bin=${ORGOS_CODEX_BIN:-/opt/homebrew/bin/codex}
 pre_exec_validate="$repo_root/scripts/codex/pre-exec-validate.sh"
 post_exec_audit="$repo_root/scripts/codex/post-exec-audit.sh"
+collect_artifacts="$repo_root/scripts/org/collect-artifacts.sh"
+artifact_manifest_verifier="$repo_root/scripts/org/verify-artifact-manifest.py"
 worktree_created=0
 cleanup_status=not_started
 
@@ -284,6 +275,16 @@ if [ ! -f "$post_exec_audit" ]; then
   exit 1
 fi
 
+if [ ! -x "$collect_artifacts" ]; then
+  printf 'run-in-worktree.sh: artifact collector not found or not executable: %s\n' "$collect_artifacts" >&2
+  exit 1
+fi
+
+if [ ! -x "$artifact_manifest_verifier" ]; then
+  printf 'run-in-worktree.sh: artifact manifest verifier not found or not executable: %s\n' "$artifact_manifest_verifier" >&2
+  exit 1
+fi
+
 if ! run_logged_command pre_exec_validate bash "$pre_exec_validate" "$task_id"; then
   log error pre_exec_validate_failed \
     "task_id=$(quote_value "$task_id")" \
@@ -292,6 +293,24 @@ if ! run_logged_command pre_exec_validate bash "$pre_exec_validate" "$task_id"; 
 fi
 
 mkdir -p "$worktree_dir" "$(dirname "$result_path")"
+
+run_ts="$(date -u +%Y%m%dT%H%M%SZ)"
+if command -v uuidgen >/dev/null 2>&1; then
+  rand="$(uuidgen | tr 'A-F' 'a-f' | cut -c1-8)"
+else
+  rand="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+fi
+run_id="${run_ts}-${task_id}-${rand}"
+artifact_dir="$repo_root/.ai/artifacts/$task_id/$run_id"
+stdout_file="$artifact_dir/logs/stdout.log"
+stderr_file="$artifact_dir/logs/stderr.log"
+mkdir -p "$artifact_dir/logs"
+: > "$stdout_file"
+: > "$stderr_file"
+
+if [ "$artifact_manifest_override" -eq 0 ]; then
+  artifact_manifest_path="$artifact_dir/artifact_manifest.json"
+fi
 
 log info worktree_create_start \
   "task_id=$(quote_value "$task_id")" \
@@ -317,6 +336,7 @@ else
   exit 1
 fi
 end_epoch=$(date +%s)
+head_before=$(git -C "$worktree_path" rev-parse HEAD)
 
 log info worktree_create_completed \
   "task_id=$(quote_value "$task_id")" \
@@ -328,15 +348,36 @@ log info codex_exec_start \
   "worktree_path=$(quote_value "$worktree_path")" \
   "output_path=$(quote_value "$result_path")"
 
+codex_started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+stdout_fifo="$artifact_dir/logs/stdout.fifo"
+stderr_fifo="$artifact_dir/logs/stderr.fifo"
+rm -f "$stdout_fifo" "$stderr_fifo"
+mkfifo "$stdout_fifo" "$stderr_fifo"
+tee -a "$stdout_file" < "$stdout_fifo" &
+stdout_tee_pid=$!
+tee -a "$stderr_file" < "$stderr_fifo" >&2 &
+stderr_tee_pid=$!
 set +e
 (
   cd "$worktree_path"
   "$codex_bin" exec --full-auto --skip-git-repo-check \
     --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt" \
     - < "../../.ai/CODEX/ORDERS/$task_id.md"
-)
+) > "$stdout_fifo" 2> "$stderr_fifo"
 codex_status=$?
+wait "$stdout_tee_pid"
+stdout_tee_status=$?
+wait "$stderr_tee_pid"
+stderr_tee_status=$?
 set -e
+rm -f "$stdout_fifo" "$stderr_fifo"
+codex_ended_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
+if [ "$stdout_tee_status" -ne 0 ] || [ "$stderr_tee_status" -ne 0 ]; then
+  log warn codex_capture_tee_failed \
+    "task_id=$(quote_value "$task_id")" \
+    "stdout_tee_status=$stdout_tee_status" \
+    "stderr_tee_status=$stderr_tee_status"
+fi
 
 log info codex_exec_completed \
   "task_id=$(quote_value "$task_id")" \
@@ -353,8 +394,43 @@ if [ "$post_status" -ne 0 ]; then
     "recovery=$(quote_value "post-exec-audit reverted disallowed files when possible")"
 fi
 
+collect_status=0
+log info artifact_collection_start \
+  "task_id=$(quote_value "$task_id")" \
+  "run_id=$(quote_value "$run_id")" \
+  "artifact_dir=$(quote_value "$artifact_dir")"
+set +e
+ORGOS_HEAD_BEFORE="$head_before" \
+ORGOS_EXEC_STARTED_AT="$codex_started_at" \
+ORGOS_EXEC_ENDED_AT="$codex_ended_at" \
+ORGOS_EXEC_EXIT_CODE="$codex_status" \
+ORGOS_COMMAND_LABEL="codex exec" \
+ORGOS_WRAPPER_VERSION="day1-artifact-manifest" \
+ORGOS_REPO_ROOT="$repo_root" \
+"$collect_artifacts" \
+  --task-id "$task_id" \
+  --run-id "$run_id" \
+  --worktree-path "$worktree_path" \
+  --artifact-dir "$artifact_dir" \
+  --stdout-source "$stdout_file" \
+  --stderr-source "$stderr_file" \
+  --last-message-source "$result_path" \
+  --actor-role codex \
+  --actor-id "${ORGOS_ACTOR_ID:-codex}"
+collect_status=$?
+set -e
+log info artifact_collection_completed \
+  "task_id=$(quote_value "$task_id")" \
+  "run_id=$(quote_value "$run_id")" \
+  "artifact_manifest=$(quote_value "$artifact_manifest_path")" \
+  "exit_status=$collect_status"
+
 if [ "$post_status" -ne 0 ]; then
   exit "$post_status"
+fi
+
+if [ "$collect_status" -ne 0 ]; then
+  exit "$collect_status"
 fi
 
 exit "$codex_status"
