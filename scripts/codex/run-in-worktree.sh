@@ -4,10 +4,11 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree]
+Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree|--preserve-worktree] [--cleanup-after-manifest --artifact-manifest PATH]
 
 Creates .worktrees/<TASK_ID>, runs Codex inside that worktree, and removes the
-worktree after Codex exits unless --keep-worktree is set.
+worktree after Codex exits only when --cleanup-after-manifest is set and the
+artifact manifest passes minimal validation. By default, worktrees are preserved.
 USAGE
 }
 
@@ -79,10 +80,22 @@ validate_task_id() {
 
 cleanup_worktree() {
   if [ "$worktree_created" -ne 1 ]; then
+    cleanup_status=not_created
     return 0
   fi
 
-  if [ "$keep_worktree" -eq 1 ]; then
+  if [ -z "${worktree_path:-}" ] || [ "$worktree_path" = "/" ] || [ ! -d "$worktree_path" ]; then
+    cleanup_status=invalid_worktree_path
+    log warn cleanup_skipped \
+      "task_id=$(quote_value "$task_id")" \
+      "worktree_path=$(quote_value "${worktree_path:-}")" \
+      "cleanup_status=$cleanup_status"
+    notify_owner "CLEANUP_WARN" \
+      "cleanup skipped: task=${task_id:-unknown} path=${worktree_path:-unknown} reason=invalid_worktree_path"
+    return 0
+  fi
+
+  if [ "$keep_worktree" -eq 1 ] && [ "$cleanup_after_manifest" -ne 1 ]; then
     cleanup_status=kept
     log info cleanup_skipped \
       "task_id=$(quote_value "$task_id")" \
@@ -91,22 +104,101 @@ cleanup_worktree() {
     return 0
   fi
 
+  if [ "$cleanup_after_manifest" -ne 1 ]; then
+    mark_worktree_quarantined "cleanup_requested_without_manifest_gate"
+    return 0
+  fi
+
+  set +e
+  verify_artifact_manifest_minimal
+  manifest_status=$?
+  set -e
+  if [ "$manifest_status" -ne 0 ]; then
+    mark_worktree_quarantined "artifact_manifest_invalid:${manifest_status}"
+    return 0
+  fi
+
   if git -C "$repo_root" worktree remove --force "$worktree_path"; then
-    cleanup_status=removed
+    cleanup_status=removed_after_manifest
     log info cleanup_completed \
       "task_id=$(quote_value "$task_id")" \
       "worktree_path=$(quote_value "$worktree_path")" \
       "cleanup_status=$cleanup_status"
   else
-    cleanup_status=failed
+    cleanup_status=remove_failed
     log error cleanup_failed \
       "task_id=$(quote_value "$task_id")" \
       "worktree_path=$(quote_value "$worktree_path")" \
       "cleanup_status=$cleanup_status"
+    notify_owner "CLEANUP_FAILED" \
+      "git worktree remove failed: task=${task_id:-unknown} path=${worktree_path:-unknown}"
   fi
 }
 
-keep_worktree=0
+notify_owner() {
+  local level="$1"
+  shift
+  local msg="$*"
+  echo "ORGOS_${level}: ${msg}" >&2
+  if [ -n "${repo_root:-}" ]; then
+    mkdir -p "$repo_root/.ai/alerts"
+    printf '%s\t%s\t%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$level" "$msg" \
+      >> "$repo_root/.ai/alerts/worktree-cleanup.log" || true
+  fi
+}
+
+verify_artifact_manifest_minimal() {
+  if [ -z "${artifact_manifest_path:-}" ]; then
+    return 10
+  fi
+
+  if [ ! -f "$artifact_manifest_path" ]; then
+    return 11
+  fi
+
+  if [ ! -s "$artifact_manifest_path" ]; then
+    return 12
+  fi
+
+  python3 - "$artifact_manifest_path" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+with open(path, "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+
+required = ("schema_version", "task_id", "run_id", "artifacts")
+missing = [key for key in required if key not in data]
+if missing:
+    print(f"missing required manifest keys: {', '.join(missing)}", file=sys.stderr)
+    sys.exit(3)
+
+if not isinstance(data["artifacts"], list):
+    print("manifest artifacts must be a list", file=sys.stderr)
+    sys.exit(3)
+PY
+}
+
+mark_worktree_quarantined() {
+  local reason="$1"
+  cleanup_status=quarantined
+  cleanup_error=1
+  if [ -n "${worktree_path:-}" ] && [ -d "$worktree_path" ]; then
+    cat > "$worktree_path/.orgos-quarantine" <<EOF
+reason: ${reason}
+timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+task_id: ${task_id:-unknown}
+repo_root: ${repo_root:-unknown}
+EOF
+  fi
+  notify_owner "CLEANUP_BLOCKED" \
+    "worktree preserved/quarantined: task=${task_id:-unknown} path=${worktree_path:-unknown} reason=${reason} cleanup_error=${cleanup_error}"
+}
+
+keep_worktree=1
+cleanup_after_manifest=0
+artifact_manifest_path=""
 
 if [ "$#" -lt 1 ]; then
   usage
@@ -118,8 +210,23 @@ shift
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --preserve-worktree)
+      keep_worktree=1
+      ;;
     --keep-worktree)
       keep_worktree=1
+      ;;
+    --cleanup-after-manifest)
+      cleanup_after_manifest=1
+      ;;
+    --artifact-manifest)
+      if [ "$#" -lt 2 ]; then
+        printf 'run-in-worktree.sh: --artifact-manifest requires PATH\n' >&2
+        usage
+        exit 2
+      fi
+      artifact_manifest_path=$2
+      shift
       ;;
     -h|--help)
       usage

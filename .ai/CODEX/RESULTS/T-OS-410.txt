@@ -1,0 +1,14 @@
+Implemented T-OS-410.
+
+Changed:
+- [run-in-worktree.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-410/scripts/codex/run-in-worktree.sh): fail-closed cleanup, preserve-by-default, new manifest-gated cleanup flags, and the three required helper functions.
+- [test-day0-cleanup.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-410/tests/kernel/test-day0-cleanup.sh): 5 deterministic Day 0 cleanup tests.
+- [run-kernel-tests.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-410/tests/kernel/run-kernel-tests.sh): test runner.
+- [.ai/CODEX/RESULTS/T-OS-410.txt](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-410/.ai/CODEX/RESULTS/T-OS-410.txt): handoff packet.
+
+Verification:
+- `bash tests/kernel/run-kernel-tests.sh` passed: 5 passed, 0 failed.
+- `bash -n` passed for the wrapper and test scripts.
+- Handoff packet parses as YAML with `handoff_packet` root.
+- `shellcheck` is not installed in this environment, so I could not run it.
+- No `git add`, `git commit`, or `git push` was run.

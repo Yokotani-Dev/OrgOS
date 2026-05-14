@@ -266,6 +266,60 @@ projects:
     status: backlog
     priority: P2
     tasks_ref: [T-OS-364]
+  - id: T-OS-390
+    title: "[v2] Concurrent execution safety v2 - epic"
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-390]
+  - id: T-OS-391
+    title: "[v2] Codex auto-commit prohibition"
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-391]
+  - id: T-OS-392
+    title: "[v2] allowed_paths conflict pre-flight"
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-392]
+  - id: T-OS-393
+    title: "[v2] main direct-commit warning"
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-393]
+  - id: T-OS-394
+    title: "[v2] worker field + heartbeat in TASKS"
+    milestone_ref: M-PHASE-7
+    status: active
+    priority: P0
+    tasks_ref: [T-OS-394]
+  - id: T-OS-395
+    title: "[v2] feature/T-XXX branch automation"
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P1
+    tasks_ref: [T-OS-395]
+  - id: T-OS-396
+    title: "[v2] .ai/LOCKS/ file mechanism"
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P1
+    tasks_ref: [T-OS-396]
+  - id: T-OS-398
+    title: "[v2] develop -> main scheduled merge bot"
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P2
+    tasks_ref: [T-OS-398]
+  - id: T-OS-399
+    title: "[v2] Parallel session dashboard"
+    milestone_ref: M-PHASE-7
+    status: backlog
+    priority: P2
+    tasks_ref: [T-OS-399]
 
 active_graph:
   current_phase: IMPLEMENTATION
