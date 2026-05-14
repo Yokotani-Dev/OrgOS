@@ -290,7 +290,7 @@ tasks:
 
   - id: T-OS-412
     title: "[Kernel-v2][Week 0 Day 2-5] No Worker Commit + No Shared Worktree + KRT-001〜010"
-    status: queued
+    status: running
     priority: P0
     deps: ["T-OS-411"]
     owner_role: "codex-implementer"
@@ -315,55 +315,6 @@ tasks:
     notes: |
       Week 0 完了の合格条件。pretool_policy.py 631行を 750-800 行程度に拡張する見込み。
       policy_core.py への分離は Week 1 以降で実施。Week 0 は同一ファイル内で関数分割。
-    priority: P0
-    deps: ["T-OS-408"]
-    owner_role: "manager"
-    allowed_paths:
-      - ".ai/REVIEW/T-OS-400/external-ai-4th-prompt.md"
-      - ".ai/REVIEW/T-OS-400/external-ai-4th-response.md"
-    autonomy_level: "execute_with_report"
-    blast_radius: "ledger_local"
-    owner_input_needed: ["external_ai_response"]
-    risk_level: "low"
-    default_if_no_response: "defer"
-    reversibility: "reversible"
-    acceptance:
-      - "Q16-Q19 (Week 0.5/1 ship blocker) + Q20-Q22 (Week 2+ enabler) + Q23 (STOP signal)"
-      - "Owner が現在の OrgOS の実態 (pretool_policy.py 631行, 9 subagents, 10+ projects) を補足情報として提供"
-      - "回答受領後 SYNTHESIS (T-OS-404) に進む可否を Q23 で判定"
-    priority: P0
-    deps: ["T-OS-405"]
-    owner_role: "manager"
-    allowed_paths:
-      - ".ai/REVIEW/T-OS-400/external-ai-3rd-prompt.md"
-      - ".ai/REVIEW/T-OS-400/external-ai-3rd-response.md"
-    autonomy_level: "execute_with_report"
-    blast_radius: "ledger_local"
-    owner_input_needed: ["external_ai_response"]
-    risk_level: "low"
-    default_if_no_response: "defer"
-    reversibility: "reversible"
-    acceptance:
-      - "Q11 (3視点比較) / Q12 (Manager身分) / Q13 (既存52task migration) / Q14 (wrapper bug事故) / Q15 (autonomy退行)"
-      - "Manager vision の8原則と Codex partial を GPT-5.5 に提示"
-      - "回答を external-ai-3rd-response.md に保存後 SYNTHESIS (T-OS-404) へ"
-    priority: P0
-    deps: ["T-OS-403"]
-    owner_role: "manager"
-    allowed_paths:
-      - ".ai/REVIEW/T-OS-400/external-ai-followup-prompt.md"
-      - ".ai/REVIEW/T-OS-400/external-ai-followup-response.md"
-    autonomy_level: "execute_with_report"
-    blast_radius: "ledger_local"
-    owner_input_needed: ["external_ai_response"]
-    risk_level: "low"
-    default_if_no_response: "defer"
-    reversibility: "reversible"
-    acceptance:
-      - "1回目の回答 (external-ai-response.md) を踏まえた具体化質問"
-      - "Constitutional invariants spec / 移行ロードマップ / Integrator gate設計 / State store schema / Owner UX / Kill list / 自己批判 の7軸"
-      - "Owner がコピペで GPT-5.5 Pro に再投入"
-      - "回答を external-ai-followup-response.md に保存"
 
   - id: T-OS-404
     title: "[Meta-Review][集約] 3視点を統合し修正方針決定"
