@@ -1,5 +1,19 @@
 {
-  "mode": "warn",
+  "schema_version": "orgos.kernel-mode.v2",
+  "default": "warn",
+  "invariants": {
+    "IntegratorOnlyCommit": "warn",
+    "PerTaskWorktree": "warn",
+    "ProtectedBranchNoTouch": "warn",
+    "LeaseBeforeWrite": "warn",
+    "StateMutationViaOrgTool": "warn",
+    "DurableArtifactBeforeCleanup": "warn",
+    "OwnerApprovalForIrreversibleOps": "disabled",
+    "DangerousShell": "warn",
+    "KernelSelfModification": "warn",
+    "IntegratorIsScriptNotAgent": "warn"
+  },
   "set_at": "2026-05-15T05:30:12Z",
-  "set_by": "youyokotani"
+  "set_by": "youyokotani",
+  "notes": "Bootstrap default; all warn pending dogfood + Owner enforce approval."
 }

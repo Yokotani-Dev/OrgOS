@@ -452,7 +452,7 @@ tasks:
       - 'test: real Codex sandbox restriction を mock した e2e check'
   - id: T-OS-420
     title: '[Kernel-v2 HARDEN] Per-invariant kernel mode + BOOTSTRAP-OVERRIDES.md'
-    status: queued
+    status: done
     priority: P1
     deps:
       - T-OS-415

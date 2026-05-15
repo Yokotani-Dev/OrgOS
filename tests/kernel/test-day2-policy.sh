@@ -93,6 +93,36 @@ expect_policy_denied() {
   rm -rf "$tmp_dir"
 }
 
+expect_policy_with_mode_file() {
+  local actor="$1"
+  local tool="$2"
+  local command="$3"
+  local path="$4"
+  local mode_json="$5"
+  local expected_status="$6"
+  local expected_marker="$7"
+  local invariant="$8"
+  local tmp_dir repo fixture stderr_path status
+
+  tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-day2-policy-mode.XXXXXX")
+  repo="$tmp_dir/repo"
+  fixture="$tmp_dir/fixture.json"
+  stderr_path="$tmp_dir/stderr.log"
+  mkdir -p "$repo/.claude/state"
+  printf '%s\n' "$mode_json" > "$repo/.claude/state/kernel-mode.json"
+  write_fixture "$fixture" "$actor" "$tool" "$command" "$path" "$repo"
+
+  set +e
+  CLAUDE_PROJECT_DIR="$repo" python3 "$POLICY" --test-fixture "$fixture" 2>"$stderr_path"
+  status=$?
+  set -e
+
+  [ "$status" -eq "$expected_status" ] || fail "expected exit $expected_status, got $status"
+  assert_contains "$stderr_path" "$expected_marker" "policy should emit $expected_marker"
+  assert_contains "$stderr_path" "$invariant" "policy should report invariant"
+  rm -rf "$tmp_dir"
+}
+
 setup_wrapper_fixture() {
   local task_id="$1"
   local tmp_dir repo mock_codex
@@ -289,6 +319,42 @@ test_krt_014_tasks_yaml_write_denied() {
   expect_policy_denied manager Write "" ".ai/TASKS.yaml" StateMutationViaOrgTool
 }
 
+test_krt_015_per_invariant_enforce_mix() {
+  expect_policy_with_mode_file \
+    codex \
+    Bash \
+    "git commit -m x && rm -rf /tmp/orgos-krt-noop" \
+    "" \
+    '{"schema_version":"orgos.kernel-mode.v2","default":"warn","invariants":{"IntegratorOnlyCommit":"enforce","DangerousShell":"warn"}}' \
+    2 \
+    ORGOS_POLICY_DENY \
+    IntegratorOnlyCommit
+}
+
+test_krt_016_default_warn_invariant_enforce() {
+  expect_policy_with_mode_file \
+    codex \
+    Bash \
+    "git commit -m x" \
+    "" \
+    '{"schema_version":"orgos.kernel-mode.v2","default":"warn","invariants":{"IntegratorOnlyCommit":"enforce"}}' \
+    2 \
+    ORGOS_POLICY_DENY \
+    IntegratorOnlyCommit
+}
+
+test_krt_017_legacy_v1_schema_compat() {
+  expect_policy_with_mode_file \
+    codex \
+    Bash \
+    "git commit -m x" \
+    "" \
+    '{"mode":"enforce"}' \
+    2 \
+    ORGOS_POLICY_DENY \
+    IntegratorOnlyCommit
+}
+
 run_test() {
   local name="$1"
   current_test_failed=0
@@ -330,6 +396,9 @@ main() {
       run_test test_krt_012_commit_msg_bypass_denied
       run_test test_krt_013_tasks_yaml_edit_denied
       run_test test_krt_014_tasks_yaml_write_denied
+      run_test test_krt_015_per_invariant_enforce_mix
+      run_test test_krt_016_default_warn_invariant_enforce
+      run_test test_krt_017_legacy_v1_schema_compat
       ;;
     *)
       echo "unknown argument: $1" >&2

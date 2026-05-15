@@ -54,22 +54,66 @@ def read_value(key: str, default: str = "") -> str:
     return m.group(1).strip() if m else default
 
 
-def get_kernel_mode() -> str:
-    """Read .claude/state/kernel-mode.json. Returns warn, enforce, or disabled."""
+def valid_kernel_mode(value: object, default: str = DEFAULT_KERNEL_MODE) -> str:
+    mode = str(value or "").strip()
+    return mode if mode in KERNEL_MODES else default
+
+
+def get_kernel_config() -> dict:
+    """Read kernel mode config, normalizing legacy v1 and current v2 schemas."""
     override = os.environ.get("ORGOS_KERNEL_MODE_OVERRIDE", "").strip()
     if override in KERNEL_MODES:
-        return override
+        return {
+            "schema_version": "orgos.kernel-mode.override",
+            "default": override,
+            "invariants": {},
+        }
 
     try:
         with (ROOT / ORGOS_KERNEL_MODE_FILE).open("r", encoding="utf-8") as handle:
             payload = json.load(handle)
     except FileNotFoundError:
-        return DEFAULT_KERNEL_MODE
+        return {"schema_version": "orgos.kernel-mode.v2", "default": DEFAULT_KERNEL_MODE, "invariants": {}}
     except (json.JSONDecodeError, OSError):
-        return DEFAULT_KERNEL_MODE
+        return {"schema_version": "orgos.kernel-mode.v2", "default": DEFAULT_KERNEL_MODE, "invariants": {}}
 
-    mode = str(payload.get("mode", DEFAULT_KERNEL_MODE)).strip()
-    return mode if mode in KERNEL_MODES else DEFAULT_KERNEL_MODE
+    if not isinstance(payload, dict):
+        return {"schema_version": "orgos.kernel-mode.v2", "default": DEFAULT_KERNEL_MODE, "invariants": {}}
+
+    schema_version = str(payload.get("schema_version", "") or "").strip()
+    if schema_version in ("", "orgos.kernel-mode.v1", "v1"):
+        return {
+            "schema_version": "orgos.kernel-mode.v1",
+            "default": valid_kernel_mode(payload.get("mode")),
+            "invariants": {},
+        }
+
+    invariants = payload.get("invariants", {})
+    if not isinstance(invariants, dict):
+        invariants = {}
+
+    return {
+        "schema_version": schema_version,
+        "default": valid_kernel_mode(payload.get("default")),
+        "invariants": {
+            str(invariant_id): valid_kernel_mode(mode)
+            for invariant_id, mode in invariants.items()
+            if valid_kernel_mode(mode, "") in KERNEL_MODES
+        },
+    }
+
+
+def get_kernel_mode() -> str:
+    """Return the default kernel mode for compatibility with legacy callers."""
+    return str(get_kernel_config().get("default", DEFAULT_KERNEL_MODE))
+
+
+def get_invariant_mode(invariant_id: str, config: dict) -> str:
+    """Per-invariant mode lookup with default fallback."""
+    invariants = config.get("invariants", {})
+    if not isinstance(invariants, dict):
+        invariants = {}
+    return valid_kernel_mode(invariants.get(invariant_id), valid_kernel_mode(config.get("default")))
 
 
 def parse_git_command(command: str) -> Optional[GitCommand]:
@@ -306,19 +350,23 @@ def evaluate_invariant_violations(
     return violations
 
 
-def enforce_violations(violations: list[tuple[str, str]], mode: str) -> int:
-    if not violations or mode == "disabled":
+def enforce_violations(violations: list[tuple[str, str]], config: dict) -> int:
+    if not violations:
         return 0
 
-    inv_id, reason = violations[0]
-    if mode == "warn":
-        print(f"ORGOS_POLICY_WARN: {inv_id}: {reason}", file=sys.stderr)
-        print(f"  (kernel mode={mode}; would be blocked in enforce mode)", file=sys.stderr)
-        return 0
+    for inv_id, reason in violations:
+        mode = get_invariant_mode(inv_id, config)
+        if mode == "disabled":
+            continue
 
-    if mode == "enforce":
-        print(f"ORGOS_POLICY_DENY: {inv_id}: {reason}", file=sys.stderr)
-        return 2
+        if mode == "warn":
+            print(f"ORGOS_POLICY_WARN: {inv_id}: {reason}", file=sys.stderr)
+            print(f"  (kernel mode={mode}; would be blocked in enforce mode)", file=sys.stderr)
+            continue
+
+        if mode == "enforce":
+            print(f"ORGOS_POLICY_DENY: {inv_id}: {reason}", file=sys.stderr)
+            return 2
 
     return 0
 
@@ -825,7 +873,7 @@ def run_test_fixture(fixture_path: str) -> None:
     path = str(fixture.get("path", "") or "")
     cwd = str(fixture.get("cwd", "") or "")
     violations = evaluate_invariant_violations(tool, command=command, path=path, cwd=cwd)
-    sys.exit(enforce_violations(violations, get_kernel_mode()))
+    sys.exit(enforce_violations(violations, get_kernel_config()))
 
 
 def main():
@@ -839,15 +887,15 @@ def main():
     tool = data.get("tool_name", "")
     tool_input = data.get("tool_input", {}) or {}
     session_id = get_session_id(data, tool_input)
-    mode = get_kernel_mode()
+    kernel_config = get_kernel_config()
     command = str(tool_input.get("command", "") or "")
     path = target_file_from_tool_input(tool_input) if tool in ("Edit", "Write") else ""
     cwd = str(tool_input.get("cwd", data.get("cwd", "")) or "")
     violations = evaluate_invariant_violations(tool, command=command, path=path, cwd=cwd)
-    enforcement_status = enforce_violations(violations, mode)
+    enforcement_status = enforce_violations(violations, kernel_config)
     if enforcement_status == 2:
         sys.exit(2)
-    if violations and mode == "warn":
+    if any(get_invariant_mode(inv_id, kernel_config) == "warn" for inv_id, _reason in violations):
         allow_json("constitutional invariant warning emitted")
 
     allow_push = read_flag("allow_push", False)
