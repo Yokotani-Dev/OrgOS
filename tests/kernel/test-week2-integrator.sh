@@ -55,11 +55,12 @@ setup_repo_fixture() {
   cp "$INTEGRATOR" "$repo/scripts/org/integrator-commit.sh"
   cp "$REPO_ROOT/scripts/org/verify-artifact-manifest.py" "$repo/scripts/org/verify-artifact-manifest.py"
   cp "$POLICY" "$repo/.claude/hooks/pretool_policy.py"
+  cp "$REPO_ROOT/.claude/hooks/policy_core.py" "$repo/.claude/hooks/policy_core.py"
   cp "$SCHEMA" "$repo/.claude/schemas/integration-queue.v1.json"
   chmod +x "$repo/scripts/org/request-integration.sh" "$repo/scripts/org/integrator-commit.sh" "$repo/scripts/org/verify-artifact-manifest.py"
 
   printf 'base\n' > "$repo/README.md"
-  git -C "$repo" add README.md scripts/org/request-integration.sh scripts/org/integrator-commit.sh scripts/org/verify-artifact-manifest.py .claude/hooks/pretool_policy.py .claude/schemas/integration-queue.v1.json
+  git -C "$repo" add README.md scripts/org/request-integration.sh scripts/org/integrator-commit.sh scripts/org/verify-artifact-manifest.py .claude/hooks/pretool_policy.py .claude/hooks/policy_core.py .claude/schemas/integration-queue.v1.json
   git -C "$repo" commit --quiet -m "initial"
   git -C "$repo" worktree add --quiet -b "$branch" "$worktree" main
 

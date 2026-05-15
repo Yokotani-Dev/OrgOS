@@ -482,7 +482,7 @@ tasks:
       '
   - id: T-OS-421
     title: '[Kernel-v2 HARDEN] pretool_policy.py を policy_core.py に分割'
-    status: queued
+    status: done
     priority: P2
     deps:
       - T-OS-416

@@ -42,6 +42,7 @@ setup_repo_fixture() {
   cp "$RELEASE" "$repo/scripts/org/release-lease.sh"
   cp "$LIST" "$repo/scripts/org/list-leases.sh"
   cp "$POLICY" "$repo/.claude/hooks/pretool_policy.py"
+  cp "$REPO_ROOT/.claude/hooks/policy_core.py" "$repo/.claude/hooks/policy_core.py"
   cp "$SCHEMA" "$repo/.claude/schemas/lease.v1.json"
   chmod +x "$repo/scripts/org/acquire-lease.sh" "$repo/scripts/org/release-lease.sh" "$repo/scripts/org/list-leases.sh"
   printf '%s\n%s\n' "$tmp_dir" "$repo"
