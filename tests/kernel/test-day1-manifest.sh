@@ -123,6 +123,29 @@ sys.exit(1)
 PY
 }
 
+manifest_source_matches() {
+  local manifest_path="$1"
+  local artifact_id="$2"
+  local expected_source="$3"
+  python3 - "$manifest_path" "$artifact_id" "$expected_source" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+
+expected = Path(sys.argv[3]).resolve()
+for entry in data["artifacts"]:
+    if entry["id"] == sys.argv[2]:
+        source_path = entry.get("source_path")
+        if not source_path:
+            sys.exit(1)
+        sys.exit(0 if Path(source_path).resolve() == expected else 1)
+sys.exit(1)
+PY
+}
+
 test_collect_basic_artifacts() {
   local task_id="T-DAY1-BASIC"
   local fixture tmp_dir repo worktree artifact_dir stdout_path stderr_path last_msg_path manifest_path
@@ -222,9 +245,9 @@ test_verify_fails_for_missing_required_artifact() {
   rm -rf "$tmp_dir"
 }
 
-test_wrapper_e2e_with_cleanup_after_manifest() {
+test_codex_handoff_via_tmp_path_succeeds() {
   local task_id="T-DAY1-E2E"
-  local tmp_dir repo codex_stub stdout_path stderr_path worktree_path artifact_root run_dir manifest_path
+  local tmp_dir repo codex_stub stdout_path stderr_path worktree_path artifact_root run_dir manifest_path handoff_tmp_dir handoff_file
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-day1-e2e.XXXXXX")
   repo="$tmp_dir/repo"
   codex_stub="$tmp_dir/codex-stub"
@@ -232,6 +255,7 @@ test_wrapper_e2e_with_cleanup_after_manifest() {
   stderr_path="$tmp_dir/stderr.log"
   worktree_path="$repo/.worktrees/$task_id"
   artifact_root="$repo/.ai/artifacts/$task_id"
+  handoff_tmp_dir="$tmp_dir/handoff-tmp"
 
   git clone --quiet "$REPO_ROOT" "$repo"
   mkdir -p "$repo/scripts/codex" "$repo/scripts/org" "$repo/.ai/CODEX/ORDERS"
@@ -282,17 +306,23 @@ EOF
 
   (
     cd "$repo"
-    ORGOS_CODEX_BIN="$codex_stub" bash scripts/codex/run-in-worktree.sh "$task_id" --cleanup-after-manifest
+    ORGOS_CODEX_BIN="$codex_stub" \
+    ORGOS_CODEX_HANDOFF_TMPDIR="$handoff_tmp_dir" \
+      bash scripts/codex/run-in-worktree.sh "$task_id" --cleanup-after-manifest
   ) >"$stdout_path" 2>"$stderr_path"
 
   assert_not_exists "$worktree_path" "wrapper should remove worktree after verified manifest"
   assert_exists "$artifact_root" "wrapper should preserve artifact root"
   run_dir=$(find "$artifact_root" -mindepth 1 -maxdepth 1 -type d | head -n 1)
   manifest_path="$run_dir/artifact_manifest.json"
+  handoff_file=$(find "$handoff_tmp_dir" -mindepth 1 -maxdepth 1 -type f -name "orgos-$task_id-*-handoff.txt" | head -n 1)
   assert_exists "$manifest_path" "wrapper should write artifact manifest"
   "$VERIFIER" "$manifest_path"
-  assert_exists "$repo/.ai/CODEX/RESULTS/$task_id.txt" "wrapper should write main repo handoff"
+  assert_not_exists "$repo/.ai/CODEX/RESULTS/$task_id.txt" "wrapper should not write legacy main repo handoff"
+  assert_exists "$handoff_file" "mock Codex should write handoff to tmp path"
   assert_exists "$run_dir/output-last-message.txt" "collector should copy handoff into artifact store"
+  assert_contains "$run_dir/output-last-message.txt" "e2e final message" "artifact handoff should contain final message"
+  manifest_source_matches "$manifest_path" "output-last-message" "$handoff_file" || fail "manifest should record tmp handoff source"
   rm -rf "$tmp_dir"
 }
 
@@ -315,7 +345,7 @@ main() {
   run_test test_collect_with_untracked_files
   run_test test_verify_passes_for_valid_manifest
   run_test test_verify_fails_for_missing_required_artifact
-  run_test test_wrapper_e2e_with_cleanup_after_manifest
+  run_test test_codex_handoff_via_tmp_path_succeeds
 
   printf 'day1 manifest tests: %s passed, %s failed\n' "$pass_count" "$fail_count"
   [ "$fail_count" -eq 0 ]

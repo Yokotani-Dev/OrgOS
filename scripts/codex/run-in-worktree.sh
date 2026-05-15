@@ -9,6 +9,9 @@ Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree|--preser
 Creates .worktrees/<TASK_ID>, runs Codex inside that worktree, and removes the
 worktree after Codex exits only when --cleanup-after-manifest is set and the
 artifact manifest passes validation. By default, worktrees are preserved.
+Codex handoff is captured via /tmp, then copied to
+.ai/artifacts/<TASK_ID>/<RUN_ID>/output-last-message.txt. Do not expect
+.ai/CODEX/RESULTS/<TASK_ID>.txt in the main repo; that path is legacy.
 USAGE
 }
 
@@ -254,7 +257,6 @@ fi
 worktree_dir="$repo_root/.worktrees"
 worktree_path="$worktree_dir/$task_id"
 order_path="$repo_root/.ai/CODEX/ORDERS/$task_id.md"
-result_path="$repo_root/.ai/CODEX/RESULTS/$task_id.txt"
 codex_bin=${ORGOS_CODEX_BIN:-/opt/homebrew/bin/codex}
 pre_exec_validate="$repo_root/scripts/codex/pre-exec-validate.sh"
 post_exec_audit="$repo_root/scripts/codex/post-exec-audit.sh"
@@ -307,7 +309,7 @@ if ! run_logged_command pre_exec_validate bash "$pre_exec_validate" "$task_id"; 
   exit 1
 fi
 
-mkdir -p "$worktree_dir" "$(dirname "$result_path")"
+mkdir -p "$worktree_dir"
 
 run_ts="$(date -u +%Y%m%dT%H%M%SZ)"
 if command -v uuidgen >/dev/null 2>&1; then
@@ -319,6 +321,10 @@ run_id="${run_ts}-${task_id}-${rand}"
 artifact_dir="$repo_root/.ai/artifacts/$task_id/$run_id"
 stdout_file="$artifact_dir/logs/stdout.log"
 stderr_file="$artifact_dir/logs/stderr.log"
+handoff_tmp_dir="${ORGOS_CODEX_HANDOFF_TMPDIR:-/tmp}"
+handoff_path="$handoff_tmp_dir/orgos-$task_id-$run_id-handoff.txt"
+mkdir -p "$handoff_tmp_dir"
+rm -f "$handoff_path"
 mkdir -p "$artifact_dir/logs"
 : > "$stdout_file"
 : > "$stderr_file"
@@ -361,13 +367,14 @@ log info worktree_create_completed \
 log info codex_exec_start \
   "task_id=$(quote_value "$task_id")" \
   "worktree_path=$(quote_value "$worktree_path")" \
-  "output_path=$(quote_value "$result_path")"
+  "handoff_path=$(quote_value "$handoff_path")" \
+  "canonical_handoff=$(quote_value "$artifact_dir/output-last-message.txt")"
 
 if [ -n "$mock_codex_path" ]; then
-  codex_cmd=("$mock_codex_path" --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt")
+  codex_cmd=("$mock_codex_path" --output-last-message "$handoff_path")
 else
   codex_cmd=("$codex_bin" exec --full-auto --skip-git-repo-check \
-    --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt")
+    --output-last-message "$handoff_path")
 fi
 
 codex_started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
@@ -434,7 +441,7 @@ ORGOS_REPO_ROOT="$repo_root" \
   --artifact-dir "$artifact_dir" \
   --stdout-source "$stdout_file" \
   --stderr-source "$stderr_file" \
-  --last-message-source "$result_path" \
+  --last-message-source "$handoff_path" \
   --actor-role codex \
   --actor-id "${ORGOS_ACTOR_ID:-codex}"
 collect_status=$?
