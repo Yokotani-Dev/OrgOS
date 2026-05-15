@@ -290,7 +290,7 @@ tasks:
 
   - id: T-OS-412
     title: "[Kernel-v2][Week 0 Day 2-5] No Worker Commit + No Shared Worktree + KRT-001〜010"
-    status: running
+    status: done
     priority: P0
     deps: ["T-OS-411"]
     owner_role: "codex-implementer"

@@ -4,7 +4,7 @@ set -euo pipefail
 
 usage() {
   cat >&2 <<'USAGE'
-Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree|--preserve-worktree] [--cleanup-after-manifest --artifact-manifest PATH]
+Usage: bash scripts/codex/run-in-worktree.sh <TASK_ID> [--keep-worktree|--preserve-worktree] [--cleanup-after-manifest --artifact-manifest PATH] [--mock-codex PATH]
 
 Creates .worktrees/<TASK_ID>, runs Codex inside that worktree, and removes the
 worktree after Codex exits only when --cleanup-after-manifest is set and the
@@ -187,6 +187,7 @@ keep_worktree=1
 cleanup_after_manifest=0
 artifact_manifest_path=""
 artifact_manifest_override=0
+mock_codex_path=""
 
 if [ "$#" -lt 1 ]; then
   usage
@@ -215,6 +216,15 @@ while [ "$#" -gt 0 ]; do
       fi
       artifact_manifest_path=$2
       artifact_manifest_override=1
+      shift
+      ;;
+    --mock-codex)
+      if [ "$#" -lt 2 ]; then
+        printf 'run-in-worktree.sh: --mock-codex requires PATH\n' >&2
+        usage
+        exit 2
+      fi
+      mock_codex_path=$2
       shift
       ;;
     -h|--help)
@@ -260,7 +270,12 @@ if [ ! -f "$order_path" ]; then
   exit 1
 fi
 
-if [ ! -x "$codex_bin" ]; then
+if [ -n "$mock_codex_path" ] && [ ! -x "$mock_codex_path" ]; then
+  printf 'run-in-worktree.sh: mock Codex executable not found or not executable: %s\n' "$mock_codex_path" >&2
+  exit 1
+fi
+
+if [ -z "$mock_codex_path" ] && [ ! -x "$codex_bin" ]; then
   printf 'run-in-worktree.sh: Codex executable not found or not executable: %s\n' "$codex_bin" >&2
   exit 1
 fi
@@ -348,6 +363,13 @@ log info codex_exec_start \
   "worktree_path=$(quote_value "$worktree_path")" \
   "output_path=$(quote_value "$result_path")"
 
+if [ -n "$mock_codex_path" ]; then
+  codex_cmd=("$mock_codex_path" --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt")
+else
+  codex_cmd=("$codex_bin" exec --full-auto --skip-git-repo-check \
+    --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt")
+fi
+
 codex_started_at=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 stdout_fifo="$artifact_dir/logs/stdout.fifo"
 stderr_fifo="$artifact_dir/logs/stderr.fifo"
@@ -360,9 +382,7 @@ stderr_tee_pid=$!
 set +e
 (
   cd "$worktree_path"
-  "$codex_bin" exec --full-auto --skip-git-repo-check \
-    --output-last-message "../../.ai/CODEX/RESULTS/$task_id.txt" \
-    - < "../../.ai/CODEX/ORDERS/$task_id.md"
+  "${codex_cmd[@]}" - < "../../.ai/CODEX/ORDERS/$task_id.md"
 ) > "$stdout_fifo" 2> "$stderr_fifo"
 codex_status=$?
 wait "$stdout_tee_pid"

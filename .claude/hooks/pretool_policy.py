@@ -8,11 +8,13 @@ import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
+from typing import NamedTuple, Optional
 
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path.cwd()))
 CONTROL = ROOT / ".ai" / "CONTROL.yaml"
 STATE_DIR = ROOT / ".claude" / "state"
+ORGOS_KERNEL_MODE_FILE = ".claude/state/kernel-mode.json"
+DEFAULT_KERNEL_MODE = "warn"
 KERNEL_FILES_PATH = ROOT / ".claude" / "evals" / "KERNEL_FILES"
 GIT_LOCK_SCRIPT = ROOT / "scripts" / "git" / "acquire-lock.sh"
 GIT_LOCK_RELEASE_SCRIPT = ROOT / "scripts" / "git" / "release-lock.sh"
@@ -26,6 +28,13 @@ BRANCH_GUARD_PATTERN = re.compile(
     + "|".join(BRANCH_GUARDED_GIT_OPS)
     + r")\b(?P<args>[^;&|()]*)"
 )
+PROTECTED_BRANCHES = {"main", "develop"}
+KERNEL_MODES = {"warn", "enforce", "disabled"}
+
+
+class GitCommand(NamedTuple):
+    subcmd: str
+    args: list[str]
 
 
 def read_flag(key: str, default: bool = False) -> bool:
@@ -43,6 +52,159 @@ def read_value(key: str, default: str = "") -> str:
     text = CONTROL.read_text(encoding="utf-8", errors="ignore")
     m = re.search(rf"^{re.escape(key)}:\s*\"?([^\n\"]+)\"?\s*$", text, re.MULTILINE)
     return m.group(1).strip() if m else default
+
+
+def get_kernel_mode() -> str:
+    """Read .claude/state/kernel-mode.json. Returns warn, enforce, or disabled."""
+    override = os.environ.get("ORGOS_KERNEL_MODE_OVERRIDE", "").strip()
+    if override in KERNEL_MODES:
+        return override
+
+    try:
+        with (ROOT / ORGOS_KERNEL_MODE_FILE).open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except FileNotFoundError:
+        return DEFAULT_KERNEL_MODE
+    except (json.JSONDecodeError, OSError):
+        return DEFAULT_KERNEL_MODE
+
+    mode = str(payload.get("mode", DEFAULT_KERNEL_MODE)).strip()
+    return mode if mode in KERNEL_MODES else DEFAULT_KERNEL_MODE
+
+
+def parse_git_command(command: str) -> Optional[GitCommand]:
+    try:
+        tokens = shlex.split(command)
+    except ValueError:
+        return None
+
+    if not tokens:
+        return None
+
+    idx = 0
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token == "git":
+            break
+        if token in ("command", "env"):
+            idx += 1
+            continue
+        if "=" in token and not token.startswith("-"):
+            idx += 1
+            continue
+        return None
+    else:
+        return None
+
+    idx += 1
+    while idx < len(tokens):
+        token = tokens[idx]
+        if token == "-C" and idx + 1 < len(tokens):
+            idx += 2
+            continue
+        if token in ("-c", "--git-dir", "--work-tree") and idx + 1 < len(tokens):
+            idx += 2
+            continue
+        if token.startswith("--git-dir=") or token.startswith("--work-tree="):
+            idx += 1
+            continue
+        if token.startswith("-"):
+            idx += 1
+            continue
+        return GitCommand(token, tokens[idx + 1 :])
+
+    return None
+
+
+def infer_git_target(args: list[str]) -> Optional[str]:
+    idx = 0
+    while idx < len(args):
+        token = args[idx]
+        if token == "--":
+            return args[idx + 1] if idx + 1 < len(args) else None
+        if token in ("-b", "-B", "-c", "-C", "--branch", "--create", "--force-create", "-t", "--track"):
+            idx += 2
+            continue
+        if token in ("--detach", "-q", "--quiet", "--guess", "--no-guess", "--merge", "--conflict"):
+            idx += 1
+            continue
+        if token.startswith("-"):
+            idx += 1
+            continue
+        if token in ("-", "@{-1}"):
+            return None
+        return token
+    return None
+
+
+def is_protected_state_file(path: str) -> bool:
+    repo_path = normalize_repo_path(path)
+    patterns = [
+        r"(^|.*/)\.ai/EVENTS\.jsonl$",
+        r"(^|.*/)\.ai/TASKS\.yaml$",
+        r"(^|.*/)\.ai/DASHBOARD\.md$",
+    ]
+    return any(re.match(pattern, repo_path) for pattern in patterns)
+
+
+def evaluate_invariant_violations(
+    tool: str,
+    command: str = "",
+    path: str = "",
+    cwd: str = "",
+) -> list[tuple[str, str]]:
+    """Return constitutional invariant violations as (invariant_id, reason)."""
+    del cwd
+    violations: list[tuple[str, str]] = []
+
+    if tool == "Bash":
+        git = parse_git_command(command)
+        if git:
+            if git.subcmd in {"commit", "push"}:
+                violations.append(("IntegratorOnlyCommit", f"raw git {git.subcmd} is blocked"))
+
+            if git.subcmd == "reset" and "--hard" in git.args:
+                violations.append(("ProtectedBranchNoTouch", "git reset --hard is blocked"))
+
+            if git.subcmd == "branch" and any(arg in git.args for arg in ("-f", "-D", "-d")):
+                violations.append(("ProtectedBranchNoTouch", "branch mutation is blocked"))
+
+            if git.subcmd in {"checkout", "switch"}:
+                target = infer_git_target(git.args)
+                if target in PROTECTED_BRANCHES:
+                    violations.append(("ProtectedBranchNoTouch", f"checkout/switch to {target} blocked"))
+
+            if git.subcmd in {"merge", "rebase", "cherry-pick", "pull"}:
+                violations.append(("IntegratorOnlyCommit", f"git {git.subcmd} requires integrator script"))
+
+            if git.subcmd == "worktree" and any(arg in git.args for arg in ("add", "remove", "prune")):
+                violations.append(("PerTaskWorktree", "worktree mutation requires org wrapper"))
+
+        if re.search(r"\brm\s+-rf\s+/", command) or re.search(r"curl[^|]+\|\s*(ba)?sh", command):
+            violations.append(("DangerousShell", "destructive/remote-exec pattern blocked"))
+
+    elif tool in {"Edit", "Write"}:
+        if is_protected_state_file(path):
+            violations.append(("StateMutationViaOrgTool", f"direct edit of {path} is blocked"))
+
+    return violations
+
+
+def enforce_violations(violations: list[tuple[str, str]], mode: str) -> int:
+    if not violations or mode == "disabled":
+        return 0
+
+    inv_id, reason = violations[0]
+    if mode == "warn":
+        print(f"ORGOS_POLICY_WARN: {inv_id}: {reason}", file=sys.stderr)
+        print(f"  (kernel mode={mode}; would be blocked in enforce mode)", file=sys.stderr)
+        return 0
+
+    if mode == "enforce":
+        print(f"ORGOS_POLICY_DENY: {inv_id}: {reason}", file=sys.stderr)
+        return 2
+
+    return 0
 
 
 def normalize_repo_path(raw_path: str) -> str:
@@ -537,11 +699,40 @@ def allow_json(reason: str):
     print(json.dumps(out))
     sys.exit(0)
 
+
+def run_test_fixture(fixture_path: str) -> None:
+    with open(fixture_path, "r", encoding="utf-8") as handle:
+        fixture = json.load(handle)
+
+    tool = str(fixture.get("tool", fixture.get("tool_name", "")) or "")
+    command = str(fixture.get("command", "") or "")
+    path = str(fixture.get("path", "") or "")
+    cwd = str(fixture.get("cwd", "") or "")
+    violations = evaluate_invariant_violations(tool, command=command, path=path, cwd=cwd)
+    sys.exit(enforce_violations(violations, get_kernel_mode()))
+
+
 def main():
+    if len(sys.argv) == 3 and sys.argv[1] == "--test-fixture":
+        run_test_fixture(sys.argv[2])
+    if len(sys.argv) != 1:
+        print("Usage: pretool_policy.py [--test-fixture FIXTURE.json]", file=sys.stderr)
+        sys.exit(2)
+
     data = json.load(sys.stdin)
     tool = data.get("tool_name", "")
     tool_input = data.get("tool_input", {}) or {}
     session_id = get_session_id(data, tool_input)
+    mode = get_kernel_mode()
+    command = str(tool_input.get("command", "") or "")
+    path = target_file_from_tool_input(tool_input) if tool in ("Edit", "Write") else ""
+    cwd = str(tool_input.get("cwd", data.get("cwd", "")) or "")
+    violations = evaluate_invariant_violations(tool, command=command, path=path, cwd=cwd)
+    enforcement_status = enforce_violations(violations, mode)
+    if enforcement_status == 2:
+        sys.exit(2)
+    if violations and mode == "warn":
+        allow_json("constitutional invariant warning emitted")
 
     allow_push = read_flag("allow_push", False)
     allow_push_main = read_flag("allow_push_main", False)
