@@ -367,7 +367,7 @@ fi
 
 git -C "$worktree_path" add -- "${changed_files[@]}"
 
-if ! ORGOS_INTEGRATOR=1 git -C "$worktree_path" \
+if ! git -C "$worktree_path" \
   -c user.name="$author_name" \
   -c user.email="$author_email" \
   commit -m "$commit_message" --author="$author_name <$author_email>" >/tmp/orgos-integrator-commit.$$ 2>&1; then

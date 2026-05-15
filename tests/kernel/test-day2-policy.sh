@@ -272,6 +272,15 @@ test_krt_010_manager_worktree_remove_denied() {
   expect_policy_denied manager Bash "git worktree remove --force /tmp/worktree" "" PerTaskWorktree
 }
 
+test_krt_011_env_prefix_bypass_denied() {
+  expect_policy_denied codex Bash "ORGOS_INTEGRATOR=1 git commit -m bypass" "" IntegratorOnlyCommit
+  expect_policy_denied codex Bash "echo \"ORGOS_INTEGRATOR=1\"; git commit -m sneaky" "" IntegratorOnlyCommit
+}
+
+test_krt_012_commit_msg_bypass_denied() {
+  expect_policy_denied codex Bash "git commit -m 'add ORGOS_INTEGRATOR=1 docs'" "" IntegratorOnlyCommit
+}
+
 run_test() {
   local name="$1"
   current_test_failed=0
@@ -309,6 +318,8 @@ main() {
       run_test test_krt_008_lease_conflict
       run_test test_krt_009_no_manifest_quarantine
       run_test test_krt_010_manager_worktree_remove_denied
+      run_test test_krt_011_env_prefix_bypass_denied
+      run_test test_krt_012_commit_msg_bypass_denied
       ;;
     *)
       echo "unknown argument: $1" >&2

@@ -262,9 +262,17 @@ def evaluate_invariant_violations(
 
     if tool == "Bash":
         git = parse_git_command(command)
+        if not git:
+            guarded = guarded_git_operation(command)
+            if guarded:
+                try:
+                    guarded_args = shlex.split(str(guarded.get("args", "")))
+                except ValueError:
+                    guarded_args = []
+                git = GitCommand(str(guarded.get("op", "")), guarded_args)
         if git:
-            integrator_bypass = "ORGOS_INTEGRATOR=1" in command
-            if git.subcmd in {"commit", "push"} and not integrator_bypass:
+            # Integrator commits run in a subprocess, so pretool never needs an env-token bypass.
+            if git.subcmd in {"commit", "push"}:
                 violations.append(("IntegratorOnlyCommit", f"raw git {git.subcmd} is blocked"))
 
             if git.subcmd == "reset" and "--hard" in git.args:

@@ -273,7 +273,7 @@ test_integrator_commit_blocks_diff_outside_allowed_paths() {
   rm -rf "$tmp_dir"
 }
 
-test_integrator_policy_bypass_allows_prefixed_commit() {
+test_integrator_env_prefix_does_not_bypass() {
   local tmp_dir fixture stderr_path status
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-week2-policy.XXXXXX")
   fixture="$tmp_dir/fixture.json"
@@ -296,8 +296,9 @@ PY
   ORGOS_KERNEL_MODE_OVERRIDE=enforce python3 "$POLICY" --test-fixture "$fixture" 2>"$stderr_path"
   status=$?
   set -e
-  [ "$status" -eq 0 ] || fail "integrator-prefixed commit should pass policy fixture"
-  assert_not_exists "$stderr_path.unused" "noop"
+  [ "$status" -eq 2 ] || fail "KRT-011 env prefix bypass should be denied, got $status"
+  assert_contains "$stderr_path" "ORGOS_POLICY_DENY" "KRT-011 policy should deny"
+  assert_contains "$stderr_path" "IntegratorOnlyCommit" "KRT-011 should report IntegratorOnlyCommit"
   rm -rf "$tmp_dir"
 }
 
@@ -330,7 +331,7 @@ main() {
       run_test test_integrator_commit_success
       run_test test_integrator_commit_blocks_without_manifest
       run_test test_integrator_commit_blocks_diff_outside_allowed_paths
-      run_test test_integrator_policy_bypass_allows_prefixed_commit
+      run_test test_integrator_env_prefix_does_not_bypass
       ;;
     *)
       echo "unknown argument: $1" >&2

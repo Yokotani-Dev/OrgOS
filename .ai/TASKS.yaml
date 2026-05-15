@@ -327,7 +327,7 @@ tasks:
 
   - id: T-OS-416
     title: "[Kernel-v2 HARDEN] Fix ORGOS_INTEGRATOR bypass + KRT-011 (CRITICAL)"
-    status: queued
+    status: done
     priority: P0
     deps: ["T-OS-415"]
     owner_role: "codex-implementer"
