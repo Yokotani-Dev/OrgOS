@@ -299,6 +299,26 @@ tasks:
   - id: T-OS-414
     title: "[Kernel-v2][Week 3] Lease registry + Lease Before Write enforcement (Invariant #4)"
     status: done
+
+  - id: T-OS-415
+    title: "[Meta-Review][③-5] GPT-5.5 Pro post-implementation full disclosure review"
+    status: review
+    priority: P0
+    deps: ["T-OS-414"]
+    owner_role: "manager"
+    allowed_paths:
+      - ".ai/REVIEW/T-OS-400/external-ai-5th-prompt.md"
+      - ".ai/REVIEW/T-OS-400/external-ai-5th-response.md"
+    autonomy_level: "execute_with_report"
+    blast_radius: "ledger_local"
+    owner_input_needed: ["external_ai_response"]
+    risk_level: "low"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "Q24-Q31 (実装乖離 / Manager self-violations / 失敗モード / enforce flip / Week 4 hardening / test 信頼度 / 品質評価 / 最大見落とし)"
+      - "Manager の rule violations (9 raw commits, manual cp, no lease) を包み隠さず開示"
+      - "回答を external-ai-5th-response.md に保存後 Week 4 進行可否判定"
     priority: P0
     deps: ["T-OS-413"]
     owner_role: "codex-implementer"
