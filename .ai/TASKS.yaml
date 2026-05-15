@@ -295,16 +295,21 @@ tasks:
   - id: T-OS-413
     title: "[Kernel-v2][Week 2] Integrator gate + integration queue + request-integration.sh"
     status: done
+
+  - id: T-OS-414
+    title: "[Kernel-v2][Week 3] Lease registry + Lease Before Write enforcement (Invariant #4)"
+    status: running
     priority: P0
-    deps: ["T-OS-412"]
+    deps: ["T-OS-413"]
     owner_role: "codex-implementer"
     allowed_paths:
-      - "scripts/org/integrator-commit.sh"
-      - "scripts/org/request-integration.sh"
-      - ".claude/schemas/integration-queue.v1.json"
+      - "scripts/org/acquire-lease.sh"
+      - "scripts/org/release-lease.sh"
+      - "scripts/org/list-leases.sh"
+      - ".claude/schemas/lease.v1.json"
       - ".claude/hooks/pretool_policy.py"
       - "tests/kernel/"
-      - ".ai/queue/integration/.gitkeep"
+      - ".ai/leases.gitkeep"
     autonomy_level: "ask_before_execute"
     blast_radius: "schema_change"
     owner_input_needed: ["destructive_approval"]
@@ -312,19 +317,19 @@ tasks:
     default_if_no_response: "defer"
     reversibility: "reversible"
     acceptance:
-      - "scripts/org/integrator-commit.sh: queue item / manifest / branch / diff 検査後に commit"
-      - "scripts/org/request-integration.sh: Manager が pending queue item を atomic に作成"
-      - ".claude/schemas/integration-queue.v1.json: queue item JSON Schema"
-      - ".ai/queue/integration/{pending,processing,done,failed,cancelled}/ ディレクトリ構造"
-      - "KRT-007 が pass する (skip 解除)"
-      - "tests/kernel/test-day2-policy.sh から KRT-007 の SKIP を外す"
-      - "新 test tests/kernel/test-week2-integrator.sh: 4-6 件 (queue creation / commit success / verifier fail block / dependency wait)"
+      - "scripts/org/acquire-lease.sh: lease を atomic に発行、allowed_paths overlap で拒否"
+      - "scripts/org/release-lease.sh: lease 解放 (task done or owner override)"
+      - "scripts/org/list-leases.sh: 現在の active lease を表示 (heartbeat expired は自動 expire)"
+      - "lease store: .ai/leases/<lease_id>.json (per-lease file、heartbeat 30min)"
+      - ".claude/schemas/lease.v1.json: lease JSON Schema"
+      - "pretool_policy.py: Invariant #4 enforce — write 前に active lease check、allowed_paths 外なら deny (warn mode)"
+      - "KRT-008 (lease conflict) が pass する (skip 解除)"
+      - "新 test tests/kernel/test-week3-lease.sh: 5-7 件 (lease acquire / conflict reject / release / heartbeat expiry / pretool integration)"
       - "git add/commit/push 一切実行しない"
     notes: |
-      GPT 4th Q20 spec に従う。
-      integrator-commit.sh が commit 権限を持つ唯一の経路。
-      Manager (now in warn mode) は raw commit がまだ警告のみで通るが、
-      enforce 化後は本 script のみが commit 可能。
+      GPT 4th Q4 (state schema) + Q15 3rd round (autonomy envelope) spec を参考に。
+      lease は per-file (.ai/leases/<lease_id>.json) で軽量に。
+      SQLite/EVENTS.jsonl は Week 4-5、本 task では JSON file based で十分。
 
   - id: T-OS-404
     title: "[Meta-Review][集約] 3視点を統合し修正方針決定"
