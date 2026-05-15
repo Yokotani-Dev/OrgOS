@@ -291,30 +291,40 @@ tasks:
   - id: T-OS-412
     title: "[Kernel-v2][Week 0 Day 2-5] No Worker Commit + No Shared Worktree + KRT-001〜010"
     status: done
+
+  - id: T-OS-413
+    title: "[Kernel-v2][Week 2] Integrator gate + integration queue + request-integration.sh"
+    status: running
     priority: P0
-    deps: ["T-OS-411"]
+    deps: ["T-OS-412"]
     owner_role: "codex-implementer"
     allowed_paths:
+      - "scripts/org/integrator-commit.sh"
+      - "scripts/org/request-integration.sh"
+      - ".claude/schemas/integration-queue.v1.json"
       - ".claude/hooks/pretool_policy.py"
-      - "scripts/codex/run-in-worktree.sh"
       - "tests/kernel/"
+      - ".ai/queue/integration/.gitkeep"
     autonomy_level: "ask_before_execute"
-    blast_radius: "kernel"
+    blast_radius: "schema_change"
     owner_input_needed: ["destructive_approval"]
-    risk_level: "critical"
+    risk_level: "high"
     default_if_no_response: "defer"
     reversibility: "reversible"
     acceptance:
-      - "pretool_policy.py を GPT 4th Q18 擬似コードに従って actor-agnostic に拡張"
-      - "raw git commit / commit --no-verify / push / reset --hard / branch -f / protected branch checkout 全 deny"
-      - ".ai/EVENTS.jsonl / TASKS.yaml / DASHBOARD.md / .claude/{hooks,rules,agents}/ Edit/Write 全 deny"
-      - "deny 出力: exit 2 + stderr 'ORGOS_POLICY_DENY <reason>'"
-      - "tests/kernel/run-kernel-tests.sh で KRT-001〜KRT-010 全 pass (Mock Codex)"
-      - "KRT-004 が wrapper bug 再発を検出 (mock codex の output が cleanup 後も artifact store に残存)"
-      - "Day 5 で regression drill を実 Codex でも 1 回通す"
+      - "scripts/org/integrator-commit.sh: queue item / manifest / branch / diff 検査後に commit"
+      - "scripts/org/request-integration.sh: Manager が pending queue item を atomic に作成"
+      - ".claude/schemas/integration-queue.v1.json: queue item JSON Schema"
+      - ".ai/queue/integration/{pending,processing,done,failed,cancelled}/ ディレクトリ構造"
+      - "KRT-007 が pass する (skip 解除)"
+      - "tests/kernel/test-day2-policy.sh から KRT-007 の SKIP を外す"
+      - "新 test tests/kernel/test-week2-integrator.sh: 4-6 件 (queue creation / commit success / verifier fail block / dependency wait)"
+      - "git add/commit/push 一切実行しない"
     notes: |
-      Week 0 完了の合格条件。pretool_policy.py 631行を 750-800 行程度に拡張する見込み。
-      policy_core.py への分離は Week 1 以降で実施。Week 0 は同一ファイル内で関数分割。
+      GPT 4th Q20 spec に従う。
+      integrator-commit.sh が commit 権限を持つ唯一の経路。
+      Manager (now in warn mode) は raw commit がまだ警告のみで通るが、
+      enforce 化後は本 script のみが commit 可能。
 
   - id: T-OS-404
     title: "[Meta-Review][集約] 3視点を統合し修正方針決定"
