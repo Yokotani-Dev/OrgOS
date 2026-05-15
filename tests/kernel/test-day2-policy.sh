@@ -281,6 +281,14 @@ test_krt_012_commit_msg_bypass_denied() {
   expect_policy_denied codex Bash "git commit -m 'add ORGOS_INTEGRATOR=1 docs'" "" IntegratorOnlyCommit
 }
 
+test_krt_013_tasks_yaml_edit_denied() {
+  expect_policy_denied manager Edit "" ".ai/TASKS.yaml" StateMutationViaOrgTool
+}
+
+test_krt_014_tasks_yaml_write_denied() {
+  expect_policy_denied manager Write "" ".ai/TASKS.yaml" StateMutationViaOrgTool
+}
+
 run_test() {
   local name="$1"
   current_test_failed=0
@@ -320,6 +328,8 @@ main() {
       run_test test_krt_010_manager_worktree_remove_denied
       run_test test_krt_011_env_prefix_bypass_denied
       run_test test_krt_012_commit_msg_bypass_denied
+      run_test test_krt_013_tasks_yaml_edit_denied
+      run_test test_krt_014_tasks_yaml_write_denied
       ;;
     *)
       echo "unknown argument: $1" >&2

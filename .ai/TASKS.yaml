@@ -355,7 +355,7 @@ tasks:
 
   - id: T-OS-417
     title: "[Kernel-v2 HARDEN] TASKS.yaml direct edit deny + duplicate-key validator + KRT-012"
-    status: queued
+    status: done
     priority: P0
     deps: ["T-OS-415"]
     owner_role: "codex-implementer"
