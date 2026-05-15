@@ -302,7 +302,7 @@ tasks:
 
   - id: T-OS-415
     title: "[Meta-Review][③-5] GPT-5.5 Pro post-implementation full disclosure review"
-    status: review
+    status: done
     priority: P0
     deps: ["T-OS-414"]
     owner_role: "manager"
@@ -319,17 +319,51 @@ tasks:
       - "Q24-Q31 (実装乖離 / Manager self-violations / 失敗モード / enforce flip / Week 4 hardening / test 信頼度 / 品質評価 / 最大見落とし)"
       - "Manager の rule violations (9 raw commits, manual cp, no lease) を包み隠さず開示"
       - "回答を external-ai-5th-response.md に保存後 Week 4 進行可否判定"
+    notes: |
+      Verdict: PAUSE WEEK 4; HARDEN + DOGFOOD FIRST.
+      Q31 (ORGOS_INTEGRATOR=1 bypass) を Manager 検証で 3/3 exploitable と確認 → T-OS-416 で即修正。
+
+  # === Hardening (5th round verdict 反映) ===
+
+  - id: T-OS-416
+    title: "[Kernel-v2 HARDEN] Fix ORGOS_INTEGRATOR bypass + KRT-011 (CRITICAL)"
+    status: queued
     priority: P0
-    deps: ["T-OS-413"]
+    deps: ["T-OS-415"]
     owner_role: "codex-implementer"
     allowed_paths:
-      - "scripts/org/acquire-lease.sh"
-      - "scripts/org/release-lease.sh"
-      - "scripts/org/list-leases.sh"
-      - ".claude/schemas/lease.v1.json"
       - ".claude/hooks/pretool_policy.py"
+      - "scripts/org/integrator-commit.sh"
       - "tests/kernel/"
-      - ".ai/leases.gitkeep"
+    autonomy_level: "ask_before_execute"
+    blast_radius: "kernel"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "critical"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "pretool: 'ORGOS_INTEGRATOR=1' string match による bypass を廃止"
+      - "代替: marker file (.claude/state/integrator-active.<pid>.json) + parent process check"
+      - "integrator-commit.sh は marker file 作成 → child process でも有効 → 終了時削除"
+      - "KRT-011 (raw env bypass deny): 'ORGOS_INTEGRATOR=1 git commit' fixture が exit 2"
+      - "KRT-012 (commit msg bypass deny): commit message に文字列含むだけでは bypass しない"
+      - "既存 KRT-007 (integrator e2e) が pass 維持 (新 marker フローで)"
+      - "git add/commit/push 一切実行しない"
+    notes: |
+      Q31: 単純 string match で 3/3 bypass 確認 (echo / 任意位置 / commit message)。
+      これは kernel core の catastrophic vulnerability。Week 4 進行前の最優先修正。
+
+  - id: T-OS-417
+    title: "[Kernel-v2 HARDEN] TASKS.yaml direct edit deny + duplicate-key validator + KRT-012"
+    status: queued
+    priority: P0
+    deps: ["T-OS-415"]
+    owner_role: "codex-implementer"
+    allowed_paths:
+      - ".claude/hooks/pretool_policy.py"
+      - "scripts/org/update-task.py"
+      - "scripts/org/validate-tasks-yaml.py"
+      - "tests/kernel/"
     autonomy_level: "ask_before_execute"
     blast_radius: "schema_change"
     owner_input_needed: ["destructive_approval"]
@@ -337,19 +371,109 @@ tasks:
     default_if_no_response: "defer"
     reversibility: "reversible"
     acceptance:
-      - "scripts/org/acquire-lease.sh: lease を atomic に発行、allowed_paths overlap で拒否"
-      - "scripts/org/release-lease.sh: lease 解放 (task done or owner override)"
-      - "scripts/org/list-leases.sh: 現在の active lease を表示 (heartbeat expired は自動 expire)"
-      - "lease store: .ai/leases/<lease_id>.json (per-lease file、heartbeat 30min)"
-      - ".claude/schemas/lease.v1.json: lease JSON Schema"
-      - "pretool_policy.py: Invariant #4 enforce — write 前に active lease check、allowed_paths 外なら deny (warn mode)"
-      - "KRT-008 (lease conflict) が pass する (skip 解除)"
-      - "新 test tests/kernel/test-week3-lease.sh: 5-7 件 (lease acquire / conflict reject / release / heartbeat expiry / pretool integration)"
-      - "git add/commit/push 一切実行しない"
+      - "scripts/org/update-task.py: id / status / allowed_paths / notes 等の field を安全更新"
+      - "scripts/org/validate-tasks-yaml.py: duplicate key を error にする ruamel.yaml (or 同等) を使い load"
+      - "pretool: Edit/Write to .ai/TASKS.yaml を deny (update-task.py 経由のみ)"
+      - "新 test test-week3-yaml-validator.sh: duplicate key を生成して validator が fail することを確認"
+      - "既存 T-OS-413/T-OS-405/T-OS-408/T-OS-409 entry の allowed_paths 欠落を復元 (履歴保全)"
+
+  - id: T-OS-418
+    title: "[Kernel-v2 HARDEN] Manager dogfood commit through new flow (1 件)"
+    status: queued
+    priority: P0
+    deps: ["T-OS-416", "T-OS-417"]
+    owner_role: "manager"
+    allowed_paths:
+      - "docs/kernel-v2/dogfood.md"
+      - ".ai/leases/"
+      - ".ai/queue/integration/"
+      - ".ai/artifacts/"
+    autonomy_level: "ask_before_execute"
+    blast_radius: "schema_change"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "high"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "Manager が新フローで実 commit を 1 件成功させる"
+      - "Flow: acquire-lease → Edit (docs/kernel-v2/dogfood.md) → collect-artifacts → request-integration → integrator-commit → release-lease"
+      - "raw git commit / git add は使わない"
+      - "CommitIntegrated event が記録される (未実装なら .ai/EVENTS.jsonl に手動 append)"
+      - "lease / artifact manifest / queue item の trace が残る"
+      - "実行結果を docs/kernel-v2/dogfood.md に記録 (dogfood 自体が commit content)"
     notes: |
-      GPT 4th Q4 (state schema) + Q15 3rd round (autonomy envelope) spec を参考に。
-      lease は per-file (.ai/leases/<lease_id>.json) で軽量に。
-      SQLite/EVENTS.jsonl は Week 4-5、本 task では JSON file based で十分。
+      Q25 dry-run の要件。これが通らないなら enforce flip 不可。
+
+  - id: T-OS-419
+    title: "[Kernel-v2 HARDEN] Codex handoff sandbox 問題修正"
+    status: queued
+    priority: P1
+    deps: ["T-OS-415"]
+    owner_role: "codex-implementer"
+    allowed_paths:
+      - "scripts/codex/run-in-worktree.sh"
+      - "scripts/org/collect-artifacts.sh"
+      - "tests/kernel/"
+    autonomy_level: "ask_before_execute"
+    blast_radius: "schema_change"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "medium"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "Codex は main repo .ai/CODEX/RESULTS/ に直接書こうとしない (--output-last-message を worktree 内 path に変更)"
+      - "wrapper が worktree 内の output-last-message + stdout/stderr を artifact store に吸い上げる"
+      - "canonical handoff source = .ai/artifacts/<task>/<run>/output-last-message.txt"
+      - "test: real Codex sandbox restriction を mock した e2e check"
+
+  - id: T-OS-420
+    title: "[Kernel-v2 HARDEN] Per-invariant kernel mode + BOOTSTRAP-OVERRIDES.md"
+    status: queued
+    priority: P1
+    deps: ["T-OS-415"]
+    owner_role: "codex-implementer"
+    allowed_paths:
+      - ".claude/hooks/pretool_policy.py"
+      - "scripts/org/set-kernel-mode.sh"
+      - ".claude/state/kernel-mode.json"
+      - ".ai/BOOTSTRAP-OVERRIDES.md"
+      - "tests/kernel/"
+    autonomy_level: "ask_before_execute"
+    blast_radius: "schema_change"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "medium"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "kernel-mode.json schema 拡張: {default, IntegratorOnlyCommit, ProtectedBranchNoTouch, DurableArtifact, LeaseBeforeWrite, ...}"
+      - "set-kernel-mode.sh: per-invariant mode flip (例: set-kernel-mode.sh IntegratorOnlyCommit enforce)"
+      - ".ai/BOOTSTRAP-OVERRIDES.md: warn 期間中の 9 raw commits を BootstrapOverride として記録"
+      - "test: per-invariant mode が独立に動く"
+    notes: |
+      Q27 rollback 戦略の精細化。enforce shock を回避。
+
+  - id: T-OS-421
+    title: "[Kernel-v2 HARDEN] pretool_policy.py を policy_core.py に分割"
+    status: queued
+    priority: P2
+    deps: ["T-OS-416", "T-OS-417"]
+    owner_role: "codex-implementer"
+    allowed_paths:
+      - ".claude/hooks/pretool_policy.py"
+      - ".claude/hooks/policy_core.py"
+      - "tests/kernel/"
+    autonomy_level: "ask_before_execute"
+    blast_radius: "schema_change"
+    owner_input_needed: ["destructive_approval"]
+    risk_level: "medium"
+    default_if_no_response: "defer"
+    reversibility: "reversible"
+    acceptance:
+      - "policy_core.py: 純粋関数 evaluate(action, actor, cwd, command, path, lease, mode) -> Decision"
+      - "pretool_policy.py: hook I/O adapter のみ、policy_core を呼ぶ"
+      - "git command parser / path policy / lease lookup / decision object を分離"
+      - "既存 35 tests + KRT-011/012 全 pass"
+      - "policy_core.py 単体 unit test を追加 (mock 不要、純粋関数)"
 
   - id: T-OS-404
     title: "[Meta-Review][集約] 3視点を統合し修正方針決定"
