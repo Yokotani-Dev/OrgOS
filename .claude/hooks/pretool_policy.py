@@ -160,7 +160,8 @@ def evaluate_invariant_violations(
     if tool == "Bash":
         git = parse_git_command(command)
         if git:
-            if git.subcmd in {"commit", "push"}:
+            integrator_bypass = "ORGOS_INTEGRATOR=1" in command
+            if git.subcmd in {"commit", "push"} and not integrator_bypass:
                 violations.append(("IntegratorOnlyCommit", f"raw git {git.subcmd} is blocked"))
 
             if git.subcmd == "reset" and "--hard" in git.args:

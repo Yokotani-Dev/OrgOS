@@ -294,7 +294,7 @@ tasks:
 
   - id: T-OS-413
     title: "[Kernel-v2][Week 2] Integrator gate + integration queue + request-integration.sh"
-    status: running
+    status: done
     priority: P0
     deps: ["T-OS-412"]
     owner_role: "codex-implementer"

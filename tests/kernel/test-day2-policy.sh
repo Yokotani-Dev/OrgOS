@@ -235,8 +235,7 @@ test_krt_006_manager_edit_events_denied() {
 }
 
 test_krt_007_integrator_commit_success() {
-  printf 'SKIP - integrator-commit.sh ships in Week 2\n'
-  return 77
+  bash "$SCRIPT_DIR/test-week2-integrator.sh" --only test_integrator_commit_success
 }
 
 test_krt_008_lease_conflict() {

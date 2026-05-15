@@ -1,0 +1,194 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orgos.integration_queue.v1",
+  "title": "OrgOS Integration Queue Item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "item_id",
+    "task_id",
+    "project_id",
+    "status",
+    "created_at",
+    "created_by",
+    "priority",
+    "dependencies",
+    "worktree",
+    "scope",
+    "artifacts",
+    "verification",
+    "approvals",
+    "commit",
+    "attempts",
+    "retention"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "orgos.integration_queue.v1"
+    },
+    "item_id": {
+      "type": "string",
+      "pattern": "^IQ-[0-9]{8}T[0-9]{6}Z-T-[A-Z0-9]+-[A-Z0-9-]+-[0-9a-f]{8}$"
+    },
+    "task_id": {
+      "type": "string",
+      "pattern": "^T-[A-Z0-9]+-[A-Z0-9-]+$"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "status": {
+      "enum": ["pending", "processing", "done", "failed", "cancelled"]
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "id", "session_id"],
+      "properties": {
+        "role": { "type": "string", "minLength": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "session_id": { "type": "string" }
+      }
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100
+    },
+    "dependencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tasks", "queue_items"],
+      "properties": {
+        "tasks": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^T-[A-Z0-9]+-[A-Z0-9-]+$" }
+        },
+        "queue_items": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^IQ-[0-9]{8}T[0-9]{6}Z-T-[A-Z0-9]+-[A-Z0-9-]+-[0-9a-f]{8}$" }
+        }
+      }
+    },
+    "worktree": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "branch", "base_branch", "base_commit", "expected_head"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "branch": { "type": "string", "pattern": "^task/T-[A-Z0-9]+-[A-Z0-9-]+-.+" },
+        "base_branch": { "type": "string", "minLength": 1 },
+        "base_commit": { "type": "string", "minLength": 7 },
+        "expected_head": { "type": "string", "minLength": 7 }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_paths", "prohibited_paths", "diff_budget"],
+      "properties": {
+        "allowed_paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "prohibited_paths": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "diff_budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["max_files", "max_lines"],
+          "properties": {
+            "max_files": { "type": "integer", "minimum": 1 },
+            "max_lines": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_manifest"],
+      "properties": {
+        "artifact_manifest": { "type": "string", "minLength": 1 },
+        "diff_patch": { "type": "string" },
+        "handoff": { "type": "string" }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "status", "commands", "artifacts"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "status": { "enum": ["pending", "running", "passed", "failed", "skipped"] },
+        "commands": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "artifacts": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "passed_at": {
+          "type": ["string", "null"],
+          "format": "date-time"
+        }
+      }
+    },
+    "approvals": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plan_id", "approval_id", "approval_hash"],
+      "properties": {
+        "plan_id": { "type": "string" },
+        "approval_id": { "type": "string" },
+        "approval_hash": { "type": "string" }
+      }
+    },
+    "commit": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["target_branch", "message", "author_name", "author_email", "trailers"],
+      "properties": {
+        "target_branch": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "author_name": { "type": "string", "minLength": 1 },
+        "author_email": { "type": "string", "format": "email" },
+        "trailers": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "commit_sha": { "type": "string" },
+        "integrated_at": { "type": "string", "format": "date-time" }
+      }
+    },
+    "attempts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["count", "max", "last_attempt_at", "last_error"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "max": { "type": "integer", "minimum": 1 },
+        "last_attempt_at": { "type": ["string", "null"], "format": "date-time" },
+        "last_error": { "type": ["string", "null"] }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["keep_until"],
+      "properties": {
+        "keep_until": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}
