@@ -1698,3 +1698,43 @@ Control-plane Dispatcher (第4の役割)。worker でも integrator でも Owner
 
 ### 次の一手
 T-OS-410 (Day 0 cleanup_worktree fail-closed patch) を Codex に dispatch。`--keep-worktree` 必須。実装 spec は `external-ai-4th-response.md` Q16 にコピペ可能な pseudo-code 完備。
+
+---
+
+## PLAN-UPDATE-024: Kernel v2 Week 0-3 自律実装完了 (2026-05-15)
+
+### トリガー
+Owner FB 2026-05-14 night: 「全部進めて」+ 「5.5 pro のレビューが必要なものがあればまたプロンプト書いて」
+
+### 実装したもの (Codex dispatch × 5 回)
+- **T-OS-410** Day 0: `cleanup_worktree()` fail-closed patch (Constitutional Invariant #6)
+- **T-OS-411** Day 1: artifact manifest + capture + verification (Invariant #6 完成)
+- **T-OS-412** Day 2-5: pretool policy 4 invariants enforce + KRT-001〜010 (Invariants #1, #2, #3, #5)
+- **T-OS-413** Week 2: integrator gate + integration queue (Invariant #1 完成、KRT-007 unskipped)
+- **T-OS-414** Week 3: lease registry + Invariant #4 enforce (Invariant #4 完成、KRT-008 unskipped)
+
+### kernel 完成度
+7 Constitutional Invariants のうち **#1〜#6 が runtime enforce** (mode=warn)。
+#7 (Owner Approval for Irreversible Ops) は Week 7 で Plan Contract と一体実装予定。
+
+### テスト状況
+全 35 tests pass、SKIP ゼロ達成。
+- Day 0 cleanup: 5
+- Day 1 manifest: 6
+- Day 2 policy (KRT-001〜010): 10
+- Week 2 integrator: 6
+- Week 3 lease: 8
+
+### kernel mode
+現在 `warn` (default)。`.claude/state/kernel-mode.json` で制御。
+Owner morning review 後の `enforce` flip 推奨。
+
+### 課題
+1. **YAML duplicate-key corruption 3 回発生**: Manager の Edit 操作が orphan field を生成。3 回共修復済みだが根本原因対策は Week 6 で検討
+2. **Sandbox wrapper bug**: Codex が main repo 側 `.ai/CODEX/RESULTS/<task>.txt` への書き込みを sandbox が拒否。fallback で `/private/tmp/` + streaming 出力で回避
+
+### 停止理由
+Week 0-3 で kernel core 完成。Week 4-8 は state migration + UX 変更で性質が異なり、Owner judgement が必要。自然な ship boundary で停止。詳細は `.ai/REVIEW/T-OS-400/MORNING_DIGEST.md`。
+
+### 関連 commit
+3776855, 4c19471, eb3c503, 97bd4f1, b7f5847, 3dfce93, 1a9e39d, 3397ff3
