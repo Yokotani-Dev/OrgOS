@@ -239,8 +239,7 @@ test_krt_007_integrator_commit_success() {
 }
 
 test_krt_008_lease_conflict() {
-  printf 'SKIP - lease registry ships in Week 3\n'
-  return 77
+  bash "$SCRIPT_DIR/test-week3-lease.sh" --only test_krt_008_lease_conflict
 }
 
 test_krt_009_no_manifest_quarantine() {
@@ -294,16 +293,28 @@ run_test() {
 }
 
 main() {
-  run_test test_krt_001_codex_commit_denied
-  run_test test_krt_002_no_verify_denied
-  run_test test_krt_003_codex_checkout_main_denied
-  run_test test_krt_004_artifact_survives
-  run_test test_krt_005_manager_commit_denied
-  run_test test_krt_006_manager_edit_events_denied
-  run_test test_krt_007_integrator_commit_success
-  run_test test_krt_008_lease_conflict
-  run_test test_krt_009_no_manifest_quarantine
-  run_test test_krt_010_manager_worktree_remove_denied
+  case "${1:-}" in
+    --only)
+      shift
+      run_test "$1"
+      ;;
+    "")
+      run_test test_krt_001_codex_commit_denied
+      run_test test_krt_002_no_verify_denied
+      run_test test_krt_003_codex_checkout_main_denied
+      run_test test_krt_004_artifact_survives
+      run_test test_krt_005_manager_commit_denied
+      run_test test_krt_006_manager_edit_events_denied
+      run_test test_krt_007_integrator_commit_success
+      run_test test_krt_008_lease_conflict
+      run_test test_krt_009_no_manifest_quarantine
+      run_test test_krt_010_manager_worktree_remove_denied
+      ;;
+    *)
+      echo "unknown argument: $1" >&2
+      exit 2
+      ;;
+  esac
 
   printf 'KRT day2 tests: %s passed, %s failed, %s skipped\n' "$pass_count" "$fail_count" "$skip_count"
   [ "$fail_count" -eq 0 ]

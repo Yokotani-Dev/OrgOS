@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orgos.lease.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "lease_id",
+    "task_id",
+    "actor",
+    "allowed_paths",
+    "status",
+    "acquired_at",
+    "heartbeat_at",
+    "expires_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "orgos.lease.v1"
+    },
+    "lease_id": {
+      "type": "string",
+      "pattern": "^LS-[0-9]{8}T[0-9]{6}Z-[A-Za-z0-9._-]+-[a-f0-9]{8}$"
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "actor": {
+      "type": "object",
+      "required": [
+        "role",
+        "id"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "manager",
+            "codex",
+            "subagent",
+            "integrator",
+            "owner"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "session_id": {
+          "type": "string"
+        }
+      }
+    },
+    "worktree_path": {
+      "type": "string"
+    },
+    "branch": {
+      "type": "string"
+    },
+    "allowed_paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "released",
+        "expired",
+        "revoked"
+      ]
+    },
+    "acquired_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "heartbeat_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "released_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "notes": {
+      "type": "string"
+    }
+  }
+}

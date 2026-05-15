@@ -137,14 +137,118 @@ def infer_git_target(args: list[str]) -> Optional[str]:
     return None
 
 
-def is_protected_state_file(path: str) -> bool:
-    repo_path = normalize_repo_path(path)
+def is_protected_state_file(path: str, cwd: str = "") -> bool:
+    repo_path = normalize_repo_path_for_root(path, resolve_policy_root(cwd))
     patterns = [
         r"(^|.*/)\.ai/EVENTS\.jsonl$",
         r"(^|.*/)\.ai/TASKS\.yaml$",
         r"(^|.*/)\.ai/DASHBOARD\.md$",
     ]
     return any(re.match(pattern, repo_path) for pattern in patterns)
+
+
+def resolve_policy_root(cwd: str = "") -> Path:
+    candidate = Path(cwd).expanduser() if cwd else ROOT
+    if not candidate.is_absolute():
+        candidate = ROOT / candidate
+    candidate = candidate.resolve(strict=False)
+    if candidate.is_file():
+        candidate = candidate.parent
+
+    for path in (candidate, *candidate.parents):
+        if (path / ".ai").is_dir() or (path / ".git").exists():
+            return path
+    return ROOT
+
+
+def normalize_repo_path_for_root(raw_path: str, root: Path) -> str:
+    path = raw_path.strip()
+    if not path:
+        return ""
+
+    candidate = Path(path).expanduser()
+    if candidate.is_absolute():
+        try:
+            return candidate.resolve(strict=False).relative_to(root.resolve()).as_posix()
+        except ValueError:
+            return candidate.resolve(strict=False).as_posix()
+
+    posix_path = Path(path).as_posix()
+    while posix_path.startswith("./"):
+        posix_path = posix_path[2:]
+    return posix_path
+
+
+def is_outside_repo(path: str, cwd: str = "") -> bool:
+    if not path.strip():
+        return False
+    root = resolve_policy_root(cwd)
+    candidate = Path(path).expanduser()
+    if not candidate.is_absolute():
+        return False
+    try:
+        candidate.resolve(strict=False).relative_to(root.resolve())
+    except ValueError:
+        return True
+    return False
+
+
+def path_covers(scope: str, target: str) -> bool:
+    scope_path = scope.strip().replace("\\", "/")
+    target_path = target.strip().replace("\\", "/")
+    while scope_path.startswith("./"):
+        scope_path = scope_path[2:]
+    while target_path.startswith("./"):
+        target_path = target_path[2:]
+    scope_path = scope_path.strip("/")
+    target_path = target_path.strip("/")
+    if not scope_path:
+        return True
+    return target_path == scope_path or target_path.startswith(scope_path.rstrip("/") + "/")
+
+
+def parse_lease_time(value: str) -> Optional[datetime]:
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def is_expired(lease: dict) -> bool:
+    expires_at = parse_lease_time(str(lease.get("expires_at", "") or ""))
+    return expires_at is not None and expires_at <= datetime.now(timezone.utc)
+
+
+def lease_registry_exists(cwd: str = "") -> bool:
+    return (resolve_policy_root(cwd) / ".ai" / "leases").is_dir()
+
+
+def load_active_leases(cwd: str = "") -> list[dict]:
+    leases_dir = resolve_policy_root(cwd) / ".ai" / "leases"
+    if not leases_dir.is_dir():
+        return []
+    result: list[dict] = []
+    for path in leases_dir.glob("*.json"):
+        try:
+            with path.open("r", encoding="utf-8") as handle:
+                lease = json.load(handle)
+        except (OSError, json.JSONDecodeError):
+            continue
+        if lease.get("status") == "active" and not is_expired(lease):
+            result.append(lease)
+    return result
+
+
+def any_lease_covers(leases: list[dict], path: str, cwd: str = "") -> bool:
+    target = normalize_repo_path_for_root(path, resolve_policy_root(cwd))
+    for lease in leases:
+        for allowed_path in lease.get("allowed_paths", []):
+            if path_covers(str(allowed_path), target):
+                return True
+    return False
 
 
 def evaluate_invariant_violations(
@@ -154,7 +258,6 @@ def evaluate_invariant_violations(
     cwd: str = "",
 ) -> list[tuple[str, str]]:
     """Return constitutional invariant violations as (invariant_id, reason)."""
-    del cwd
     violations: list[tuple[str, str]] = []
 
     if tool == "Bash":
@@ -185,8 +288,12 @@ def evaluate_invariant_violations(
             violations.append(("DangerousShell", "destructive/remote-exec pattern blocked"))
 
     elif tool in {"Edit", "Write"}:
-        if is_protected_state_file(path):
+        if is_protected_state_file(path, cwd):
             violations.append(("StateMutationViaOrgTool", f"direct edit of {path} is blocked"))
+        elif lease_registry_exists(cwd) and not is_outside_repo(path, cwd):
+            active_leases = load_active_leases(cwd)
+            if not any_lease_covers(active_leases, path, cwd):
+                violations.append(("LeaseBeforeWrite", f"write to {path} without active lease covering it"))
 
     return violations
 

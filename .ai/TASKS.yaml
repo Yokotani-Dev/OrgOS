@@ -298,7 +298,7 @@ tasks:
 
   - id: T-OS-414
     title: "[Kernel-v2][Week 3] Lease registry + Lease Before Write enforcement (Invariant #4)"
-    status: running
+    status: done
     priority: P0
     deps: ["T-OS-413"]
     owner_role: "codex-implementer"
