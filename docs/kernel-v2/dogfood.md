@@ -60,3 +60,35 @@ The dogfood exercise revealed an Iron Law-level integrator bug that 35+ KRT test
 
 ### Step 1 (retry): Lease acquisition
 Lease re-acquired: LS-20260516T001928Z-T-OS-418-031ac9d6
+
+## FINAL ITERATION SUCCESS (after 5 iterations)
+
+After T-OS-422 + T-OS-423 + T-OS-424 + T-OS-425 + T-OS-426, the dogfood succeeded.
+
+```
+commit d7d39c69aca7e685f30c71ab05ec0e27075cffee
+Author: OrgOS Integrator <orgos-integrator@local>
+docs(kernel-v2): T-OS-418 Manager dogfood execution log
+```
+
+## Bugs discovered through dogfood (zero detected by 35+ KRT tests)
+
+1. **T-OS-422**: integrator-commit.sh treated queue state file moves as user diff
+2. **T-OS-423**: .claude/state/ (git.lock) leaked through INTERNAL_PATHS filter
+3. **T-OS-424**: macOS case-insensitive FS made `.ai/ARTIFACTS/` (legacy uppercase) bypass filter
+4. **T-OS-425**: INTERNAL_PATHS deny-list was fundamentally whack-a-mole; redesigned to allowed_paths intersect (allow-list)
+5. **T-OS-426**: request-integration.sh defaulted allowed_paths to ALL git status paths instead of taking explicit value or reading from lease
+
+## Verdict
+
+GPT-5.5 Pro 5th-round Q26 / Q29 prediction confirmed literally:
+> KRT は pass するが実セッションで deny されない / mock と real の乖離
+
+The dogfood pattern (Manager exercising the new flow on real commit content) IS the most important safety net before enforce flip. Without dogfood, all 5 bugs would have been production blockers.
+
+## Next steps
+
+- T-OS-418 dogfood: DONE
+- Bootstrap accountability: BOOTSTRAP-OVERRIDES.md updated
+- All Iron Law #1-#6 dogfood-proven
+- Owner morning review can decide enforce flip

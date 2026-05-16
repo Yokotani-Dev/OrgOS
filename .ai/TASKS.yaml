@@ -396,7 +396,7 @@ tasks:
       - 既存 T-OS-413/T-OS-405/T-OS-408/T-OS-409 entry の allowed_paths 欠落を復元 (履歴保全)
   - id: T-OS-418
     title: '[Kernel-v2 HARDEN] Manager dogfood commit through new flow (1 件)'
-    status: queued
+    status: done
     priority: P0
     deps:
       - T-OS-416
