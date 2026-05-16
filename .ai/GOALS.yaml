@@ -1,336 +1,386 @@
 vision:
   id: V-ORGOS
-  statement: Chief of Staff OrgOS as an integrated operating model that compounds memory, optionality, intake discipline, handoff reliability, and authority-aware execution without storing secrets in tracked state.
+  statement: Chief of Staff OrgOS as an integrated operating model that compounds
+    memory, optionality, intake discipline, handoff reliability, and authority-aware
+    execution without storing secrets in tracked state.
   created_at: 2026-04-19
   updated_at: 2026-04-19
-
 milestones:
-  - id: M-PHASE-1
-    title: Memory
-    description: Establish a safe fact registry and lifecycle so the system can remember relevant context without leaking secrets.
-    target_date: 2026-04-30
-    status: achieved
-    vision_ref: V-ORGOS
-    acceptance:
-      - USER_PROFILE schema and lifecycle rule exist.
-      - Secret material is represented by pointers, not plaintext.
-  - id: M-PHASE-2
-    title: Optionality
-    description: Build capability discovery and evaluation primitives so the manager can choose tools instead of asking the owner prematurely.
-    target_date: 2026-05-07
-    status: active
-    vision_ref: V-ORGOS
-    acceptance:
-      - Capability manifest is machine-readable and reusable.
-      - Quality eval can score capability reuse and context binding.
-  - id: M-PHASE-3
-    title: Intake
-    description: Make the request intake loop deterministic, including active work graph binding and coherence mode selection.
-    target_date: 2026-05-14
-    status: active
-    vision_ref: V-ORGOS
-    acceptance:
-      - Request Intake Loop is defined as an Iron Law.
-      - GOALS registry and coherence rubric remove subjective context handling.
-  - id: M-PHASE-4
-    title: Handoff
-    description: Standardize delegation and completion packets so parallel work preserves assumptions, risks, and follow-up actions.
-    target_date: 2026-05-21
-    status: active
-    vision_ref: V-ORGOS
-    acceptance:
-      - Handoff packet schema exists.
-      - Downstream memory updates are explicit and safe.
-  - id: M-PHASE-5
-    title: Authority
-    description: Integrate autonomy and approval logic so execution respects risk and ownership boundaries deterministically.
-    target_date: 2026-05-31
-    status: active
-    vision_ref: V-ORGOS
-    acceptance:
-      - Authority layer schemas and rules exist.
-      - Risk and approval decisions can be audited.
-  - id: M-PHASE-7
-    title: Concurrent Execution Safety
-    description: Prevent unintended branch switches and commit-to-wrong-branch incidents when multiple Claude Code sessions or Codex processes operate on the same repository in parallel.
-    target_date: 2026-07-15
-    status: active
-    vision_ref: V-ORGOS
-    acceptance:
-      - parallel-session-policy rule defines safe operation modes for concurrent sessions.
-      - pretool hook detects unintended branch switches before destructive git operations.
-      - Codex CLI startup is wrapped to enforce git worktree isolation.
-      - Coordination lock prevents simultaneous git mutations from multiple sessions.
-  - id: M-PHASE-6
-    title: Pre-Implementation Quality and Owner Sync
-    description: Prevent the "implement-then-discover-CRITICAL" loop by forcing ToBe journey sync, quality contract, domain analysis, threat modeling, and acceptance pre-write before implementation begins.
-    target_date: 2026-06-30
-    status: achieved
-    vision_ref: V-ORGOS
-    acceptance:
-      - Quality Contract protocol exists and is required before IMPLEMENTATION.
-      - Journey-First protocol blocks function-list thinking before ToBe flow is confirmed.
-      - DESIGN gate requires explicit threat model, full data model, and authority boundary.
-      - Acceptance criteria are pre-written before Codex implementation.
-      - Owner is explicitly engaged at five high-leverage touchpoints (journey, quality, domain, design, acceptance).
-
+- id: M-PHASE-1
+  title: Memory
+  description: Establish a safe fact registry and lifecycle so the system can remember
+    relevant context without leaking secrets.
+  target_date: 2026-04-30
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - USER_PROFILE schema and lifecycle rule exist.
+  - Secret material is represented by pointers, not plaintext.
+- id: M-PHASE-2
+  title: Optionality
+  description: Build capability discovery and evaluation primitives so the manager
+    can choose tools instead of asking the owner prematurely.
+  target_date: 2026-05-07
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - Capability manifest is machine-readable and reusable.
+  - Quality eval can score capability reuse and context binding.
+  notes: CAPABILITIES.yaml + pretool_policy.py invariant checks satisfy optionality
+- id: M-PHASE-3
+  title: Intake
+  description: Make the request intake loop deterministic, including active work graph
+    binding and coherence mode selection.
+  target_date: 2026-05-14
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - Request Intake Loop is defined as an Iron Law.
+  - GOALS registry and coherence rubric remove subjective context handling.
+  notes: request-intake-loop.md Iron Law + Step 3.5 Journey integration (T-OS-312)
+- id: M-PHASE-4
+  title: Handoff
+  description: Standardize delegation and completion packets so parallel work preserves
+    assumptions, risks, and follow-up actions.
+  target_date: 2026-05-21
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - Handoff packet schema exists.
+  - Downstream memory updates are explicit and safe.
+  notes: handoff-protocol.md schema + integrator-commit.sh + artifact_manifest
+- id: M-PHASE-5
+  title: Authority
+  description: Integrate autonomy and approval logic so execution respects risk and
+    ownership boundaries deterministically.
+  target_date: 2026-05-31
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - Authority layer schemas and rules exist.
+  - Risk and approval decisions can be audited.
+  notes: per-invariant kernel mode (T-OS-420) + 7 Constitutional Invariants + Owner
+    approval framework
+- id: M-PHASE-7
+  title: Concurrent Execution Safety
+  description: Prevent unintended branch switches and commit-to-wrong-branch incidents
+    when multiple Claude Code sessions or Codex processes operate on the same repository
+    in parallel.
+  target_date: 2026-07-15
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - parallel-session-policy rule defines safe operation modes for concurrent sessions.
+  - pretool hook detects unintended branch switches before destructive git operations.
+  - Codex CLI startup is wrapped to enforce git worktree isolation.
+  - Coordination lock prevents simultaneous git mutations from multiple sessions.
+  notes: 'kernel v2 (T-OS-410〜431) provides full concurrent execution safety: per-task
+    worktree, lease registry, integrator gate, branch protection'
+- id: M-PHASE-6
+  title: Pre-Implementation Quality and Owner Sync
+  description: Prevent the "implement-then-discover-CRITICAL" loop by forcing ToBe
+    journey sync, quality contract, domain analysis, threat modeling, and acceptance
+    pre-write before implementation begins.
+  target_date: 2026-06-30
+  status: achieved
+  vision_ref: V-ORGOS
+  acceptance:
+  - Quality Contract protocol exists and is required before IMPLEMENTATION.
+  - Journey-First protocol blocks function-list thinking before ToBe flow is confirmed.
+  - DESIGN gate requires explicit threat model, full data model, and authority boundary.
+  - Acceptance criteria are pre-written before Codex implementation.
+  - Owner is explicitly engaged at five high-leverage touchpoints (journey, quality,
+    domain, design, acceptance).
 projects:
-  - id: T-OS-150
-    title: Manager Quality Eval regression suite and metrics base
-    milestone_ref: M-PHASE-2
-    status: done
-    priority: P0
-    tasks_ref:
-      - T-OS-150
-  - id: T-OS-151
-    title: Safe Memory fact registry
-    milestone_ref: M-PHASE-1
-    status: done
-    priority: P0
-    tasks_ref:
-      - T-OS-151
-      - T-OS-151F
-      - T-OS-151R
-  - id: T-OS-153
-    title: Capability Preflight tool manifest
-    milestone_ref: M-PHASE-2
-    status: done
-    priority: P1
-    tasks_ref:
-      - T-OS-153
-      - T-OS-153F
-      - T-OS-153R
-  - id: T-OS-154
-    title: Request Intake State Machine
-    milestone_ref: M-PHASE-3
-    status: done
-    priority: P0
-    tasks_ref:
-      - T-OS-154
-      - T-OS-154F
-      - T-OS-154R
-  - id: T-OS-155
-    title: Handoff Packet protocol and schema
-    milestone_ref: M-PHASE-4
-    status: done
-    priority: P1
-    tasks_ref:
-      - T-OS-155
-      - T-OS-155F
-      - T-OS-155R
-  - id: T-OS-158
-    title: Manager Quality Eval runtime wiring
-    milestone_ref: M-PHASE-2
-    status: active
-    priority: P0
-    tasks_ref:
-      - T-OS-158
-  - id: T-OS-160
-    title: Safety hardening scripts and hooks
-    milestone_ref: M-PHASE-1
-    status: active
-    priority: P0
-    tasks_ref:
-      - T-OS-160
-  - id: T-OS-161
-    title: Awareness reinforcement with GOALS and coherence rubric
-    milestone_ref: M-PHASE-3
-    status: active
-    priority: P1
-    tasks_ref:
-      - T-OS-161
-  - id: T-OS-170
-    title: Authority and risk layer design
-    milestone_ref: M-PHASE-5
-    status: backlog
-    priority: P0
-    tasks_ref:
-      - T-OS-170
-  - id: T-OS-350
-    title: Quality Contract Protocol
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P0
-    tasks_ref:
-      - T-OS-350
-  - id: T-OS-351
-    title: Journey-First Protocol enforcement
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P0
-    tasks_ref:
-      - T-OS-351
-  - id: T-OS-352
-    title: Domain Constraint Sync
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P1
-    tasks_ref:
-      - T-OS-352
-  - id: T-OS-353
-    title: Pre-Implementation Risk Profile
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P1
-    tasks_ref:
-      - T-OS-353
-  - id: T-OS-354
-    title: Acceptance Pre-Write Protocol
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P1
-    tasks_ref:
-      - T-OS-354
-  - id: T-OS-355
-    title: Specialist Subagents for pre-implementation review
-    milestone_ref: M-PHASE-6
-    status: done
-    priority: P2
-    tasks_ref:
-      - T-OS-355
-  - id: T-OS-323
-    title: DNA v0.1 schema + manifest generation
-    milestone_ref: M-PHASE-2
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-323]
-  - id: T-OS-324
-    title: Synthesis proposal + peer review
-    milestone_ref: M-PHASE-2
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-324]
-  - id: T-OS-325
-    title: Validation harness (synthetic Owner + fixture-response)
-    milestone_ref: M-PHASE-2
-    status: backlog
-    priority: P0
-    tasks_ref: [T-OS-325]
-  - id: T-OS-326
-    title: Application engine (4-stage rollout)
-    milestone_ref: M-PHASE-5
-    status: backlog
-    priority: P0
-    tasks_ref: [T-OS-326]
-  - id: T-OS-327
-    title: Adaptive Capability Probe
-    milestone_ref: M-PHASE-2
-    status: backlog
-    priority: P1
-    tasks_ref: [T-OS-327]
-  - id: T-OS-328
-    title: Intelligence freshness pipeline
-    milestone_ref: M-PHASE-2
-    status: active
-    priority: P1
-    tasks_ref: [T-OS-328]
-  - id: T-OS-329
-    title: Always-On shadow scheduler
-    milestone_ref: M-PHASE-5
-    status: backlog
-    priority: P1
-    tasks_ref: [T-OS-329]
-  - id: T-OS-331
-    title: Evolution Dashboard + AI Evolution Trace
-    milestone_ref: M-PHASE-2
-    status: backlog
-    priority: P1
-    tasks_ref: [T-OS-331]
-  - id: T-OS-360
-    title: Parallel session policy rule
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P1
-    tasks_ref: [T-OS-360]
-  - id: T-OS-361
-    title: pretool branch consistency check
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P1
-    tasks_ref: [T-OS-361]
-  - id: T-OS-362
-    title: Codex worktree isolation wrapper
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P1
-    tasks_ref: [T-OS-362]
-  - id: T-OS-363
-    title: Git coordination lock
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P2
-    tasks_ref: [T-OS-363]
-  - id: T-OS-364
-    title: Concurrency architecture redesign (long-term)
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P2
-    tasks_ref: [T-OS-364]
-  - id: T-OS-390
-    title: "[v2] Concurrent execution safety v2 - epic"
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-390]
-  - id: T-OS-391
-    title: "[v2] Codex auto-commit prohibition"
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-391]
-  - id: T-OS-392
-    title: "[v2] allowed_paths conflict pre-flight"
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-392]
-  - id: T-OS-393
-    title: "[v2] main direct-commit warning"
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-393]
-  - id: T-OS-394
-    title: "[v2] worker field + heartbeat in TASKS"
-    milestone_ref: M-PHASE-7
-    status: active
-    priority: P0
-    tasks_ref: [T-OS-394]
-  - id: T-OS-395
-    title: "[v2] feature/T-XXX branch automation"
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P1
-    tasks_ref: [T-OS-395]
-  - id: T-OS-396
-    title: "[v2] .ai/LOCKS/ file mechanism"
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P1
-    tasks_ref: [T-OS-396]
-  - id: T-OS-398
-    title: "[v2] develop -> main scheduled merge bot"
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P2
-    tasks_ref: [T-OS-398]
-  - id: T-OS-399
-    title: "[v2] Parallel session dashboard"
-    milestone_ref: M-PHASE-7
-    status: backlog
-    priority: P2
-    tasks_ref: [T-OS-399]
-
+- id: T-OS-150
+  title: Manager Quality Eval regression suite and metrics base
+  milestone_ref: M-PHASE-2
+  status: done
+  priority: P0
+  tasks_ref:
+  - T-OS-150
+- id: T-OS-151
+  title: Safe Memory fact registry
+  milestone_ref: M-PHASE-1
+  status: done
+  priority: P0
+  tasks_ref:
+  - T-OS-151
+  - T-OS-151F
+  - T-OS-151R
+- id: T-OS-153
+  title: Capability Preflight tool manifest
+  milestone_ref: M-PHASE-2
+  status: done
+  priority: P1
+  tasks_ref:
+  - T-OS-153
+  - T-OS-153F
+  - T-OS-153R
+- id: T-OS-154
+  title: Request Intake State Machine
+  milestone_ref: M-PHASE-3
+  status: done
+  priority: P0
+  tasks_ref:
+  - T-OS-154
+  - T-OS-154F
+  - T-OS-154R
+- id: T-OS-155
+  title: Handoff Packet protocol and schema
+  milestone_ref: M-PHASE-4
+  status: done
+  priority: P1
+  tasks_ref:
+  - T-OS-155
+  - T-OS-155F
+  - T-OS-155R
+- id: T-OS-158
+  title: Manager Quality Eval runtime wiring
+  milestone_ref: M-PHASE-2
+  status: completed
+  priority: P0
+  tasks_ref:
+  - T-OS-158
+- id: T-OS-160
+  title: Safety hardening scripts and hooks
+  milestone_ref: M-PHASE-1
+  status: completed
+  priority: P0
+  tasks_ref:
+  - T-OS-160
+- id: T-OS-161
+  title: Awareness reinforcement with GOALS and coherence rubric
+  milestone_ref: M-PHASE-3
+  status: completed
+  priority: P1
+  tasks_ref:
+  - T-OS-161
+- id: T-OS-170
+  title: Authority and risk layer design
+  milestone_ref: M-PHASE-5
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-170
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-350
+  title: Quality Contract Protocol
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P0
+  tasks_ref:
+  - T-OS-350
+- id: T-OS-351
+  title: Journey-First Protocol enforcement
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P0
+  tasks_ref:
+  - T-OS-351
+- id: T-OS-352
+  title: Domain Constraint Sync
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P1
+  tasks_ref:
+  - T-OS-352
+- id: T-OS-353
+  title: Pre-Implementation Risk Profile
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P1
+  tasks_ref:
+  - T-OS-353
+- id: T-OS-354
+  title: Acceptance Pre-Write Protocol
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P1
+  tasks_ref:
+  - T-OS-354
+- id: T-OS-355
+  title: Specialist Subagents for pre-implementation review
+  milestone_ref: M-PHASE-6
+  status: done
+  priority: P2
+  tasks_ref:
+  - T-OS-355
+- id: T-OS-323
+  title: DNA v0.1 schema + manifest generation
+  milestone_ref: M-PHASE-2
+  status: completed
+  priority: P0
+  tasks_ref:
+  - T-OS-323
+- id: T-OS-324
+  title: Synthesis proposal + peer review
+  milestone_ref: M-PHASE-2
+  status: completed
+  priority: P0
+  tasks_ref:
+  - T-OS-324
+- id: T-OS-325
+  title: Validation harness (synthetic Owner + fixture-response)
+  milestone_ref: M-PHASE-2
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-325
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-326
+  title: Application engine (4-stage rollout)
+  milestone_ref: M-PHASE-5
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-326
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-327
+  title: Adaptive Capability Probe
+  milestone_ref: M-PHASE-2
+  status: cancelled
+  priority: P1
+  tasks_ref:
+  - T-OS-327
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-328
+  title: Intelligence freshness pipeline
+  milestone_ref: M-PHASE-2
+  status: completed
+  priority: P1
+  tasks_ref:
+  - T-OS-328
+- id: T-OS-329
+  title: Always-On shadow scheduler
+  milestone_ref: M-PHASE-5
+  status: cancelled
+  priority: P1
+  tasks_ref:
+  - T-OS-329
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-331
+  title: Evolution Dashboard + AI Evolution Trace
+  milestone_ref: M-PHASE-2
+  status: cancelled
+  priority: P1
+  tasks_ref:
+  - T-OS-331
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-360
+  title: Parallel session policy rule
+  milestone_ref: M-PHASE-7
+  status: completed
+  priority: P1
+  tasks_ref:
+  - T-OS-360
+- id: T-OS-361
+  title: pretool branch consistency check
+  milestone_ref: M-PHASE-7
+  status: completed
+  priority: P1
+  tasks_ref:
+  - T-OS-361
+- id: T-OS-362
+  title: Codex worktree isolation wrapper
+  milestone_ref: M-PHASE-7
+  status: completed
+  priority: P1
+  tasks_ref:
+  - T-OS-362
+- id: T-OS-363
+  title: Git coordination lock
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P2
+  tasks_ref:
+  - T-OS-363
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-364
+  title: Concurrency architecture redesign (long-term)
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P2
+  tasks_ref:
+  - T-OS-364
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-390
+  title: '[v2] Concurrent execution safety v2 - epic'
+  milestone_ref: M-PHASE-7
+  status: completed
+  priority: P0
+  tasks_ref:
+  - T-OS-390
+- id: T-OS-391
+  title: '[v2] Codex auto-commit prohibition'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-391
+- id: T-OS-392
+  title: '[v2] allowed_paths conflict pre-flight'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-392
+- id: T-OS-393
+  title: '[v2] main direct-commit warning'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-393
+- id: T-OS-394
+  title: '[v2] worker field + heartbeat in TASKS'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P0
+  tasks_ref:
+  - T-OS-394
+- id: T-OS-395
+  title: '[v2] feature/T-XXX branch automation'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P1
+  tasks_ref:
+  - T-OS-395
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-396
+  title: '[v2] .ai/LOCKS/ file mechanism'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P1
+  tasks_ref:
+  - T-OS-396
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-398
+  title: '[v2] develop -> main scheduled merge bot'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P2
+  tasks_ref:
+  - T-OS-398
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
+- id: T-OS-399
+  title: '[v2] Parallel session dashboard'
+  milestone_ref: M-PHASE-7
+  status: cancelled
+  priority: P2
+  tasks_ref:
+  - T-OS-399
+  notes: Absorbed by kernel v2 hardening (T-OS-410〜431). Original scope superseded.
 active_graph:
   current_phase: IMPLEMENTATION
   running_tasks:
-    - T-OS-158
-    - T-OS-160
-    - T-OS-161
+  - T-OS-158
+  - T-OS-160
+  - T-OS-161
   blocked_tasks: []
   recent_decisions:
-    - DECISION-SELFREVIEW-001
-    - DECISION-AWARENESS-BASELINE
-    - DECISION-REQUEST-INTAKE-IRON-LAW
-    - DECISION-HANDOFF-PACKET-REQUIRED
-    - DECISION-AUTHORITY-LAYER-SPLIT
+  - DECISION-SELFREVIEW-001
+  - DECISION-AWARENESS-BASELINE
+  - DECISION-REQUEST-INTAKE-IRON-LAW
+  - DECISION-HANDOFF-PACKET-REQUIRED
+  - DECISION-AUTHORITY-LAYER-SPLIT
