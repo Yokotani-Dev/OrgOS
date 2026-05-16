@@ -1759,3 +1759,35 @@ tasks:
       Codex の T-OS-422 fix は .ai/queue/leases/artifacts のみ filter、.claude/state/ を見落とした。
 
       '
+  - id: T-OS-424
+    title: '[Kernel-v2 HARDEN] integrator INTERNAL_PATHS を case-insensitive 化'
+    status: done
+    priority: P0
+    deps:
+      - T-OS-423
+    owner_role: codex-implementer
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    blast_radius: schema_change
+    owner_input_needed:
+      - destructive_approval
+    risk_level: high
+    default_if_no_response: defer
+    reversibility: reversible
+    acceptance:
+      - T-OS-418 retry で .ai/ARTIFACTS/ (uppercase) が filter 漏れて fail
+      - 'fix: INTERNAL_PATHS の startswith check を case-insensitive 化 (macOS case-insensitive
+        FS 対応)'
+      - '新 test: legacy uppercase paths が filter される'
+      - 全 existing tests pass
+    notes: 'Iteration 3: T-OS-422 (.ai/queue/leases/artifacts) + T-OS-423 (.claude/state/.ai/alerts)
+
+      で漏れていた case difference を捕捉。
+
+      macOS は case-insensitive FS、git は記録した case を表示する。
+
+      Python の startswith は case-sensitive のため zone differ で漏れる。
+
+      '

@@ -336,6 +336,37 @@ test_integrator_ignores_leases_and_artifacts() {
   rm -rf "$tmp_dir"
 }
 
+test_integrator_ignores_uppercase_legacy_paths() {
+  local task_id="T-TEST-7B"
+  local fixture tmp_dir repo worktree branch manifest output done_count
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'integrated uppercase legacy artifacts\n' > "$worktree/README.md"
+
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: ignore uppercase legacy paths $task_id" >/dev/null
+  mkdir -p "$worktree/.ai/ARTIFACTS/$task_id/legacy" "$worktree/.ai/artifacts/$task_id/runtime"
+  printf '{"legacy":true}\n' > "$worktree/.ai/ARTIFACTS/$task_id/legacy/artifact_manifest.json"
+  printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime/output.log"
+
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+
+  [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with uppercase legacy artifacts present"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Eqi '^\.ai/artifacts/' || fail "artifact paths should not be committed regardless of case"
+  rm -rf "$tmp_dir"
+}
+
 test_integrator_ignores_claude_state_file() {
   local task_id="T-TEST-8"
   local fixture tmp_dir repo worktree branch manifest output done_count
@@ -426,6 +457,7 @@ main() {
       run_test test_integrator_commit_blocks_diff_outside_allowed_paths
       run_test test_integrator_ignores_queue_state_transitions
       run_test test_integrator_ignores_leases_and_artifacts
+      run_test test_integrator_ignores_uppercase_legacy_paths
       run_test test_integrator_ignores_claude_state_file
       run_test test_integrator_env_prefix_does_not_bypass
       ;;

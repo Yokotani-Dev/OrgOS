@@ -276,6 +276,7 @@ INTERNAL_PATHS = (
     ".ai/alerts/",
     ".claude/state/",
 )
+INTERNAL_PATH_PREFIXES = tuple(prefix.lower() for prefix in INTERNAL_PATHS)
 
 output = subprocess.check_output(
     ["git", "-C", worktree, "status", "--porcelain", "--untracked-files=all"],
@@ -288,7 +289,7 @@ for line in output.splitlines():
     path = line[3:]
     if " -> " in path:
         path = path.split(" -> ", 1)[1]
-    if path.startswith(INTERNAL_PATHS):
+    if path.lower().startswith(INTERNAL_PATH_PREFIXES):
         continue
     paths.append(path)
 for path in sorted(set(paths)):
