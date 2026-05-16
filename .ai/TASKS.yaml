@@ -1853,3 +1853,16 @@ tasks:
       自体が間違っていた。lease.allowed_paths と queue item.scope.allowed_paths の整合性が必要。
 
       '
+  - id: T-OS-427
+    title: '[Kernel-v2 HARDEN] enforce 4 invariants via integrator dogfood #2'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/state/kernel-mode.json
+  - id: T-OS-428
+    title: '[Final] Hardening digest + task status updates'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .ai/REVIEW/T-OS-400/HARDEN_DIGEST.md
+      - .ai/TASKS.yaml
