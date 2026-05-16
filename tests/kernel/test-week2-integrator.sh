@@ -144,7 +144,8 @@ test_request_integration_creates_pending() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: integrate $task_id")
+    --commit-message "test: integrate $task_id" \
+    --allowed-paths "README.md")
 
   assert_exists "$queue_path" "request-integration should create pending item"
   assert_queue_schema_valid_json
@@ -158,6 +159,111 @@ assert data["task_id"] == sys.argv[2]
 assert data["status"] == "pending"
 assert "README.md" in data["scope"]["allowed_paths"]
 PY
+  rm -rf "$tmp_dir"
+}
+
+test_request_integration_explicit_allowed_paths_arg() {
+  local task_id="T-TEST-1A"
+  local fixture tmp_dir repo worktree branch manifest queue_path
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'change\n' > "$worktree/README.md"
+
+  queue_path=$("$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: explicit allowed paths" \
+    --allowed-paths "README.md, src/")
+
+  python3 - "$queue_path" <<'PY'
+import json
+import sys
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+assert data["scope"]["allowed_paths"] == ["README.md", "src/"]
+assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 5000}
+PY
+  rm -rf "$tmp_dir"
+}
+
+test_request_integration_lease_lookup_succeeds() {
+  local task_id="T-TEST-1B"
+  local fixture tmp_dir repo worktree branch manifest queue_path
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'change\n' > "$worktree/README.md"
+  mkdir -p "$repo/.ai/leases"
+  python3 - "$repo/.ai/leases/lease-$task_id.json" "$task_id" <<'PY'
+import json
+import sys
+from datetime import datetime, timedelta, timezone
+
+payload = {
+    "schema_version": "orgos.lease.v1",
+    "lease_id": "LS-test",
+    "task_id": sys.argv[2],
+    "status": "active",
+    "allowed_paths": ["docs/kernel-v2/"],
+    "expires_at": (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat(timespec="seconds").replace("+00:00", "Z"),
+}
+with open(sys.argv[1], "w", encoding="utf-8") as handle:
+    json.dump(payload, handle)
+PY
+
+  queue_path=$("$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: lease allowed paths")
+
+  python3 - "$queue_path" <<'PY'
+import json
+import sys
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    data = json.load(handle)
+assert data["scope"]["allowed_paths"] == ["docs/kernel-v2/"]
+assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 5000}
+PY
+  rm -rf "$tmp_dir"
+}
+
+test_request_integration_no_allowed_paths_no_lease_rejects() {
+  local task_id="T-TEST-1C"
+  local fixture tmp_dir repo worktree branch manifest stderr_path status
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  stderr_path="$tmp_dir/request-no-allowed.stderr"
+
+  set +e
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: reject missing allowed paths" >/dev/null 2>"$stderr_path"
+  status=$?
+  set -e
+
+  [ "$status" -eq 2 ] || fail "request-integration should exit 2 without allowed paths or active lease"
+  assert_contains "$stderr_path" "allowed_paths required: provide --allowed-paths or have an active lease for this task" "missing allowed_paths should explain refusal"
   rm -rf "$tmp_dir"
 }
 
@@ -177,7 +283,8 @@ test_request_integration_rejects_protected_branch() {
     --branch main \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: reject protected" >/dev/null 2>&1
+    --commit-message "test: reject protected" \
+    --allowed-paths "README.md" >/dev/null 2>&1
   status=$?
   set -e
 
@@ -202,7 +309,8 @@ test_integrator_commit_success() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: integrate $task_id")
+    --commit-message "test: integrate $task_id" \
+    --allowed-paths "README.md")
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
   done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
@@ -231,7 +339,8 @@ test_integrator_commit_blocks_without_manifest() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: missing manifest")
+    --commit-message "test: missing manifest" \
+    --allowed-paths "README.md")
   rm "$manifest"
 
   set +e
@@ -260,7 +369,8 @@ test_integrator_commit_blocks_diff_outside_allowed_paths() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: scope")
+    --commit-message "test: scope" \
+    --allowed-paths "README.md")
   printf 'outside\n' > "$worktree/outside.txt"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
@@ -294,7 +404,8 @@ test_integrator_only_commits_allowed_paths_intersect() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: intersect $task_id" >/dev/null
+    --commit-message "test: intersect $task_id" \
+    --allowed-paths "README.md,src/" >/dev/null
 
   mkdir -p "$worktree/.ai/CODEX/AUDIT" "$worktree/.ai/sessions" "$worktree/.claude/state"
   printf 'audit\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
@@ -335,7 +446,8 @@ test_integrator_refuses_empty_intersect() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: empty intersect")
+    --commit-message "test: empty intersect" \
+    --allowed-paths "README.md")
   git -C "$worktree" checkout -- README.md
   mkdir -p "$worktree/.ai/CODEX/AUDIT"
   printf 'audit only\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
@@ -368,7 +480,8 @@ test_integrator_ignores_queue_state_transitions() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: ignore queue state $task_id" >/dev/null
+    --commit-message "test: ignore queue state $task_id" \
+    --allowed-paths "README.md" >/dev/null
   mkdir -p "$worktree/.ai/queue/integration/processing"
   printf '{"status":"processing"}\n' > "$worktree/.ai/queue/integration/processing/$task_id.json"
 
@@ -398,7 +511,8 @@ test_integrator_ignores_leases_and_artifacts() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: ignore internal state $task_id" >/dev/null
+    --commit-message "test: ignore internal state $task_id" \
+    --allowed-paths "README.md" >/dev/null
   mkdir -p "$worktree/.ai/leases" "$worktree/.ai/artifacts/$task_id" "$worktree/.ai/alerts"
   printf '{"holder":"integrator"}\n' > "$worktree/.ai/leases/$task_id.json"
   printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime.log"
@@ -430,7 +544,8 @@ test_integrator_ignores_uppercase_legacy_paths() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: ignore uppercase legacy paths $task_id" >/dev/null
+    --commit-message "test: ignore uppercase legacy paths $task_id" \
+    --allowed-paths "README.md" >/dev/null
   mkdir -p "$worktree/.ai/ARTIFACTS/$task_id/legacy" "$worktree/.ai/artifacts/$task_id/runtime"
   printf '{"legacy":true}\n' > "$worktree/.ai/ARTIFACTS/$task_id/legacy/artifact_manifest.json"
   printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime/output.log"
@@ -461,7 +576,8 @@ test_integrator_ignores_claude_state_file() {
     --branch "$branch" \
     --base-branch main \
     --artifact-manifest "$manifest" \
-    --commit-message "test: ignore claude state $task_id" >/dev/null
+    --commit-message "test: ignore claude state $task_id" \
+    --allowed-paths "README.md" >/dev/null
   mkdir -p "$worktree/.claude/state"
   printf 'pid=123 task_id=%s\n' "$task_id" > "$worktree/.claude/state/git.lock"
 
@@ -528,6 +644,9 @@ main() {
       ;;
     "")
       run_test test_request_integration_creates_pending
+      run_test test_request_integration_explicit_allowed_paths_arg
+      run_test test_request_integration_lease_lookup_succeeds
+      run_test test_request_integration_no_allowed_paths_no_lease_rejects
       run_test test_request_integration_rejects_protected_branch
       run_test test_integrator_commit_success
       run_test test_integrator_commit_blocks_without_manifest

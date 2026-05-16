@@ -1823,3 +1823,33 @@ tasks:
       \  1. git status --porcelain で全 changed paths\n  2. allowed_paths にマッチする paths\
       \ のみ抽出 (intersect)\n  3. prohibited に当たらないか確認\n  4. それらのみ git add + commit\n\
       \nINTERNAL_PATHS は撤廃 (deny-list よりも allow-list が安全)。\n"
+  - id: T-OS-426
+    title: '[Kernel-v2 HARDEN] request-integration.sh: --allowed-paths CLI 引数追加'
+    status: done
+    priority: P0
+    deps:
+      - T-OS-425
+    owner_role: codex-implementer
+    allowed_paths:
+      - scripts/org/request-integration.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    blast_radius: schema_change
+    owner_input_needed:
+      - destructive_approval
+    risk_level: high
+    default_if_no_response: defer
+    reversibility: reversible
+    acceptance:
+      - T-OS-418 dogfood iter4 で 2296 files diff budget exceeded
+      - 'root cause: request-integration.sh が allowed_paths を全 changed paths から自動生成'
+      - 'fix: --allowed-paths CLI 引数を受ける、明示時はそれを使う、不在時は active lease から読む'
+      - 'lease lookup: .ai/leases/*.json から該当 task_id の active lease を見つけて allowed_paths
+        を取得'
+      - 既存 KRT-007 と Week2 integrator tests が pass 維持
+      - '新 test: --allowed-paths 指定 / lease 自動参照 / 両方不在で reject'
+    notes: 'Iteration 5: dogfood で発見。intersect approach は正しいが、queue item の allowed_paths
+
+      自体が間違っていた。lease.allowed_paths と queue item.scope.allowed_paths の整合性が必要。
+
+      '

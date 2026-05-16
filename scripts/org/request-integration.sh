@@ -10,6 +10,7 @@ Usage: request-integration.sh \
   --base-branch main \
   --artifact-manifest PATH \
   --commit-message MSG \
+  [--allowed-paths "p1,p2,..."] \
   [--diff-patch PATH] \
   [--handoff PATH] \
   [--priority 50] \
@@ -26,6 +27,8 @@ branch=""
 base_branch=""
 artifact_manifest=""
 commit_message=""
+allowed_paths_arg=""
+allowed_paths_arg_set="0"
 diff_patch=""
 handoff=""
 priority="50"
@@ -39,6 +42,7 @@ while [ "$#" -gt 0 ]; do
     --base-branch) base_branch=${2:-}; shift 2 ;;
     --artifact-manifest) artifact_manifest=${2:-}; shift 2 ;;
     --commit-message) commit_message=${2:-}; shift 2 ;;
+    --allowed-paths) allowed_paths_arg=${2:-}; allowed_paths_arg_set="1"; shift 2 ;;
     --diff-patch) diff_patch=${2:-}; shift 2 ;;
     --handoff) handoff=${2:-}; shift 2 ;;
     --priority) priority=${2:-}; shift 2 ;;
@@ -133,7 +137,7 @@ item_id="IQ-$timestamp-$task_id-$random_hex"
 
 python3 - "$REPO_ROOT" "$task_id" "$item_id" "$created_at" "$worktree_path" "$branch" \
   "$base_branch" "$artifact_manifest" "$commit_message" "$diff_patch" "$handoff" \
-  "$priority" "$verifier_status" >"$tmp_path" <<'PY'
+  "$allowed_paths_arg_set" "$allowed_paths_arg" "$priority" "$verifier_status" >"$tmp_path" <<'PY'
 import json
 import os
 import subprocess
@@ -153,9 +157,11 @@ from pathlib import Path
     commit_message,
     diff_patch,
     handoff,
+    allowed_paths_arg_set,
+    allowed_paths_arg,
     priority,
     verifier_status,
-) = sys.argv[1:14]
+) = sys.argv[1:16]
 
 root = Path(repo_root)
 worktree = Path(worktree_path)
@@ -170,20 +176,36 @@ def repo_relative(path: Path) -> str:
     except ValueError:
         return str(path)
 
-def status_paths() -> list[str]:
-    output = subprocess.check_output(
-        ["git", "-C", str(worktree), "status", "--porcelain"],
-        text=True,
-    )
-    paths: list[str] = []
-    for line in output.splitlines():
-        if len(line) < 4:
+def parse_comma(value: str) -> list[str]:
+    return [part.strip() for part in value.split(",") if part.strip()]
+
+
+def parse_dt(value: object):
+    if not isinstance(value, str) or not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def find_active_lease_for_task(task_id: str):
+    leases_dir = root / ".ai" / "leases"
+    if not leases_dir.is_dir():
+        return None
+    now = datetime.now(timezone.utc)
+    for path in sorted(leases_dir.glob("*.json")):
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
             continue
-        path = line[3:]
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1]
-        paths.append(path)
-    return sorted(set(paths))
+        if data.get("task_id") != task_id or data.get("status") != "active":
+            continue
+        expires_at = parse_dt(data.get("expires_at"))
+        if expires_at is not None and expires_at <= now:
+            continue
+        return data
+    return None
 
 try:
     base_commit = git("rev-parse", base_branch)
@@ -191,7 +213,22 @@ except subprocess.CalledProcessError:
     base_commit = git("rev-parse", "HEAD")
 expected_head = git("rev-parse", "HEAD")
 
-allowed_paths = status_paths() or ["**"]
+if allowed_paths_arg_set == "1":
+    allowed_paths = parse_comma(allowed_paths_arg)
+else:
+    lease = find_active_lease_for_task(task_id)
+    if lease is None:
+        print(
+            "allowed_paths required: provide --allowed-paths or have an active lease for this task",
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+    allowed_paths = [str(path) for path in lease.get("allowed_paths", [])]
+
+if not allowed_paths:
+    print("allowed_paths cannot be empty", file=sys.stderr)
+    raise SystemExit(2)
+
 keep_until = (datetime.now(timezone.utc) + timedelta(days=90)).isoformat(timespec="seconds").replace("+00:00", "Z")
 passed_at = created_at if verifier_status == "passed" else None
 
@@ -219,7 +256,7 @@ item = {
     "scope": {
         "allowed_paths": allowed_paths,
         "prohibited_paths": [],
-        "diff_budget": {"max_files": max(1, len(allowed_paths) + 20), "max_lines": 5000},
+        "diff_budget": {"max_files": max(10, len(allowed_paths) * 5), "max_lines": 5000},
     },
     "artifacts": {
         "artifact_manifest": repo_relative(manifest),
