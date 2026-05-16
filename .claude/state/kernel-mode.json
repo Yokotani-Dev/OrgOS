@@ -2,18 +2,18 @@
   "schema_version": "orgos.kernel-mode.v2",
   "default": "warn",
   "invariants": {
-    "IntegratorOnlyCommit": "warn",
+    "IntegratorOnlyCommit": "enforce",
     "PerTaskWorktree": "warn",
-    "ProtectedBranchNoTouch": "warn",
+    "ProtectedBranchNoTouch": "enforce",
     "LeaseBeforeWrite": "warn",
-    "StateMutationViaOrgTool": "warn",
-    "DurableArtifactBeforeCleanup": "warn",
+    "StateMutationViaOrgTool": "enforce",
+    "DurableArtifactBeforeCleanup": "enforce",
     "OwnerApprovalForIrreversibleOps": "disabled",
     "DangerousShell": "warn",
     "KernelSelfModification": "warn",
     "IntegratorIsScriptNotAgent": "warn"
   },
-  "set_at": "2026-05-15T05:30:12Z",
+  "set_at": "2026-05-16T03:42:37Z",
   "set_by": "youyokotani",
-  "notes": "Bootstrap default; all warn pending dogfood + Owner enforce approval."
+  "notes": "StateMutationViaOrgTool set to enforce."
 }
