@@ -269,7 +269,18 @@ import subprocess
 import sys
 
 worktree = sys.argv[1]
-output = subprocess.check_output(["git", "-C", worktree, "status", "--porcelain"], text=True)
+INTERNAL_PATHS = (
+    ".ai/queue/integration/",
+    ".ai/leases/",
+    ".ai/artifacts/",
+    ".ai/alerts/",
+    ".claude/state/",
+)
+
+output = subprocess.check_output(
+    ["git", "-C", worktree, "status", "--porcelain", "--untracked-files=all"],
+    text=True,
+)
 paths = []
 for line in output.splitlines():
     if len(line) < 4:
@@ -277,6 +288,8 @@ for line in output.splitlines():
     path = line[3:]
     if " -> " in path:
         path = path.split(" -> ", 1)[1]
+    if path.startswith(INTERNAL_PATHS):
+        continue
     paths.append(path)
 for path in sorted(set(paths)):
     print(path)

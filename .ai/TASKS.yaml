@@ -1701,3 +1701,61 @@ tasks:
       関連: T-OS-060〜062 (既存 OrgOS Dashboard) の実態確認も含む。
 
       '
+  - id: T-OS-422
+    title: '[Kernel-v2 HARDEN] integrator-commit.sh: queue state files を allowed_paths
+      check から除外'
+    status: done
+    priority: P0
+    deps:
+      - T-OS-413
+    owner_role: codex-implementer
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    blast_radius: schema_change
+    owner_input_needed:
+      - destructive_approval
+    risk_level: high
+    default_if_no_response: defer
+    reversibility: reversible
+    acceptance:
+      - 'T-OS-418 dogfood で発見した bug: queue file pending→processing 移動を allowed_paths
+        check が user diff と誤認'
+      - 'fix: changed_files 収集時に .ai/queue/integration/** をフィルタ除外 (integrator-managed
+        paths)'
+      - '新 test: test_integrator_queue_state_does_not_break_allowed_paths_check'
+      - 既存 KRT-007 が pass 維持
+    notes: 'Dogfood で discovered。GPT-5.5 Q26 「test pass するが real-world で抜ける」予測の literal
+      な実例。
+
+      '
+  - id: T-OS-423
+    title: '[Kernel-v2 HARDEN] integrator INTERNAL_PATHS を拡張 (.claude/state/, .ai/alerts/)'
+    status: done
+    priority: P0
+    deps:
+      - T-OS-422
+    owner_role: codex-implementer
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    blast_radius: schema_change
+    owner_input_needed:
+      - destructive_approval
+    risk_level: high
+    default_if_no_response: defer
+    reversibility: reversible
+    acceptance:
+      - T-OS-422 でも捉えきれなかった .claude/state/ (git lock) と .ai/alerts/ を filter 追加
+      - 'INTERNAL_PATHS list を充実: .ai/queue/, .ai/leases/, .ai/artifacts/, .ai/alerts/,
+        .claude/state/'
+      - test_integrator_ignores_queue_state_transitions / test_integrator_ignores_leases_and_artifacts
+        両方 pass
+      - T-OS-418 Manager dogfood retry が integrator-commit.sh で succeed する状態
+    notes: 'Dogfood retry が依然失敗: `changed path is outside allowed_paths: .claude/state/`
+
+      Codex の T-OS-422 fix は .ai/queue/leases/artifacts のみ filter、.claude/state/ を見落とした。
+
+      '

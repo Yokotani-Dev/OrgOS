@@ -274,6 +274,98 @@ test_integrator_commit_blocks_diff_outside_allowed_paths() {
   rm -rf "$tmp_dir"
 }
 
+test_integrator_ignores_queue_state_transitions() {
+  local task_id="T-TEST-6"
+  local fixture tmp_dir repo worktree branch manifest output done_count
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'integrated queue state\n' > "$worktree/README.md"
+
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: ignore queue state $task_id" >/dev/null
+  mkdir -p "$worktree/.ai/queue/integration/processing"
+  printf '{"status":"processing"}\n' > "$worktree/.ai/queue/integration/processing/$task_id.json"
+
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+
+  [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with queue state present"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fq ".ai/queue/integration/" || fail "queue state should not be committed"
+  rm -rf "$tmp_dir"
+}
+
+test_integrator_ignores_leases_and_artifacts() {
+  local task_id="T-TEST-7"
+  local fixture tmp_dir repo worktree branch manifest output done_count
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'integrated internal state\n' > "$worktree/README.md"
+
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: ignore internal state $task_id" >/dev/null
+  mkdir -p "$worktree/.ai/leases" "$worktree/.ai/artifacts/$task_id" "$worktree/.ai/alerts"
+  printf '{"holder":"integrator"}\n' > "$worktree/.ai/leases/$task_id.json"
+  printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime.log"
+  printf 'alert log\n' > "$worktree/.ai/alerts/$task_id.log"
+
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+
+  [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with internal state present"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Eq '^\.ai/(leases|artifacts|alerts)/' || fail "leases, artifacts, and alerts should not be committed"
+  rm -rf "$tmp_dir"
+}
+
+test_integrator_ignores_claude_state_file() {
+  local task_id="T-TEST-8"
+  local fixture tmp_dir repo worktree branch manifest output done_count
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'integrated claude state\n' > "$worktree/README.md"
+
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: ignore claude state $task_id" >/dev/null
+  mkdir -p "$worktree/.claude/state"
+  printf 'pid=123 task_id=%s\n' "$task_id" > "$worktree/.claude/state/git.lock"
+
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+
+  [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with claude state present"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fq ".claude/state/" || fail "claude state should not be committed"
+  rm -rf "$tmp_dir"
+}
+
 test_integrator_env_prefix_does_not_bypass() {
   local tmp_dir fixture stderr_path status
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-week2-policy.XXXXXX")
@@ -332,6 +424,9 @@ main() {
       run_test test_integrator_commit_success
       run_test test_integrator_commit_blocks_without_manifest
       run_test test_integrator_commit_blocks_diff_outside_allowed_paths
+      run_test test_integrator_ignores_queue_state_transitions
+      run_test test_integrator_ignores_leases_and_artifacts
+      run_test test_integrator_ignores_claude_state_file
       run_test test_integrator_env_prefix_does_not_bypass
       ;;
     *)
