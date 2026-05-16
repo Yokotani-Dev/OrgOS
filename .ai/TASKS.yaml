@@ -1866,3 +1866,10 @@ tasks:
     allowed_paths:
       - .ai/REVIEW/T-OS-400/HARDEN_DIGEST.md
       - .ai/TASKS.yaml
+  - id: T-OS-429
+    title: '[Final] 6th-round GPT-5.5 Pro post-hardening validation prompt'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .ai/REVIEW/T-OS-400/external-ai-6th-prompt.md
+      - .ai/TASKS.yaml
