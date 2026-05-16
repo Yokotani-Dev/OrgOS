@@ -246,7 +246,7 @@ test_integrator_commit_blocks_without_manifest() {
 
 test_integrator_commit_blocks_diff_outside_allowed_paths() {
   local task_id="T-TEST-5"
-  local fixture tmp_dir repo worktree branch manifest queue_path status
+  local fixture tmp_dir repo worktree branch manifest queue_path output done_count
   fixture=$(setup_repo_fixture "$task_id")
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
@@ -263,14 +263,91 @@ test_integrator_commit_blocks_diff_outside_allowed_paths() {
     --commit-message "test: scope")
   printf 'outside\n' > "$worktree/outside.txt"
 
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+
+  [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done while outside paths are present"
+  assert_not_exists "$queue_path" "pending queue item should be consumed"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fxq "README.md" || fail "allowed path should be committed"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fxq "outside.txt" || fail "outside path should not be committed"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq "outside.txt" || fail "outside path should remain untracked"
+  rm -rf "$tmp_dir"
+}
+
+test_integrator_only_commits_allowed_paths_intersect() {
+  local task_id="T-TEST-9"
+  local fixture tmp_dir repo worktree branch manifest output done_count changed_names
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  printf 'allowed readme\n' > "$worktree/README.md"
+  mkdir -p "$worktree/src"
+  printf 'allowed source\n' > "$worktree/src/allowed.txt"
+
+  "$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: intersect $task_id" >/dev/null
+
+  mkdir -p "$worktree/.ai/CODEX/AUDIT" "$worktree/.ai/sessions" "$worktree/.claude/state"
+  printf 'audit\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
+  printf 'session\n' > "$worktree/.ai/sessions/$task_id.jsonl"
+  printf 'pretool\n' > "$worktree/.claude/state/pretool_$task_id.jsonl"
+  printf 'outside\n' > "$worktree/outside.txt"
+
+  output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
+  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  changed_names=$(git -C "$worktree" show --name-only --pretty=format: HEAD)
+
+  [ "$done_count" -eq 1 ] || fail "integrator should complete with irrelevant paths present"
+  printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  printf '%s\n' "$changed_names" | grep -Fxq "README.md" || fail "README.md should be committed"
+  printf '%s\n' "$changed_names" | grep -Fxq "src/allowed.txt" || fail "allowed source should be committed"
+  ! printf '%s\n' "$changed_names" | grep -Eq '^(\.ai/|\.claude/|outside\.txt$)' || fail "irrelevant paths should not be committed"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/CODEX/AUDIT/$task_id.log" || fail "audit path should remain untracked"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/sessions/$task_id.jsonl" || fail "session path should remain untracked"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".claude/state/pretool_$task_id.jsonl" || fail "pretool path should remain untracked"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq "outside.txt" || fail "outside path should remain untracked"
+  rm -rf "$tmp_dir"
+}
+
+test_integrator_refuses_empty_intersect() {
+  local task_id="T-TEST-10"
+  local fixture tmp_dir repo worktree branch manifest queue_path stderr_path status
+  fixture=$(setup_repo_fixture "$task_id")
+  tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
+  repo=$(printf '%s\n' "$fixture" | sed -n '2p')
+  worktree=$(printf '%s\n' "$fixture" | sed -n '3p')
+  branch=$(printf '%s\n' "$fixture" | sed -n '4p')
+  manifest=$(write_manifest "$repo" "$task_id")
+  stderr_path="$tmp_dir/integrator-empty-intersect.stderr"
+  printf 'allowed snapshot\n' > "$worktree/README.md"
+  queue_path=$("$repo/scripts/org/request-integration.sh" \
+    --task-id "$task_id" \
+    --worktree-path "$worktree" \
+    --branch "$branch" \
+    --base-branch main \
+    --artifact-manifest "$manifest" \
+    --commit-message "test: empty intersect")
+  git -C "$worktree" checkout -- README.md
+  mkdir -p "$worktree/.ai/CODEX/AUDIT"
+  printf 'audit only\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
+
   set +e
-  "$repo/scripts/org/integrator-commit.sh" --task-id "$task_id" >/dev/null 2>&1
+  "$repo/scripts/org/integrator-commit.sh" --queue-item "$queue_path" --task-id "$task_id" >/dev/null 2>"$stderr_path"
   status=$?
   set -e
 
-  [ "$status" -ne 0 ] || fail "integrator should reject files outside allowed_paths"
-  assert_not_exists "$queue_path" "failed queue item should leave pending"
-  [ "$(find "$repo/.ai/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed scope item should be recorded"
+  [ "$status" -ne 0 ] || fail "integrator should reject empty allowed_paths intersect"
+  assert_contains "$stderr_path" "no user diff within allowed_paths" "empty intersect should explain refusal"
+  [ "$(find "$repo/.ai/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed empty-intersect item should be recorded"
   rm -rf "$tmp_dir"
 }
 
@@ -459,6 +536,8 @@ main() {
       run_test test_integrator_ignores_leases_and_artifacts
       run_test test_integrator_ignores_uppercase_legacy_paths
       run_test test_integrator_ignores_claude_state_file
+      run_test test_integrator_only_commits_allowed_paths_intersect
+      run_test test_integrator_refuses_empty_intersect
       run_test test_integrator_env_prefix_does_not_bypass
       ;;
     *)

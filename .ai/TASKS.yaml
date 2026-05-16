@@ -1791,3 +1791,35 @@ tasks:
       Python の startswith は case-sensitive のため zone differ で漏れる。
 
       '
+  - id: T-OS-425
+    title: '[Kernel-v2 HARDEN] integrator changed_files redesign: allowed_paths intersect
+      approach'
+    status: done
+    priority: P0
+    deps:
+      - T-OS-424
+    owner_role: codex-implementer
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    blast_radius: schema_change
+    owner_input_needed:
+      - destructive_approval
+    risk_level: high
+    default_if_no_response: defer
+    reversibility: reversible
+    acceptance:
+      - INTERNAL_PATHS list 方式 (whack-a-mole) を廃止
+      - '新方式: git status から allowed_paths にマッチする paths のみを抽出 (intersect)'
+      - 'prohibited check: 抽出済み paths に対して実施'
+      - 他 paths (queue/leases/artifacts/alerts/state/audit/任意) は無関係として無視
+      - T-OS-422/423/424 の test 4 件全 pass + 既存全 test pass
+      - '新 test: 任意の .ai/* path が status に出ても integrator は無視'
+    notes: "Iteration 4 で .ai/CODEX/AUDIT/ 漏れ。次は .ai/sessions/ や .claude/state/* など\n\
+      また漏れが出る蓋然性が高い。INTERNAL_PATHS list は本質的に whack-a-mole で fragile。\n\n設計再考: integrator\
+      \ は \"user intent (lease.allowed_paths) のみ commit\" が本来の責務。\ngit status の他 path\
+      \ は「Codex / runtime / OS / 過去の残骸」であって integrator が触らない。\n\nCleaner algorithm:\n\
+      \  1. git status --porcelain で全 changed paths\n  2. allowed_paths にマッチする paths\
+      \ のみ抽出 (intersect)\n  3. prohibited に当たらないか確認\n  4. それらのみ git add + commit\n\
+      \nINTERNAL_PATHS は撤廃 (deny-list よりも allow-list が安全)。\n"

@@ -264,56 +264,15 @@ rm -f /tmp/orgos-integrator-deps.$$
 
 changed_files=()
 changed_files_path=$(mktemp "${TMPDIR:-/tmp}/orgos-integrator-changed.XXXXXX")
-python3 - "$worktree_path" >"$changed_files_path" <<'PY'
-import subprocess
-import sys
-
-worktree = sys.argv[1]
-INTERNAL_PATHS = (
-    ".ai/queue/integration/",
-    ".ai/leases/",
-    ".ai/artifacts/",
-    ".ai/alerts/",
-    ".claude/state/",
-)
-INTERNAL_PATH_PREFIXES = tuple(prefix.lower() for prefix in INTERNAL_PATHS)
-
-output = subprocess.check_output(
-    ["git", "-C", worktree, "status", "--porcelain", "--untracked-files=all"],
-    text=True,
-)
-paths = []
-for line in output.splitlines():
-    if len(line) < 4:
-        continue
-    path = line[3:]
-    if " -> " in path:
-        path = path.split(" -> ", 1)[1]
-    if path.lower().startswith(INTERNAL_PATH_PREFIXES):
-        continue
-    paths.append(path)
-for path in sorted(set(paths)):
-    print(path)
-PY
-while IFS= read -r changed_file; do
-  [ -n "$changed_file" ] && changed_files+=("$changed_file")
-done < "$changed_files_path"
-rm -f "$changed_files_path"
-
-if [ "${#changed_files[@]}" -eq 0 ]; then
-  fail_processing "no worktree changes to commit"
-fi
-
-if ! python3 - "$processing_path" "$worktree_path" "${changed_files[@]}" >/tmp/orgos-integrator-diff.$$ <<'PY'
+if ! python3 - "$worktree_path" "$processing_path" >"$changed_files_path" <<'PY'
 import fnmatch
 import json
 import subprocess
 import sys
 from pathlib import Path
 
-queue_path = Path(sys.argv[1])
-worktree = Path(sys.argv[2])
-changed = sys.argv[3:]
+worktree = sys.argv[1]
+queue_path = Path(sys.argv[2])
 with queue_path.open("r", encoding="utf-8") as handle:
     data = json.load(handle)
 
@@ -325,15 +284,61 @@ if not allowed:
     raise SystemExit(1)
 
 def matches(path: str, pattern: str) -> bool:
-    return fnmatch.fnmatch(path, pattern) or path == pattern
+    if path == pattern:
+        return True
+    if pattern.endswith("/") and path.startswith(pattern):
+        return True
+    if not any(char in pattern for char in "*?[") and path.startswith(pattern.rstrip("/") + "/"):
+        return True
+    return fnmatch.fnmatch(path, pattern)
 
-for path in changed:
+output = subprocess.check_output(
+    ["git", "-C", worktree, "status", "--porcelain", "--untracked-files=all"],
+    text=True,
+)
+all_paths = []
+for line in output.splitlines():
+    if len(line) < 4:
+        continue
+    path = line[3:]
+    if " -> " in path:
+        path = path.split(" -> ", 1)[1]
+    all_paths.append(path)
+
+user_diff = sorted(
+    path
+    for path in set(all_paths)
+    if any(matches(path, pattern) for pattern in allowed)
+)
+if not user_diff:
+    print("no user diff within allowed_paths")
+    raise SystemExit(1)
+
+for path in user_diff:
     if any(matches(path, pattern) for pattern in prohibited):
         print(f"changed path is prohibited: {path}")
         raise SystemExit(1)
-    if not any(matches(path, pattern) for pattern in allowed):
-        print(f"changed path is outside allowed_paths: {path}")
-        raise SystemExit(1)
+
+for path in user_diff:
+    print(path)
+PY
+then
+  changed_error=$(cat "$changed_files_path" 2>/dev/null || true)
+  rm -f "$changed_files_path"
+  fail_processing "${changed_error:-changed file selection failed}"
+fi
+while IFS= read -r changed_file; do
+  [ -n "$changed_file" ] && changed_files+=("$changed_file")
+done < "$changed_files_path"
+rm -f "$changed_files_path"
+
+if ! python3 - "$worktree_path" "${changed_files[@]}" >/tmp/orgos-integrator-diff.$$ <<'PY'
+import subprocess
+import sys
+from pathlib import Path
+
+worktree = Path(sys.argv[1])
+changed = sys.argv[2:]
 
 tracked_output = subprocess.check_output(
     ["git", "-C", str(worktree), "diff", "--numstat", "HEAD", "--", *changed],
