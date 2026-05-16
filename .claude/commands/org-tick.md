@@ -314,6 +314,52 @@ def check_plan_sync():
   - 理由: ISSUE-005 対応のため
 ```
 
+### 6A. REQUIREMENTS → DESIGN Gate: Journey 合意チェック
+
+REQUIREMENTS から DESIGN へ進める前に、Journey Sync の合意状態を必ず確認する。
+
+**ORG_TICK_JOURNEY_GATE_SENTINEL**
+
+```python
+# 疑似コード
+def check_journey_gate(stage, next_stage):
+    """
+    REQUIREMENTS -> DESIGN の遷移には Owner と合意済みの Journey が必須。
+    .ai/JOURNEY.md、または PROJECT.md/BRIEF.md 等に同等の Journey セクションがあり、
+    sync_status=confirmed が明記されていることを確認する。
+    """
+    if stage != "REQUIREMENTS" or next_stage != "DESIGN":
+        return {"allow": True}
+
+    journey_sources = [
+        ".ai/JOURNEY.md",
+        ".ai/PROJECT.md",
+        ".ai/BRIEF.md",
+    ]
+    journey = find_existing_journey_source(journey_sources)
+
+    if journey is None:
+        return {
+            "allow": False,
+            "reason": "Journey document is missing",
+            "owner_prompt": "DESIGN に進む前に Journey workshop を実施し、.ai/JOURNEY.md に sync_status=confirmed を記録してください。",
+        }
+
+    if not contains_field(journey, "sync_status", "confirmed"):
+        return {
+            "allow": False,
+            "reason": "Journey sync_status is not confirmed",
+            "owner_prompt": "Journey が draft のため DESIGN に進めません。Owner と Journey workshop を実施し、sync_status=confirmed に更新してください。",
+        }
+
+    return {"allow": True}
+```
+
+不在または `sync_status=draft` / 未確認の場合:
+- DESIGN へ stage 遷移しない
+- `awaiting_owner=true` として Owner に Journey workshop を促す
+- DASHBOARD の Next Action に「Journey workshop 実施、sync_status=confirmed 記録」を表示する
+
 ---
 
 ### 7. 状況診断とエージェント自動選択

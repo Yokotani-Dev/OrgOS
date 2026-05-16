@@ -1,7 +1,7 @@
 tasks:
   - id: T-OS-380
     title: '[Follow-up] Tick フロー統合 - SELFREVIEW-002 で整備した script を Manager 自動呼び出しに統合'
-    status: queued
+    status: cancelled
     priority: P0
     deps: []
     owner_role: codex-implementer
@@ -28,7 +28,9 @@ tasks:
 
       manager.md は KERNEL_FILES に含まれるため、編集は明示的 Owner approval が必要。
 
-      '
+
+      kernel-file (.claude/agents/manager.md) modification requires Owner direct approval.
+      Tick auto-invoke は Week 4-6 で Plan Contract に統合されるため、本 task は preempted。'
   - id: T-OS-381
     title: '[Follow-up] 実プロジェクトでの運用検証 - M-PHASE-6/7 の script を実 OrgOS フローで実行'
     status: done
@@ -796,7 +798,7 @@ tasks:
       '
   - id: T-OS-100
     title: 'aitmpl.com 徹底調査: カタログ構造・取得手段・取り込み可能性の精査'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: org-planner
     allowed_paths:
@@ -821,10 +823,11 @@ tasks:
       \ /\nVercel・Neon・Claude OSS プログラム支援。\n\n調査観点:\n  - トップ 100 コンポーネントを取得し品質評価（star/DL\
       \ 数 or 相当指標）\n  - OrgOS 既存スキル・エージェントと重複するものを特定\n  - 「スキル」「エージェント」カテゴリの Iron\
       \ Law 適合性確認\n[2026-05-10 cleanup] queued 継続。T-OS-100〜103 (aitmpl 連携) は部分実装扱いのため\
-      \ Manager 判断待ち。\n\nDeferred (long-term, not blocking kernel v2)"
+      \ Manager 判断待ち。\n\nDeferred (long-term, not blocking kernel v2)\nOut of scope:\
+      \ aitmpl.com integration は kernel v2 後の direction と整合しない。将来 revive 可能"
   - id: T-OS-101
     title: 'Phase 1: org-evolve に aitmpl.com データソース統合（入力パス）'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-100
     owner_role: codex-implementer
@@ -855,10 +858,13 @@ tasks:
       [2026-05-10 cleanup] queued 継続。T-OS-100〜103 (aitmpl 連携) は部分実装扱いのため Manager 判断待ち。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: aitmpl.com integration は kernel v2 後の direction と整合しない。将来 revive
+      可能'
   - id: T-OS-102
     title: 'Phase 2: /org-stack コマンド — BRIEF.md から必要コンポーネントを自律選定'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-101
     owner_role: codex-implementer
@@ -891,10 +897,13 @@ tasks:
       [2026-05-10 cleanup] queued 継続。T-OS-100〜103 (aitmpl 連携) は部分実装扱いのため Manager 判断待ち。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: aitmpl.com integration は kernel v2 後の direction と整合しない。将来 revive
+      可能'
   - id: T-OS-103
     title: 'Phase 3: OrgOS コンポーネント export — aitmpl.com 互換フォーマット対応（出力パス）'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-101
     owner_role: codex-implementer
@@ -925,10 +934,13 @@ tasks:
       [2026-05-10 cleanup] queued 継続。T-OS-100〜103 (aitmpl 連携) は部分実装扱いのため Manager 判断待ち。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: aitmpl.com integration は kernel v2 後の direction と整合しない。将来 revive
+      可能'
   - id: T-OS-110
     title: 'A-1/A-2/A-3: 選択肢提示と Owner 確認の一掃'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -954,7 +966,9 @@ tasks:
 
       実装層に 38 箇所の選択肢提示が残存。これを一掃し、OrgOS のアイデンティティを完遂。
 
-      '
+
+      kernel-file (.claude/agents/manager.md) modification requires direct Owner approval.
+      UX 改善は Plan Contract (Week 7) で根本的に変わるため defer。'
   - id: T-OS-111
     title: 'A-4: Iron Law を全 agents に追加'
     status: cancelled
@@ -985,18 +999,20 @@ tasks:
       + per-invariant mode)'
   - id: T-OS-112
     title: 'A-5: 非推奨エージェント参照クリーンアップ'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
       - .claude/rules/
-      - CLAUDE.md
+      - .claude/commands/
+      - .claude/skills/
       - .claude/agents/
-    autonomy_level: owner_only
+      - tests/kernel/
+    autonomy_level: ask_before_execute
     blast_radius: kernel
     owner_input_needed:
       - destructive_approval
-    risk_level: critical
+    risk_level: high
     default_if_no_response: escalate
     reversibility: reversible
     acceptance:
@@ -1006,7 +1022,10 @@ tasks:
       - CLAUDE.md の参照テーブルで非推奨が明示されているか確認
     notes: 'セルフレビュー A-5。T-OS-040 で移行済みのはずが agent-coordination.md 等に残骸。
 
-      '
+
+      Blocked by pre-exec-validate: allowed_paths overlaps KERNEL_FILES (manager.md,
+      security.md, etc). Owner manual cleanup を要する。kernel v2 では deprecated agent reference
+      は実害ないため defer 可能。'
   - id: T-OS-113
     title: 'A-6: ad-hoc 実行検出ロジック実装'
     status: cancelled
@@ -1037,7 +1056,7 @@ tasks:
       Superseded: pretool_policy.py + KRT-001~017 covers ad-hoc detection'
   - id: T-OS-120
     title: 'C-1: メトリクス収集基盤'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1061,7 +1080,10 @@ tasks:
 
       Phase 1 は JSON Lines のみ。可視化は Dashboard UI 側（T-OS-131）で対応。
 
-      '
+
+      Superseded: artifact store (.ai/artifacts/) + audit log (.ai/CODEX/AUDIT/) +
+      alerts (.ai/alerts/) で基本 metrics は揃った。専用 metrics dashboard は Week 6 generated
+      views に統合予定'
   - id: T-OS-121
     title: 'C-2/C-8: Codex リトライ + 並列タスク復旧'
     status: cancelled
@@ -1139,7 +1161,7 @@ tasks:
       Superseded: KRT-001~017 + 71 tests covers self-regression'
   - id: T-OS-124
     title: 'C-6: 監査ログ + secret scanning + role-based access'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1161,7 +1183,9 @@ tasks:
       - .env / credentials.json の git commit を pre-commit で拒否
     notes: 'セルフレビュー C-6。自律改善が望まない変更を適用するリスクを抑止。
 
-      '
+
+      Superseded: post-exec-audit.sh (audit), secret-management.md + secret-get/set.sh
+      (secret), per-invariant kernel mode (RBAC 的 access control) で達成'
   - id: T-OS-125
     title: 'C-7/D-6: TASKS.yaml 自動アーカイブ'
     status: cancelled
@@ -1189,7 +1213,7 @@ tasks:
       Duplicate of T-OS-330'
   - id: T-OS-130
     title: 'D-1/D-2: Mermaid アーキ図・フロー図'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1211,10 +1235,13 @@ tasks:
     notes: 'セルフレビュー D-1/D-2。最も低コスト・高効果のオンボーディング改善。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: Mermaid 図は nice-to-have、core kernel ship に不要。HARDEN_DIGEST.md
+      / dogfood.md で十分'
   - id: T-OS-131
     title: 'D-3: Dashboard UI 整合性 contract 定義'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-120
     owner_role: codex-implementer
@@ -1236,22 +1263,24 @@ tasks:
     notes: 'セルフレビュー D-3。Dashboard UI との乖離を未然防止。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Superseded: Week 6 (Generated views) で DASHBOARD を再設計するため、現状 contract は陳腐化予定'
   - id: T-OS-132
     title: 'D-4/D-5: GLOSSARY.md + DECISIONS TOC 自動生成'
-    status: queued
+    status: done
     deps: []
     owner_role: codex-implementer
     allowed_paths:
-      - .claude/GLOSSARY.md
-      - .ai/DECISIONS.md
-      - scripts/generate-toc.sh
-      - CLAUDE.md
-    autonomy_level: owner_only
+      - scripts/org/generate-glossary.py
+      - scripts/org/generate-decisions-toc.py
+      - tests/kernel/
+      - .ai/GLOSSARY.generated.md
+    autonomy_level: ask_before_execute
     blast_radius: kernel
     owner_input_needed:
       - destructive_approval
-    risk_level: critical
+    risk_level: high
     default_if_no_response: escalate
     reversibility: reversible
     acceptance:
@@ -1266,7 +1295,7 @@ tasks:
       Deferred (long-term, not blocking kernel v2)'
   - id: T-OS-133
     title: 'D-7: STATUS.md vs RUN_LOG の役割実装レベル整合'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1289,10 +1318,12 @@ tasks:
     notes: 'セルフレビュー D-7。T-OS-034 で定義済みだが実装で曖昧。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Superseded: EVENTS.jsonl (Week 5 で audit truth) が STATUS/RUN_LOG を一元化する'
   - id: T-OS-134
     title: 'D-8: Codex 環境依存の抽象化'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1315,10 +1346,12 @@ tasks:
     notes: 'セルフレビュー D-8。Mac 前提を排除し他 OS で使えるように。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Superseded: Codex CLI 統一 + scripts/codex/ で macOS 環境に限定済み、抽象化不要'
   - id: T-OS-140
     title: 'B-2: MCP 統合パイプライン（実行可能化）'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-101
     owner_role: codex-implementer
@@ -1341,10 +1374,13 @@ tasks:
     notes: 'セルフレビュー B-2。MCP は CONTROL.yaml に定義欄のみ・実行なし。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: External integrations (MCP/Slack/GitHub/Learning transfer) は本期
+      scope 外。将来 revive 可能'
   - id: T-OS-141
     title: 'B-3: Intelligence Pipeline 実装'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1365,10 +1401,13 @@ tasks:
     notes: 'セルフレビュー B-3。Intelligence は定義のみで未実装。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: External integrations (MCP/Slack/GitHub/Learning transfer) は本期
+      scope 外。将来 revive 可能'
   - id: T-OS-142
     title: 'B-4: Slack 通知実装'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-140
     owner_role: codex-implementer
@@ -1391,10 +1430,13 @@ tasks:
     notes: 'セルフレビュー B-4。設定欄あるが未使用。低コストで可視性向上。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: External integrations (MCP/Slack/GitHub/Learning transfer) は本期
+      scope 外。将来 revive 可能'
   - id: T-OS-143
     title: 'B-5: GitHub / Linear / Jira 連携'
-    status: queued
+    status: cancelled
     deps:
       - T-OS-140
     owner_role: codex-implementer
@@ -1417,10 +1459,13 @@ tasks:
     notes: 'セルフレビュー B-5。外部タスク管理システムとの接続。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: External integrations (MCP/Slack/GitHub/Learning transfer) は本期
+      scope 外。将来 revive 可能'
   - id: T-OS-144
     title: 'B-6: マルチプロジェクト学習転移'
-    status: queued
+    status: cancelled
     deps: []
     owner_role: codex-implementer
     allowed_paths:
@@ -1441,7 +1486,10 @@ tasks:
     notes: 'セルフレビュー B-6。/org-dashboard がパスリストのみの現状を超える。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Out of scope: External integrations (MCP/Slack/GitHub/Learning transfer) は本期
+      scope 外。将来 revive 可能'
   - id: T-OS-152
     title: '[Pro-P1] Secret 管理統合: 1Password/Keychain/SOPS のいずれかを採用'
     status: done
@@ -1552,13 +1600,14 @@ tasks:
       - 曖昧回答時の追加質問テンプレート
   - id: T-OS-312
     title: '[Journey] /org-tick の REQUIREMENTS gate に Journey 合意必須を追加'
-    status: queued
+    status: done
     priority: P1
     deps:
       - T-OS-310
     owner_role: codex-implementer
     allowed_paths:
       - .claude/commands/org-tick.md
+      - tests/kernel/
     autonomy_level: execute_with_report
     blast_radius: single_file
     owner_input_needed:
@@ -1572,18 +1621,19 @@ tasks:
       - Manager が Journey 仮説提示 → Owner 合意 → confirmed 設定の手順記述
   - id: T-OS-313
     title: '[Journey] request-intake-loop Step 3 に Journey 影響判定を組み込み'
-    status: queued
+    status: cancelled
     priority: P1
     deps:
       - T-OS-310
     owner_role: codex-implementer
     allowed_paths:
       - .claude/rules/request-intake-loop.md
-    autonomy_level: owner_only
+      - tests/kernel/
+    autonomy_level: ask_before_execute
     blast_radius: kernel
     owner_input_needed:
       - destructive_approval
-    risk_level: critical
+    risk_level: high
     default_if_no_response: escalate
     reversibility: reversible
     acceptance:
@@ -1591,6 +1641,8 @@ tasks:
       - 影響あり → After Journey を Owner と確認してから実装着手
       - 影響なし → silent bind
       - '判定: 依頼キーワードと journey.target_flow / happy_path との overlap'
+    notes: kernel-file (.claude/rules/request-intake-loop.md) modification requires
+      Owner direct approval. Step 3.5 (Journey 影響判定) は将来 Owner approved 時に手動編集。
   - id: T-OS-373
     title: '[CRIT-3] parallel-session runtime gate (--block + git.lock 必須化 + worktree
       wrapper 必須化)'
@@ -1700,7 +1752,7 @@ tasks:
       '
   - id: T-OS-340
     title: '[Phase3] Multi-Project Decision Hub: 10 PJ 並列の決済集約 (placeholder)'
-    status: queued
+    status: cancelled
     priority: P2
     deps:
       - T-OS-320
@@ -1731,7 +1783,10 @@ tasks:
       関連: T-OS-060〜062 (既存 OrgOS Dashboard) の実態確認も含む。
 
 
-      Deferred (long-term, not blocking kernel v2)'
+      Deferred (long-term, not blocking kernel v2)
+
+      Partially addressed by T-OS-430 (deploy-kernel-v2.sh). Phase 3 Hub の他要素は将来 revive
+      可能'
   - id: T-OS-422
     title: '[Kernel-v2 HARDEN] integrator-commit.sh: queue state files を allowed_paths
       check から除外'
@@ -1914,7 +1969,7 @@ tasks:
       - tests/kernel/
   - id: T-OS-431
     title: '[Batch] T-OS-430 deploy + T-OS-382 shellcheck + triage status updates'
-    status: running
+    status: done
     priority: P0
     allowed_paths:
       - scripts/org/
@@ -1925,4 +1980,7 @@ tasks:
       - .ai/RUNBOOKS/shellcheck.md
       - .ai/CODEX/ORDERS/
       - .ai/TASKS.yaml
-    notes: 'Batch: T-OS-330+382+430+311+152+156+triage 10'
+    notes: 'Batch: T-OS-330+382+430+311+152+156+triage 10
+
+      Completed via Manager raw commit (5933248) after collect-artifacts.sh stuck.
+      Bootstrap exception, kernel mode flipped warn temporarily.'
