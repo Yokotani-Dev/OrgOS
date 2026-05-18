@@ -73,15 +73,20 @@ def load_tasks_file(path: Path) -> tuple[Any, Any]:
         return IndentDumper, yaml.safe_load(handle)
 
 
+LEGACY_HEADER = "# ORGOS-LEGACY: use scripts/org/update-task.py\n"
+
+
 def dump_tasks_file(yaml_obj: Any, data: Any, path: Path) -> None:
     if USE_RUAMEL:
         with path.open("w", encoding="utf-8") as handle:
+            handle.write(LEGACY_HEADER)
             yaml_obj.dump(data, handle)
         return
 
     import yaml
 
     with path.open("w", encoding="utf-8") as handle:
+        handle.write(LEGACY_HEADER)
         yaml.dump(
             data,
             handle,

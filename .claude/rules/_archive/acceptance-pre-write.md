@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-05-17**: This rule is superseded by the kernel.
+> See `.ai/DECISIONS.md#PLAN-UPDATE-WEEK8-AUDIT` for rationale.
+
 # Acceptance Pre-Write Protocol - Iron Law
 
 > セルフレビュー観点を実装後に発見する運用を止める。

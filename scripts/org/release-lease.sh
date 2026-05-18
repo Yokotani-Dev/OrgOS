@@ -4,9 +4,57 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 LEASE_DIR="$REPO_ROOT/.ai/leases"
+EVENTS_PATH="${ORGOS_EVENTS_PATH:-$REPO_ROOT/.ai/EVENTS.jsonl}"
 
 usage() {
   echo "Usage: release-lease.sh <lease_id> [--reason done|cancelled|expired]" >&2
+}
+
+emit_lease_event() {
+  local event_type="$1"
+  local lease_path="$2"
+  local release_reason="$3"
+
+  mkdir -p "$(dirname "$EVENTS_PATH")"
+  python3 - "$EVENTS_PATH" "$event_type" "$lease_path" "$release_reason" "$(basename "$0")" <<'PY'
+import json
+import secrets
+import sys
+from datetime import datetime, timezone
+
+events_path, event_type, lease_path, release_reason, source = sys.argv[1:6]
+with open(lease_path, "r", encoding="utf-8") as handle:
+    lease = json.load(handle)
+
+now = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+payload = {
+    "schema_version": "orgos.event.v1",
+    "event_id": f"EV-{now.replace('-', '').replace(':', '')}-{lease.get('lease_id', 'unknown')}-{secrets.token_hex(4)}",
+    "event_type": event_type,
+    "type": event_type,
+    "occurred_at": now,
+    "source": f"scripts/org/{source}",
+    "lease_id": lease.get("lease_id"),
+    "task_id": lease.get("task_id"),
+    "actor": lease.get("actor", {}),
+    "allowed_paths": lease.get("allowed_paths", []),
+    "lease_status": lease.get("status"),
+    "release_reason": release_reason,
+    "lease": {
+        "acquired_at": lease.get("acquired_at"),
+        "expires_at": lease.get("expires_at"),
+        "heartbeat_at": lease.get("heartbeat_at"),
+        "released_at": lease.get("released_at"),
+    },
+}
+for key in ("worktree_path", "branch"):
+    if lease.get(key):
+        payload[key] = lease[key]
+
+with open(events_path, "a", encoding="utf-8") as handle:
+    json.dump(payload, handle, sort_keys=True)
+    handle.write("\n")
+PY
 }
 
 if [ "$#" -lt 1 ]; then
@@ -75,4 +123,5 @@ PY
 
 mv "$tmp_path" "$released_path"
 rm -f "$lease_path"
+emit_lease_event LeaseReleased "$released_path" "$reason"
 printf '%s\n' "$released_path"

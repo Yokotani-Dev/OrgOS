@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 LEASE_DIR="$REPO_ROOT/.ai/leases"
+EVENTS_PATH="${ORGOS_EVENTS_PATH:-$REPO_ROOT/.ai/EVENTS.jsonl}"
 
 task_id=""
 actor_role=""
@@ -17,6 +18,50 @@ usage() {
   cat >&2 <<'EOF'
 Usage: acquire-lease.sh --task-id T-XXX --actor-role codex|manager|subagent|integrator|owner --actor-id ID --allowed-paths "path1,path2" [--worktree-path PATH] [--branch NAME] [--ttl-seconds 1800]
 EOF
+}
+
+emit_lease_event() {
+  local event_type="$1"
+  local lease_path="$2"
+
+  mkdir -p "$(dirname "$EVENTS_PATH")"
+  python3 - "$EVENTS_PATH" "$event_type" "$lease_path" "$(basename "$0")" <<'PY'
+import json
+import secrets
+import sys
+from datetime import datetime, timezone
+
+events_path, event_type, lease_path, source = sys.argv[1:5]
+with open(lease_path, "r", encoding="utf-8") as handle:
+    lease = json.load(handle)
+
+now = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+payload = {
+    "schema_version": "orgos.event.v1",
+    "event_id": f"EV-{now.replace('-', '').replace(':', '')}-{lease.get('lease_id', 'unknown')}-{secrets.token_hex(4)}",
+    "event_type": event_type,
+    "type": event_type,
+    "occurred_at": now,
+    "source": f"scripts/org/{source}",
+    "lease_id": lease.get("lease_id"),
+    "task_id": lease.get("task_id"),
+    "actor": lease.get("actor", {}),
+    "allowed_paths": lease.get("allowed_paths", []),
+    "lease_status": lease.get("status"),
+    "lease": {
+        "acquired_at": lease.get("acquired_at"),
+        "expires_at": lease.get("expires_at"),
+        "heartbeat_at": lease.get("heartbeat_at"),
+    },
+}
+for key in ("worktree_path", "branch"):
+    if lease.get(key):
+        payload[key] = lease[key]
+
+with open(events_path, "a", encoding="utf-8") as handle:
+    json.dump(payload, handle, sort_keys=True)
+    handle.write("\n")
+PY
 }
 
 while [ "$#" -gt 0 ]; do
@@ -193,4 +238,5 @@ sys.stdout.write("\n")
 PY
 
 mv "$tmp_path" "$lease_path"
+emit_lease_event LeaseAcquired "$lease_path"
 printf '%s\n' "$lease_id"

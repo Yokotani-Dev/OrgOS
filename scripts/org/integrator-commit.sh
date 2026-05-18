@@ -11,6 +11,7 @@ EOF
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 VERIFIER="$REPO_ROOT/scripts/org/verify-artifact-manifest.py"
+PLAN_SCHEMA="$REPO_ROOT/.claude/schemas/plan-contract.v1.json"
 
 task_id=""
 queue_item=""
@@ -33,6 +34,37 @@ while [ "$#" -gt 0 ]; do
       ;;
   esac
 done
+
+read_queue_task_id() {
+  local path="$1"
+  python3 - "$path" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+try:
+    with path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+except Exception as exc:
+    print(f"ERROR:failed to parse queue item: {exc}")
+    raise SystemExit(0)
+task_id = data.get("task_id")
+if not isinstance(task_id, str) or not task_id:
+    print("ERROR:queue item missing task_id")
+    raise SystemExit(0)
+print(task_id)
+PY
+}
+
+if [ -z "$task_id" ] && [ -n "$queue_item" ]; then
+  queue_task_id=$(read_queue_task_id "$queue_item")
+  if [[ "$queue_task_id" == ERROR:* ]]; then
+    echo "${queue_task_id#ERROR:}" >&2
+    exit 2
+  fi
+  task_id="$queue_task_id"
+fi
 
 if [ -z "$task_id" ]; then
   echo "missing --task-id" >&2
@@ -62,6 +94,16 @@ if [ ! -f "$queue_item" ]; then
   exit 2
 fi
 
+queue_task_id=$(read_queue_task_id "$queue_item")
+if [[ "$queue_task_id" == ERROR:* ]]; then
+  echo "${queue_task_id#ERROR:}" >&2
+  exit 2
+fi
+if [ "$queue_task_id" != "$task_id" ]; then
+  echo "queue item task_id mismatch: expected $task_id, got $queue_task_id" >&2
+  exit 2
+fi
+
 lock_file="$REPO_ROOT/.claude/state/git.lock"
 lock_dir="$lock_file.d"
 if ! mkdir "$lock_dir" 2>/dev/null; then
@@ -82,6 +124,25 @@ fail_processing() {
   local message="$1"
   local failed_path="$failed_dir/$task_id.$(date -u +%Y%m%dT%H%M%SZ).json"
   mkdir -p "$failed_dir"
+  python3 - "$queue_root/events.jsonl" "$task_id" "$message" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+events_path = Path(sys.argv[1])
+task_id = sys.argv[2]
+message = sys.argv[3]
+events_path.parent.mkdir(parents=True, exist_ok=True)
+payload = {
+    "event": "IntegrationFailed",
+    "task_id": task_id,
+    "message": message,
+    "occurred_at": datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z"),
+}
+with events_path.open("a", encoding="utf-8") as handle:
+    handle.write(json.dumps(payload, sort_keys=True, separators=(",", ":")) + "\n")
+PY
   python3 - "$processing_path" "$message" <<'PY'
 import json
 import sys
@@ -105,6 +166,92 @@ PY
   echo "$message" >&2
   echo "failed queue item: $failed_path" >&2
   exit 1
+}
+
+validate_plan_contract() {
+  local plan_path="$REPO_ROOT/.ai/plans/$task_id.plan.yaml"
+
+  if [ ! -f "$PLAN_SCHEMA" ] && [ ! -f "$plan_path" ]; then
+    return 0
+  fi
+
+  python3 - "$worktree_path" "$task_id" "$plan_path" "$PLAN_SCHEMA" <<'PY'
+import fnmatch
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+try:
+    import yaml
+    from jsonschema import Draft202012Validator
+except Exception as exc:
+    print(f"plan contract validator dependency missing: {exc}")
+    raise SystemExit(1)
+
+worktree = Path(sys.argv[1])
+task_id = sys.argv[2]
+plan_path = Path(sys.argv[3])
+schema_path = Path(sys.argv[4])
+
+if not plan_path.is_file():
+    print(f"plan contract missing: {plan_path}")
+    raise SystemExit(1)
+if not schema_path.is_file():
+    print(f"plan schema missing: {schema_path}")
+    raise SystemExit(1)
+
+try:
+    with schema_path.open("r", encoding="utf-8") as handle:
+        schema = json.load(handle)
+except Exception as exc:
+    print(f"plan schema is not valid JSON: {exc}")
+    raise SystemExit(1)
+
+try:
+    with plan_path.open("r", encoding="utf-8") as handle:
+        plan = yaml.safe_load(handle)
+except Exception as exc:
+    print(f"plan contract is not valid YAML: {exc}")
+    raise SystemExit(1)
+
+try:
+    Draft202012Validator(schema).validate(plan)
+except Exception as exc:
+    print(f"plan contract failed schema validation: {exc.message}")
+    raise SystemExit(1)
+
+if not isinstance(plan, dict):
+    print("plan contract must be an object")
+    raise SystemExit(1)
+if plan.get("task_id") not in (None, task_id):
+    print(f"plan task_id mismatch: expected {task_id}, got {plan.get('task_id')}")
+    raise SystemExit(1)
+
+allowed = [str(item) for item in plan.get("allowed_paths") or []]
+if not allowed:
+    print("plan allowed_paths must not be empty")
+    raise SystemExit(1)
+
+def matches(path: str, pattern: str) -> bool:
+    if path == pattern:
+        return True
+    if pattern.endswith("/") and path.startswith(pattern):
+        return True
+    if not any(char in pattern for char in "*?[") and path.startswith(pattern.rstrip("/") + "/"):
+        return True
+    return fnmatch.fnmatch(path, pattern)
+
+output = subprocess.check_output(
+    ["git", "-C", str(worktree), "diff", "--name-only", "HEAD"],
+    text=True,
+)
+changed = sorted(path for path in output.splitlines() if path)
+outside = [path for path in changed if not any(matches(path, pattern) for pattern in allowed)]
+if outside:
+    print("changed file outside plan allowed_paths: " + ", ".join(outside))
+    raise SystemExit(1)
+PY
 }
 
 item_values_path=$(mktemp "${TMPDIR:-/tmp}/orgos-integrator-item.XXXXXX")
@@ -382,6 +529,10 @@ if [ "$max_files" -gt 0 ] && [ "${#changed_files[@]}" -gt "$max_files" ]; then
 fi
 if [ "$max_lines" -gt 0 ] && [ "$diff_lines" -gt "$max_lines" ]; then
   fail_processing "diff budget exceeded: $diff_lines lines > $max_lines"
+fi
+
+if ! plan_error=$(validate_plan_contract 2>&1); then
+  fail_processing "${plan_error:-plan contract validation failed}"
 fi
 
 git -C "$worktree_path" add -- "${changed_files[@]}"

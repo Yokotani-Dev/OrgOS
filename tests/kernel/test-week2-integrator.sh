@@ -54,13 +54,41 @@ setup_repo_fixture() {
   cp "$REQUEST" "$repo/scripts/org/request-integration.sh"
   cp "$INTEGRATOR" "$repo/scripts/org/integrator-commit.sh"
   cp "$REPO_ROOT/scripts/org/verify-artifact-manifest.py" "$repo/scripts/org/verify-artifact-manifest.py"
+  cat > "$repo/scripts/org/append-event.py" <<'PY'
+#!/usr/bin/env python3
+import argparse
+import json
+import sys
+from pathlib import Path
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--event-type", required=True)
+parser.add_argument("--task-id", required=True)
+parser.add_argument("--actor-role", required=True)
+parser.add_argument("--actor-id", required=True)
+parser.add_argument("--payload-json", default="{}")
+args = parser.parse_args()
+
+event = {
+    "event_type": args.event_type,
+    "task_id": args.task_id,
+    "actor": {"role": args.actor_role, "id": args.actor_id},
+    "payload": json.loads(args.payload_json),
+}
+root = Path(__file__).resolve().parents[2]
+events_path = root / ".ai" / "EVENTS.jsonl"
+events_path.parent.mkdir(parents=True, exist_ok=True)
+with events_path.open("a", encoding="utf-8") as handle:
+    json.dump(event, handle, sort_keys=True)
+    handle.write("\n")
+PY
   cp "$POLICY" "$repo/.claude/hooks/pretool_policy.py"
   cp "$REPO_ROOT/.claude/hooks/policy_core.py" "$repo/.claude/hooks/policy_core.py"
   cp "$SCHEMA" "$repo/.claude/schemas/integration-queue.v1.json"
-  chmod +x "$repo/scripts/org/request-integration.sh" "$repo/scripts/org/integrator-commit.sh" "$repo/scripts/org/verify-artifact-manifest.py"
+  chmod +x "$repo/scripts/org/request-integration.sh" "$repo/scripts/org/integrator-commit.sh" "$repo/scripts/org/verify-artifact-manifest.py" "$repo/scripts/org/append-event.py"
 
   printf 'base\n' > "$repo/README.md"
-  git -C "$repo" add README.md scripts/org/request-integration.sh scripts/org/integrator-commit.sh scripts/org/verify-artifact-manifest.py .claude/hooks/pretool_policy.py .claude/hooks/policy_core.py .claude/schemas/integration-queue.v1.json
+  git -C "$repo" add README.md scripts/org/request-integration.sh scripts/org/integrator-commit.sh scripts/org/verify-artifact-manifest.py scripts/org/append-event.py .claude/hooks/pretool_policy.py .claude/hooks/policy_core.py .claude/schemas/integration-queue.v1.json
   git -C "$repo" commit --quiet -m "initial"
   git -C "$repo" worktree add --quiet -b "$branch" "$worktree" main
 
@@ -294,7 +322,7 @@ test_request_integration_rejects_protected_branch() {
 
 test_integrator_commit_success() {
   local task_id="T-TEST-3"
-  local fixture tmp_dir repo worktree branch manifest queue_path output done_count head_msg
+  local fixture tmp_dir repo worktree branch manifest queue_path output done_count head_msg commit_sha
   fixture=$(setup_repo_fixture "$task_id")
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
@@ -315,11 +343,28 @@ test_integrator_commit_success() {
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
   done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
   head_msg=$(git -C "$worktree" log -1 --pretty=%s)
+  commit_sha=$(git -C "$worktree" rev-parse HEAD)
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done"
   [ "$head_msg" = "test: integrate $task_id" ] || fail "integrator should create commit"
   assert_not_exists "$queue_path" "pending queue item should be consumed"
   printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
+  python3 - "$repo/.ai/EVENTS.jsonl" "$task_id" "$commit_sha" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    events = [json.loads(line) for line in handle if line.strip()]
+
+assert len(events) == 1
+event = events[0]
+assert event["event_type"] == "CommitIntegrated"
+assert event["task_id"] == sys.argv[2]
+assert event["actor"] == {"id": "integrator-commit.sh", "role": "integrator"}
+assert event["payload"]["commit_sha"] == sys.argv[3]
+assert event["payload"]["target_branch"] == "main"
+assert event["payload"]["integrated_at"].endswith("Z")
+PY
   rm -rf "$tmp_dir"
 }
 

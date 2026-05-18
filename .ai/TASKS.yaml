@@ -1,3 +1,4 @@
+# ORGOS-LEGACY: use scripts/org/update-task.py
 tasks:
   - id: T-OS-380
     title: '[Follow-up] Tick フロー統合 - SELFREVIEW-002 で整備した script を Manager 自動呼び出しに統合'
@@ -1984,3 +1985,221 @@ tasks:
 
       Completed via Manager raw commit (5933248) after collect-artifacts.sh stuck.
       Bootstrap exception, kernel mode flipped warn temporarily.'
+  - id: T-OS-440
+    title: '[Week4] SQLite schema + .ai/orgos.sqlite init'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/schemas/orgos.sqlite.schema.sql
+      - scripts/org/init-sqlite.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-441
+    title: '[Week4] TASKS.yaml -> SQLite import (shadow)'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/import-tasks-yaml.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-442
+    title: '[Week4] SQLite-backed task query'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/list-tasks-sqlite.py
+      - scripts/org/show-task.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-443
+    title: '[Week4] DASHBOARD.generated.md from SQLite'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/generate-dashboard.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-444
+    title: '[Week5] EVENTS.jsonl schema + append helper'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/schemas/orgos-event.v1.json
+      - scripts/org/append-event.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-445
+    title: '[Week5] integrator-commit emits CommitIntegrated event'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+    notes: All Week 5 append-event.py CLI fixes verified, kernel tests pass (0 failures)
+  - id: T-OS-446
+    title: '[Week5] collect-artifacts emits ArtifactCollected event'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/collect-artifacts.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-447
+    title: '[Week5] lease scripts emit LeaseAcquired/Released events'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/acquire-lease.sh
+      - scripts/org/release-lease.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-448
+    title: '[Week5] Evidence-Gated Done requires events'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/check-task-done.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-449
+    title: '[Week6] TASKS.generated.yaml generator from SQLite'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/generate-tasks-yaml.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-450
+    title: '[Week6] Generated file checksum + manual-edit detection'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/check-generated-checksums.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-451
+    title: '[Week6] pretool deny direct edit of generated files'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/hooks/policy_core.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-452
+    title: '[Week6] sessionstart checksum verifier'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/hooks/SessionStart.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-453
+    title: '[Week6] TASKS.yaml legacy header'
+    status: done
+    priority: P0
+    allowed_paths:
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-454
+    title: '[Week7] Plan Contract schema (.plan.yaml)'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/schemas/plan-contract.v1.json
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-455
+    title: '[Week7] /org-plan command generates .plan.yaml'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/generate-plan.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-456
+    title: '[Week7] Invariant #7 PlanContractRequired in policy_core'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/hooks/policy_core.py
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-457
+    title: '[Week7] integrator verifies .plan.yaml before commit'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/org/integrator-commit.sh
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-458
+    title: '[Week7] kernel-mode default flip PlanContractRequired to enforce'
+    status: cancelled
+    priority: P0
+    allowed_paths:
+      - .claude/state/kernel-mode.json
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+    notes: set-kernel-mode.sh doesn't accept PlanContractRequired enum yet. Defer
+      until set-kernel-mode.sh updated. PlanContractRequired defaults to warn already,
+      T-OS-456 tests pass.
+  - id: T-OS-459
+    title: '[Week8] Audit & list rules/agents superseded by kernel'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .ai/DECISIONS.md
+    autonomy_level: ask_before_execute
+    risk_level: medium
+  - id: T-OS-460
+    title: '[Week8] Move superseded rules to .claude/rules/_archive/'
+    status: done
+    priority: P0
+    allowed_paths:
+      - .claude/rules/_archive/
+      - .claude/rules/pre-implementation-risk-profile.md
+      - .claude/rules/acceptance-pre-write.md
+      - .claude/rules/eval-loop.md
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-461
+    title: '[Week8] Remove duplicate scripts (consolidate to canonical)'
+    status: done
+    priority: P0
+    allowed_paths:
+      - scripts/
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+  - id: T-OS-462
+    title: '[Week8] CLAUDE.md slim down — point to kernel as truth'
+    status: cancelled
+    priority: P0
+    allowed_paths:
+      - CLAUDE.md
+      - tests/kernel/
+    autonomy_level: ask_before_execute
+    risk_level: high
+    notes: CLAUDE.md is a KERNEL_FILE — slimming requires direct Owner edit. Defer
+      to manual.

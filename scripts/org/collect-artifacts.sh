@@ -21,6 +21,10 @@ last_message_source=""
 actor_role=""
 actor_id=""
 
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+APPEND_EVENT=${ORGOS_APPEND_EVENT:-"$REPO_ROOT/scripts/org/append-event.py"}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --task-id)
@@ -468,3 +472,46 @@ if verification_errors:
         print(error, file=sys.stderr)
     sys.exit(1)
 PY
+
+manifest_path=$(python3 - "$artifact_dir" <<'PY'
+from pathlib import Path
+import sys
+
+artifact_dir = Path(sys.argv[1])
+if not artifact_dir.is_absolute():
+    artifact_dir = Path.cwd() / artifact_dir
+print((artifact_dir.resolve() / "artifact_manifest.json").as_posix())
+PY
+)
+
+artifact_count=$(python3 - "$manifest_path" <<'PY'
+import json
+import sys
+
+with open(sys.argv[1], "r", encoding="utf-8") as handle:
+    manifest = json.load(handle)
+print(len(manifest.get("artifacts", [])))
+PY
+)
+
+if [ -f "$APPEND_EVENT" ]; then
+  payload_json=$(python3 - "$run_id" "$manifest_path" "$artifact_count" <<'PY'
+import json
+import sys
+
+run_id, manifest_path, artifact_count = sys.argv[1:4]
+payload = {
+    "run_id": run_id,
+    "manifest_path": manifest_path,
+    "artifact_count": int(artifact_count),
+}
+sys.stdout.write(json.dumps(payload, sort_keys=True))
+PY
+)
+  python3 "$APPEND_EVENT" \
+    --event-type ArtifactCollected \
+    --task-id "$task_id" \
+    --actor-role system \
+    --actor-id collect-artifacts.sh \
+    --payload-json "$payload_json" >/dev/null || true
+fi

@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-05-17**: This rule is superseded by the kernel.
+> See `.ai/DECISIONS.md#PLAN-UPDATE-WEEK8-AUDIT` for rationale.
+
 # 評価ループ（Verification Loops）
 
 > タスク完了時・ステージ遷移時の品質検証ルール

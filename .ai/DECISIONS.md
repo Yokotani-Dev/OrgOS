@@ -1738,3 +1738,107 @@ Week 0-3 で kernel core 完成。Week 4-8 は state migration + UX 変更で性
 
 ### 関連 commit
 3776855, 4c19471, eb3c503, 97bd4f1, b7f5847, 3dfce93, 1a9e39d, 3397ff3
+
+---
+
+## PLAN-UPDATE-WEEK8-AUDIT: Rule/Agent kill audit (2026-05-17)
+
+### Trigger
+Owner directive: "Rule/Agent kill"。Weeks 0-7 で kernel (hooks + invariants + lease + integrator gate + generated views) が実体化したため、自然言語 rule / Claude agent のうち runtime enforcement に置換済みのものを棚卸しする。
+
+### Audit principle
+旧: rule / agent に「守ってもらう」。  
+新: kernel invariant / org script / generated projection で物理的に閉じる。  
+自然言語 rule は、Manager 判断・Owner UX・設計判断など機械化できない領域だけに残す。
+
+### 1. Superseded by kernel hook
+
+`policy_core.py` が enforce / warn できる領域は、自然言語 rule を source of truth にしない。該当 rule は archive へ移動し、残す場合も invariant の背景説明に限定する。
+
+| path | status | superseded_by | action |
+|---|---|---|---|
+| `.claude/rules/parallel-session-policy.md` | superseded | `.claude/hooks/policy_core.py` `IntegratorOnlyCommit` / `ProtectedBranchNoTouch` / `PerTaskWorktree`; `scripts/codex/run-in-worktree.sh`; `scripts/org/integrator-commit.sh` | move to archive; keep only incident note if needed |
+| `.claude/rules/agent-coordination.md` | partially superseded | `LeaseBeforeWrite` + per-task worktree + integration queue allowed_paths check | trim to Manager orchestration guidance; delete collision prevention prose |
+| `.claude/rules/pre-implementation-risk-profile.md` | partially superseded | `LeaseBeforeWrite` prevents unleased writes; acceptance pre-write gates implementation scope | keep risk taxonomy; move write-gate / "do not start implementation" enforcement language to kernel docs |
+| `.claude/rules/acceptance-pre-write.md` | partially superseded | Work Order acceptance contract + `LeaseBeforeWrite` + run-in-worktree allowed_paths boundary | keep source-mapping rubric until Plan Contract ships; delete Codex-start gate duplication afterward |
+| `.claude/rules/rationalization-prevention.md` | partially superseded | `KernelFileNoTouch`, `StateMutationViaOrgTool`, `DangerousShell` fail closed on common rationalization paths | keep as Manager behavioral rubric only; remove duplicated prohibitions |
+| `.claude/rules/secret-management.md` | partially superseded | `DangerousShell` blocks risky shell patterns; `scripts/org/secret-get.sh` / `secret-set.sh`; secret tests | keep external secret storage policy; move command snippets to runbook |
+| `.claude/rules/authority-layer.md` | partially superseded | `ProtectedBranchNoTouch`, `StateMutationViaOrgTool`, `KernelFileNoTouch`, `DangerousShell` | keep ask/execute judgment matrix; delete machine-enforced prohibition list |
+| `.claude/rules/output-management.md` | partially superseded | artifact manifest + durable artifact before cleanup/done kernel tests | keep only artifact taxonomy; move "must preserve outputs" to kernel invariant docs |
+| `.claude/rules/handoff-protocol.md` | partially superseded | artifact manifest / review packet capture in Codex wrapper flow | keep packet schema contract; delete wrapper persistence instructions once generated packets are mandatory |
+| `.claude/rules/session-management.md` | partially superseded | lease registry + per-task worktree + generated context pack | keep session UX policy; delete git/session collision controls |
+
+### 2. Superseded by SQLite/EVENTS.jsonl
+
+Manually maintained ledgers are no longer authoritative once SQLite shadow store and `EVENTS.jsonl` projections are active. Manual edits should be replaced by org tools and generated views.
+
+| path | status | superseded_by | action |
+|---|---|---|---|
+| `.ai/TASKS.yaml` | superseded as manual SSOT | SQLite task store + generated `TASKS.yaml` projection + `scripts/org/update-task.py` | move to generated view; block manual edits |
+| `.ai/DASHBOARD.md` | superseded as manual dashboard | SQLite / `EVENTS.jsonl` projection | regenerate only; delete manual maintenance instructions |
+| `.ai/STATUS.md` | superseded as manual status | event-derived status projection | regenerate only; archive hand-written status entries |
+| `.ai/RUN_LOG.md` | superseded | `EVENTS.jsonl` append-only audit log | replace with generated chronological view |
+| `.ai/RISKS.md` | partially superseded | risk events + generated risk projection | keep human decision notes only until risk projection exists; then generated view |
+| `.ai/OWNER_INBOX.md` | partially superseded | Plan Contract / event-backed owner action queue | keep until Week 7 UX fully replaces inbox; then generated view |
+| `.ai/OWNER_COMMENTS.md` | partially superseded | Owner intent events in `EVENTS.jsonl` | keep as compatibility input during migration; then archive |
+| `.ai/DECISIONS.md` | partially superseded | decision events + generated decisions projection | keep as current audit ledger for Week 8; future action is generated projection |
+| `.ai/GOALS.yaml` | partially superseded | SQLite project/milestone projection | keep until goal graph projection exists; then generated view |
+
+### 3. Still needed (Manager-side)
+
+These rules encode judgment, communication, product sense, or Owner interaction policy. They should not be deleted unless replaced by a Plan Contract / Manager state machine with equivalent semantics.
+
+| path | status | superseded_by | action |
+|---|---|---|---|
+| `.claude/rules/next-step-guidance.md` | still needed | not mechanically enforceable | keep |
+| `.claude/rules/coherence-mode.md` | still needed | Manager response rubric | keep; may later compile into request-intake state machine |
+| `.claude/rules/request-intake-loop.md` | still needed | top-level Manager state machine, not kernel hook | keep |
+| `.claude/rules/proactive-mode.md` | still needed | Chief-of-Staff behavior policy | keep |
+| `.claude/rules/owner-task-minimization.md` | still needed | Manager judgment / Owner UX | keep |
+| `.claude/rules/capability-preflight.md` | still needed | capability discovery before asking Owner | keep until tool registry can enforce it |
+| `.claude/rules/quality-contract.md` | still needed | Owner quality target negotiation | keep until Plan Contract owns quality level |
+| `.claude/rules/user-journey-sync.md` | still needed | Owner workflow alignment | keep |
+| `.claude/rules/domain-constraint-sync.md` | still needed | regulated-domain judgment and Owner confirmation | keep |
+| `.claude/rules/specialist-subagents.md` | still needed | DESIGN-stage expert review selection | keep; revisit after worker delegation matrix is rewritten |
+| `.claude/rules/literacy-adaptation.md` | still needed | Owner communication adaptation | keep |
+| `.claude/rules/design-documentation.md` | still needed | Manager design artifact judgment | keep; remove duplicated acceptance gate text |
+
+### 4. Agents redundant after worker delegation
+
+Claude agents whose primary job is now handled by Codex workers, kernel scripts, or generated projections should be deleted or archived. Specialist design agents remain for Manager-side judgment unless replaced by a typed design workflow.
+
+| path | status | superseded_by | action |
+|---|---|---|---|
+| `.claude/agents/org-integrator.md` | redundant | `scripts/org/integrator-commit.sh` + integration queue + `IntegratorOnlyCommit` | delete or move to archive |
+| `.claude/agents/CODEX_WORKER_GUIDE.md` | redundant as agent guide | `scripts/codex/run-in-worktree.sh` + Work Order template + AGENTS.md worker constitution | move to codex runbook or delete after wrapper docs updated |
+| `.claude/agents/org-build-fixer.md` | redundant | Codex worker dispatch with scoped Work Order and tests | delete; route build fixes to Codex implementer/reviewer role |
+| `.claude/agents/org-refactor-cleaner.md` | redundant | Codex worker dispatch with allowed_paths + lease | delete; keep refactor criteria as skill/rule if still useful |
+| `.claude/agents/org-doc-updater.md` | partially redundant | generated docs scripts (`generate-glossary.py`, generated projections) | move to script-backed runbook; keep only for non-generated narrative docs |
+| `.claude/agents/org-scribe.md` | redundant | SQLite / `EVENTS.jsonl` + generated ledgers | delete after generated views replace manual STATUS/RUN_LOG/DECISIONS updates |
+| `.claude/agents/org-os-maintainer.md` | partially redundant | scheduler/evolution scripts + event log | keep only for OIP synthesis; remove ledger-edit authority |
+| `.claude/agents/org-reviewer.md` | still needed | design judgment not covered by Codex code review | keep |
+| `.claude/agents/org-threat-modeler.md` | still needed | DESIGN threat judgment | keep |
+| `.claude/agents/org-data-modeler.md` | still needed | DESIGN data model judgment | keep |
+| `.claude/agents/org-security-architect.md` | still needed | DESIGN authority boundary judgment | keep |
+| `.claude/agents/org-domain-analyst.md` | still needed | regulated-domain research and Owner sync | keep |
+
+### Action items
+1. Archive/delete superseded rules only after kernel docs list the equivalent invariant and test coverage.
+2. Freeze manual ledger edits once SQLite / `EVENTS.jsonl` projections become canonical; generated files must be labeled as generated.
+3. Delete redundant Claude agents in a separate cleanup task with allowed_paths covering `.claude/agents/**`.
+4. Keep Manager-side judgment rules until Plan Contract / request-intake state machine explicitly replaces them.
+
+## PLAN-UPDATE-T-OS-461: Script consolidation audit (2026-05-18)
+
+### Outcome
+
+scripts/ tree contains 123 files. No `*.bak` or `*.old` backups present. All scripts referenced by `tests/kernel/run-kernel-tests.sh` exist at referenced paths. No duplicate canonical/legacy pairs found.
+
+### Verification
+
+- `tests/kernel/test-script-consolidation.sh`: 3 tests pass
+- Total scripts count: 123 files
+
+### Files audited
+
+All shell + python scripts under `scripts/` and `tests/` directories.

@@ -7,6 +7,49 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONTROL_FILE="$PROJECT_ROOT/.ai/CONTROL.yaml"
 HANDOFF_FILE="$PROJECT_ROOT/.ai/HANDOFF.md"
+DEFAULT_CHECKSUM_VERIFIER="$PROJECT_ROOT/scripts/integrity/check-generated-checksums.py"
+CHECKSUM_VERIFIER="${ORGOS_GENERATED_CHECKSUM_VERIFIER:-$DEFAULT_CHECKSUM_VERIFIER}"
+
+run_generated_checksum_check() {
+  local output status verifier_label verifier_mode
+  verifier_label="$CHECKSUM_VERIFIER"
+
+  if [ -x "$CHECKSUM_VERIFIER" ]; then
+    verifier_mode="direct"
+  elif [ -f "$CHECKSUM_VERIFIER" ] && command -v python3 >/dev/null 2>&1; then
+    verifier_mode="python"
+  elif command -v "$CHECKSUM_VERIFIER" >/dev/null 2>&1; then
+    verifier_mode="direct"
+    verifier_label=$(command -v "$CHECKSUM_VERIFIER" 2>/dev/null || printf '%s' "$CHECKSUM_VERIFIER")
+  elif [ "$CHECKSUM_VERIFIER" = "$DEFAULT_CHECKSUM_VERIFIER" ] && command -v check-generated-checksums.py >/dev/null 2>&1; then
+    CHECKSUM_VERIFIER="check-generated-checksums.py"
+    verifier_mode="direct"
+    verifier_label=$(command -v check-generated-checksums.py 2>/dev/null || printf '%s' "check-generated-checksums.py")
+  else
+    return 0
+  fi
+
+  set +e
+  if [ "$verifier_mode" = "python" ]; then
+    output=$(cd "$PROJECT_ROOT" && python3 "$CHECKSUM_VERIFIER" 2>&1)
+  else
+    output=$(cd "$PROJECT_ROOT" && "$CHECKSUM_VERIFIER" 2>&1)
+  fi
+  status=$?
+  set -e
+
+  if [ "$status" -ne 0 ]; then
+    echo ""
+    echo "⚠️ Owner warning: generated checksum mismatch detected"
+    echo "→ $verifier_label"
+    if [ -n "$output" ]; then
+      printf '%s\n' "$output" | sed 's/^/  /'
+    fi
+    echo "Session continues (warn only)."
+  fi
+
+  return 0
+}
 
 # 現在日付の注入（日付誤認防止）
 TODAY=$(date +"%Y-%m-%d")
@@ -15,6 +58,8 @@ echo "OrgOS SessionStart:"
 echo "- Read: $PROJECT_ROOT/.ai/DASHBOARD.md"
 echo "- Owner questions: $PROJECT_ROOT/.ai/OWNER_INBOX.md"
 echo "- Control plane: $CONTROL_FILE"
+
+run_generated_checksum_check
 
 # CONTROL.yaml から handoff.enabled を確認
 handoff_enabled=$(grep "enabled:" "$CONTROL_FILE" | grep -A 1 "handoff:" | tail -1 | sed 's/.*enabled: //' | tr -d ' ')

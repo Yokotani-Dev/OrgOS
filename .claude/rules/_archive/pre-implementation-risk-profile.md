@@ -1,3 +1,6 @@
+> **ARCHIVED 2026-05-17**: This rule is superseded by the kernel.
+> See `.ai/DECISIONS.md#PLAN-UPDATE-WEEK8-AUDIT` for rationale.
+
 # Pre-Implementation Risk Profile - Iron Law
 
 > DESIGN フェーズで脅威・データ全体・権限境界・トランザクション境界・冪等性を固定する。
