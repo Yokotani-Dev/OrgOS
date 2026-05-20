@@ -4,6 +4,79 @@
 
 ---
 
+## v1.0.0 (2026-05-20) — Production-Ready Kernel
+
+### 🎯 Headline
+GPT-5.5 Pro 8 週 migration plan 完走。Document-driven な OrgOS から **Mechanically-enforced Constitutional Kernel** へ進化。8 invariants が runtime で強制され、Plan Contract、Evidence-Gated Done、SQLite shadow、EVENTS.jsonl truth ledger により再現可能・監査可能な OS が完成。
+
+### 追加 (Week 4 — SQLite Shadow)
+- `.ai/orgos.sqlite` schema + init (`scripts/org/init-sqlite.py`)
+- TASKS.yaml → SQLite import shadow (`scripts/org/import-tasks-yaml.py`)
+- SQLite-backed task query (`list-tasks-sqlite.py` / `show-task.py`)
+- DASHBOARD.generated.md from SQLite (`generate-dashboard.py`)
+
+### 追加 (Week 5 — EVENTS.jsonl Truth Ledger)
+- `.ai/events/` hash-chained JSONL event log (`scripts/org/append-event.py`)
+- integrator-commit emits `CommitIntegrated` events
+- collect-artifacts emits `ArtifactCollected` events
+- acquire-lease / release-lease emit `LeaseAcquired` / `LeaseReleased` events
+- Evidence-Gated Done (`check-task-done.py`): task done 移行に lease + artifact + commit event 証跡必須
+
+### 追加 (Week 6 — Generated Views)
+- TASKS.generated.yaml generator from SQLite
+- Generated file checksum + manual-edit detection
+- pretool deny direct edit of `*.generated.*` files
+- SessionStart.sh checksum verifier (起動時に乖離検出)
+- TASKS.yaml legacy sentinel header
+
+### 追加 (Week 7 — Plan Contract)
+- `.claude/schemas/plan-contract.v1.json` (`.plan.yaml` 用 JSON Schema)
+- `/org-plan` generator (Work Order → `.ai/plans/<task>.plan.yaml`)
+- **Invariant #8 PlanContractRequired**: 全 Edit/Write op に `.plan.yaml` 必須
+- integrator-commit が plan + diff 一致を pre-commit 検証
+
+### 追加 (Week 8 — Terminal Cleanup)
+- Rule audit: 10 rules + 12 agents 分類 (kernel-superseded / SQLite-superseded / Manager-judgment-keep)
+- `.claude/rules/_archive/`: kernel に取って代わられた 3 rules を物理移動
+  (acceptance-pre-write / eval-loop / pre-implementation-risk-profile)
+- Script consolidation audit (123 files, 0 backups, 全 referenced 存在)
+
+### 8 Constitutional Invariants
+| # | Invariant | 役割 |
+|---|-----------|------|
+| 1 | IntegratorOnlyCommit | Manager raw commit ブロック → integrator-commit.sh のみ |
+| 2 | PerTaskWorktree | 並列 codex 衝突防止 |
+| 3 | ProtectedBranchNoTouch | main/master/develop checkout/merge 直接禁止 |
+| 4 | LeaseBeforeWrite | lease なき write 禁止 |
+| 5 | StateMutationViaOrgTool | 保護台帳 + Generated files 直接編集禁止 |
+| 6 | DurableArtifactBeforeCleanup | manifest なき cleanup 禁止 |
+| 7 | OwnerApprovalForIrreversibleOps | 不可逆操作の Owner gate |
+| **8** | **PlanContractRequired** (NEW) | `.plan.yaml` なき Edit/Write/commit 禁止 |
+
+### 改善
+- `update-task.py` が legacy sentinel header (`# ORGOS-LEGACY`) を保持
+- `collect-artifacts.sh` / `integrator-commit.sh` / `acquire-lease.sh` / `release-lease.sh` が `append-event.py` CLI に対応
+
+### Deferred (Owner-direct required)
+- T-OS-458: `set-kernel-mode.sh` enum 拡張 (PlanContractRequired を flip 可能に)
+- T-OS-462: CLAUDE.md slim down (kernel file は Owner 直接編集要)
+
+### テスト
+- kernel tests: 117 件 pass / 0 failures
+- 14 新規 test スクリプト追加 (SQLite / events / plan-contract / checksum / sessionstart / rule-archive / script-consolidation)
+
+---
+
+## v0.24.0 (2026-05-10)
+
+Pre-Implementation Quality + Self-Evolution Engine + Concurrent Safety + SELFREVIEW-002.
+
+M-PHASE-6 (Quality Contract / Journey-First / Domain Constraint / Pre-Risk Profile / Acceptance Pre-Write / 4 Specialist subagents)。Phase 2 complete (DNA / Synthesis / Validation / Application engine / Capability Probe / Intelligence pipeline / Always-On scheduler / Evolution Dashboard)。M-PHASE-7 (parallel-session-policy / branch consistency check / Codex worktree wrapper / git lock)。
+
+詳細は `.ai/VERSION.yaml` 参照。
+
+---
+
 ## v0.23.0 (2026-04-19) — Chief of Staff Edition
 
 ### 🎯 Headline
