@@ -1,0 +1,18 @@
+完了しました。`git add` / `git commit` / `git push` は実行していません。
+
+変更内容:
+- [scripts/codex/run-in-worktree.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-419/scripts/codex/run-in-worktree.sh:324)
+  - `--output-last-message` を legacy の `.ai/CODEX/RESULTS/<task>.txt` ではなく `/tmp/orgos-<task>-<run>-handoff.txt` に変更
+  - `collect-artifacts.sh --last-message-source` に同じ tmp handoff path を渡すよう変更
+  - usage コメントに canonical handoff が `.ai/artifacts/<task>/<run>/output-last-message.txt` であることを追記
+- [tests/kernel/test-day1-manifest.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-419/tests/kernel/test-day1-manifest.sh:248)
+  - `test_codex_handoff_via_tmp_path_succeeds` を追加
+  - tmp handoff 作成、artifact store へのコピー、legacy main repo handoff 未作成、manifest source を検証
+
+成果物:
+- [.ai/CODEX/RESULTS/T-OS-419.json](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-419/.ai/CODEX/RESULTS/T-OS-419.json)
+- [.ai/REVIEW/PACKETS/T-OS-419.md](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-419/.ai/REVIEW/PACKETS/T-OS-419.md)
+
+検証:
+- `bash tests/kernel/test-day1-manifest.sh` passed
+- `bash tests/kernel/run-kernel-tests.sh` passed

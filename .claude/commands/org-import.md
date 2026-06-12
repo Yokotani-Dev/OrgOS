@@ -66,12 +66,17 @@ WORK_DIR=$(mktemp -d) && git clone --depth 1 --branch $VERSION https://github.co
 
 ### 4. ディレクトリ作成
 
+`.orgos-manifest.yaml` の `create_dirs` セクションと同一のディレクトリを作成する。
+
 ```bash
-# プロジェクトディレクトリで必要なディレクトリを作成
+# プロジェクトディレクトリで必要なディレクトリを作成（manifest create_dirs と同一）
 mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
   .ai/RESOURCES/designs .ai/RESOURCES/references \
-  .ai/RESOURCES/code-samples .claude/commands .claude/agents \
-  scripts/platform
+  .ai/RESOURCES/code-samples .ai/TEMPLATES \
+  .claude/commands .claude/agents .claude/rules .claude/skills \
+  .claude/schemas .claude/evals .claude/hooks .claude/scripts \
+  scripts/session scripts/platform scripts/capabilities/probe \
+  scripts/memory scripts/security scripts/org scripts/codex scripts/activity
 ```
 
 ### 5. ファイルコピー
@@ -79,15 +84,59 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
 **重要**: Step 3 で取得した `WORK_DIR` のパスを使い、`$WORK_DIR/OrgOS/` からファイルをコピーする。
 ファイルコピーは Step 3 の `WORK_DIR` パスを参照して **1つの Bash 呼び出し** で実行すること。
 
-`.orgos-manifest.yaml` の `core` セクションに定義されたファイルをコピー。
+**取得元の `.orgos-manifest.yaml` の `core` セクションが SSOT。** 手書きのファイルリストではなく、
+manifest を読んで core に列挙された全ファイルをコピーする:
 
-**上書きするファイル（core）:**
-- `.ai/VERSION.yaml`
-- `.ai/CHANGELOG.md`
-- `.ai/RESOURCES/README.md`
-- `.claude/commands/org-*.md`
-- `.orgos-manifest.yaml`
-- `CLAUDE.md`
+```bash
+python3 - "$WORK_DIR/OrgOS" <<'EOF'
+import os, re, shutil, sys
+
+src_root = sys.argv[1]
+core = []
+section = None
+with open(os.path.join(src_root, ".orgos-manifest.yaml")) as f:
+    for line in f:
+        m = re.match(r"^(\w+):", line)
+        if m:
+            section = m.group(1)
+            continue
+        m = re.match(r'^\s+-\s+"([^"]+)"', line)
+        if m and section == "core":
+            core.append(m.group(1))
+
+copied, missing = 0, []
+for rel in core:
+    src = os.path.join(src_root, rel)
+    if not os.path.exists(src):
+        missing.append(rel)
+        continue
+    d = os.path.dirname(rel)
+    if d:
+        os.makedirs(d, exist_ok=True)
+    shutil.copy2(src, rel)
+    # シェルスクリプトと hook には実行権限を付与
+    if rel.endswith(".sh") or rel.startswith(".claude/hooks/"):
+        os.chmod(rel, 0o755)
+    copied += 1
+
+print(f"copied={copied} missing={len(missing)}")
+for rel in missing:
+    print(f"WARN: source missing: {rel}")
+EOF
+```
+
+**上書きするファイル（core — manifest と完全一致）:**
+- `.ai/VERSION.yaml` / `.ai/CHANGELOG.md` / `.ai/RESOURCES/README.md`
+- `.ai/TEMPLATES/`（初期テンプレート + 設計テンプレート + codex-wsl.sh）
+- `.claude/commands/`（manifest core に列挙された全コマンド: org-*.md + issue.md）
+- `.claude/agents/`（manager.md / CODEX_WORKER_GUIDE.md を含む全エージェント）
+- `.claude/rules/`（CLAUDE.md が参照する最高位 Iron Law 含む rules 一式）
+- `.claude/skills/` / `.claude/schemas/` / `.claude/evals/`（一式）
+- `.claude/hooks/`（settings.json が登録する hook 一式）+ `.claude/settings.json`
+- `.claude/scripts/run-parallel.sh`
+- `scripts/session/` `scripts/platform/` `scripts/capabilities/` `scripts/memory/`
+  `scripts/security/` `scripts/org/` `scripts/codex/` `scripts/activity/`
+- `.orgos-manifest.yaml` / `CLAUDE.md` / `AGENTS.md`
 
 **保持するファイル（preserve）:**
 - `.ai/PROJECT.md`
@@ -111,14 +160,11 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
 
 **プラットフォーム検出ツール:**
 
-`scripts/platform/detect.sh` が取得元に存在する場合は、現在のプロジェクトにもコピーして実行権限を付与する。
+`scripts/platform/detect.sh` は manifest core に含まれており、上記の core コピーで配布・実行権限付与される
+（旧バージョンの個別コピー手順は不要）。コピー後に存在を確認する:
 
 ```bash
-if [ -f "$WORK_DIR/OrgOS/scripts/platform/detect.sh" ]; then
-  mkdir -p scripts/platform
-  cp "$WORK_DIR/OrgOS/scripts/platform/detect.sh" scripts/platform/detect.sh
-  chmod +x scripts/platform/detect.sh
-fi
+[ -x scripts/platform/detect.sh ] || echo "WARN: scripts/platform/detect.sh が配布されていません（取得元バージョンが古い可能性）"
 ```
 
 ### 5.5. platform の記録
@@ -288,8 +334,10 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 更新されたファイル:
 - .ai/VERSION.yaml
 - .ai/CHANGELOG.md
-- .claude/commands/org-*.md
-- CLAUDE.md
+- .claude/commands/ .claude/agents/ .claude/rules/ .claude/skills/ ほか core 一式
+- .claude/settings.json + .claude/hooks/
+- scripts/（session / platform / capabilities / memory / org / codex / activity）
+- CLAUDE.md / AGENTS.md
 
 マイグレーションした設定:
 - owner_literacy_level: "intermediate"（新規追加）
@@ -371,7 +419,8 @@ def extract_user_facing_changes(changelog, from_version, to_version):
 
 ## 注意事項
 
-- **CLAUDE.md は上書きされる**: プロジェクト固有の設定がある場合は事前にバックアップ推奨
+- **CLAUDE.md / AGENTS.md / .claude/settings.json は上書きされる**: プロジェクト固有の設定がある場合は事前にバックアップ推奨
+- **`.claude/hooks/` と `scripts/` も core として上書きされる**: settings.json が登録する hook と、rules が要求するスクリプト一式は常にセットで配布される（ISS-007: 依存閉包）
 - **ネットワーク必須**: GitHub にアクセスできる環境で実行
 - **preserve ファイルは安全**: プロジェクト固有データは上書きされない
 - **初回のみテンプレート展開**: BRIEF.md等は既存があれば上書きしない

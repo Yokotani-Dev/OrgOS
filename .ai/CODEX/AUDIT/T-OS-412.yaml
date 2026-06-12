@@ -1,0 +1,38 @@
+---
+task_id: T-OS-412
+timestamp: '2026-05-14T15:46:59Z'
+status: violations_reverted
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 4
+  violation_count: 1
+  reverted_count: 1
+  revert_failed_count: 0
+files:
+- file: ".claude/hooks/pretool_policy.py"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/hooks/pretool_policy.py'
+- file: scripts/codex/run-in-worktree.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/codex/run-in-worktree.sh'
+- file: scripts/org/set-kernel-mode.sh
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-day2-policy.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

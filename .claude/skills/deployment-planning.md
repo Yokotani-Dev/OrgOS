@@ -214,4 +214,4 @@ gates:
 
 - [GitHub devops-rollout-plan](https://github.com/github/awesome-copilot)
 - [.ai/CONTROL.yaml](../../.ai/CONTROL.yaml)
-- [.claude/rules/eval-loop.md](../rules/eval-loop.md)
+- [.claude/rules/_archive/eval-loop.md](../rules/_archive/eval-loop.md) (archived 2026-05-17, superseded by kernel)

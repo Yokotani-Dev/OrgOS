@@ -1,0 +1,19 @@
+{
+  "acquired_at": "2026-05-15T18:40:29Z",
+  "actor": {
+    "id": "claude-opus-4.7",
+    "role": "manager"
+  },
+  "allowed_paths": [
+    "docs/kernel-v2/"
+  ],
+  "branch": "task/T-OS-418-dogfood",
+  "expires_at": "2026-05-15T19:10:29Z",
+  "heartbeat_at": "2026-05-15T18:40:29Z",
+  "lease_id": "LS-20260515T184029Z-T-OS-418-c36c80af",
+  "notes": "release_reason=cancelled",
+  "released_at": "2026-05-15T18:42:28Z",
+  "schema_version": "orgos.lease.v1",
+  "status": "released",
+  "task_id": "T-OS-418"
+}

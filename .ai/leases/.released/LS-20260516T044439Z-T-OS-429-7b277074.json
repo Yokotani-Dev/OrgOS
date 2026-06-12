@@ -1,0 +1,20 @@
+{
+  "acquired_at": "2026-05-16T04:44:39Z",
+  "actor": {
+    "id": "claude-opus-4.7",
+    "role": "manager"
+  },
+  "allowed_paths": [
+    ".ai/REVIEW/T-OS-400/external-ai-6th-prompt.md",
+    ".ai/TASKS.yaml"
+  ],
+  "branch": "task/T-OS-429-6th-prompt",
+  "expires_at": "2026-05-16T04:54:39Z",
+  "heartbeat_at": "2026-05-16T04:44:39Z",
+  "lease_id": "LS-20260516T044439Z-T-OS-429-7b277074",
+  "notes": "release_reason=done",
+  "released_at": "2026-05-16T07:42:26Z",
+  "schema_version": "orgos.lease.v1",
+  "status": "released",
+  "task_id": "T-OS-429"
+}

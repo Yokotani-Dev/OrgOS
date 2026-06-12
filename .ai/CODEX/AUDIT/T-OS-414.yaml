@@ -1,0 +1,58 @@
+---
+task_id: T-OS-414
+timestamp: '2026-05-15T05:52:49Z'
+status: passed
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-414"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 9
+  violation_count: 0
+  reverted_count: 0
+  revert_failed_count: 0
+files:
+- file: ".ai/leases.gitkeep"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .ai/leases.gitkeep'
+- file: ".claude/hooks/pretool_policy.py"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/hooks/pretool_policy.py'
+- file: ".claude/schemas/lease.v1.json"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/schemas/lease.v1.json'
+- file: scripts/org/acquire-lease.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/acquire-lease.sh'
+- file: scripts/org/list-leases.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/list-leases.sh'
+- file: scripts/org/release-lease.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/release-lease.sh'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-day2-policy.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-week3-lease.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

@@ -52,77 +52,11 @@ facts:
     transferability: "none"
     secret: false
 
-  - id: fact_qa_supabase_project_ref
-    type: project_resource
-    value_ref:
-      question: "Supabase project_ref は？"
-      answer: "abc123"
-      asked_at: "2026-03-15"
-      context: "initial setup"
-    scope: "project:orgos"
-    source: owner_confirmed
-    source_ref: "past_qa:2026-03-15"
-    confidence: 1.0
-    valid_from: "2026-03-15"
-    expires_at: null
-    pii_level: low
-    last_verified_at: "2026-03-15"
-    transferability: "project_to_domain"
-    secret: false
-
-  - id: fact_qa_github_org
-    type: project_resource
-    value_ref:
-      question: "GitHub org は？"
-      answer: "orgos-dev"
-      asked_at: "2026-04-01"
-      context: "release workflow setup"
-    scope: "domain:github"
-    source: owner_confirmed
-    source_ref: "past_qa:2026-04-01"
-    confidence: 1.0
-    valid_from: "2026-04-01"
-    expires_at: null
-    pii_level: low
-    last_verified_at: "2026-04-01"
-    transferability: "domain_to_global"
-    secret: false
-
-  - id: fact_qa_vercel_team_slug
-    type: project_resource
-    value_ref:
-      question: "Vercel team slug は？"
-      answer: "orgos-web"
-      asked_at: "2026-03-22"
-      context: "preview environment onboarding"
-    scope: "domain:vercel"
-    source: owner_confirmed
-    source_ref: "past_qa:2026-03-22"
-    confidence: 1.0
-    valid_from: "2026-03-22"
-    expires_at: null
-    pii_level: low
-    last_verified_at: "2026-03-22"
-    transferability: "domain_to_global"
-    secret: false
-
-  - id: fact_qa_deploy_flow
-    type: project_resource
-    value_ref:
-      question: "deploy は preview 経由でよい？"
-      answer: "preview -> manual promote"
-      asked_at: "2026-04-10"
-      context: "deploy runbook confirmation"
-    scope: "project:orgos"
-    source: owner_confirmed
-    source_ref: "past_qa:2026-04-10"
-    confidence: 1.0
-    valid_from: "2026-04-10"
-    expires_at: null
-    pii_level: low
-    last_verified_at: "2026-04-10"
-    transferability: "explicit_only"
-    secret: false
+  # NOTE (ISS-011): Do not seed fictitious past_qa facts here.
+  # The fact_qa_* examples ("abc123", "orgos-dev", "orgos-web", deploy flow)
+  # were eval fixtures and contaminated live memory when copied.
+  # They now live in .claude/evals/manager-quality/fixtures/USER_PROFILE.yaml
+  # and are injected via report.py --profile-path during eval runs.
 
 secrets: []
 

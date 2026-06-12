@@ -78,8 +78,15 @@ echo "ローカル: $LOCAL_TAG"
 |----------|------|--------|
 | タグ存在確認 | ローカルにタグが存在するか | ❌ 中止 |
 | ファイル整合性 | manifestのpublishファイルがすべて存在するか | ❌ 中止 |
+| 依存閉包チェック | settings.json の hooks・配布 rules/agents が参照する scripts/schemas が publish に含まれるか（ISS-006/007） | ❌ 中止 |
 | 削除ファイル検出 | 前バージョンにあって今回ないファイル | ⚠️ 警告 |
 | 機密情報スキャン | .env, secrets, API keyなどの混入 | ❌ 中止 |
+
+依存閉包チェックの実行:
+
+```bash
+bash tests/kernel/test-manifest-closure.sh
+```
 
 **AskUserQuestion** で確認:
 - 差分を確認しましたか？

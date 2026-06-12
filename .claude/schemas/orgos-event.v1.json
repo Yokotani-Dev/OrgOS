@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "orgos-event.v1",
+  "title": "OrgOS Program Event",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "ts",
+    "event_type",
+    "task_id",
+    "actor",
+    "payload",
+    "prev_hash",
+    "hash"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "orgos-event.v1"
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^EVT-[0-9]{8}T[0-9]{6}Z-[A-Za-z0-9._-]+-[a-f0-9]{8}$"
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "TaskCreated",
+        "TaskUpdated",
+        "LeaseAcquired",
+        "LeaseReleased",
+        "LeaseExpired",
+        "WorkerStarted",
+        "WorkerFinished",
+        "WorkerFailed",
+        "ArtifactCollected",
+        "ArtifactCollectionFailed",
+        "VerificationPassed",
+        "VerificationFailed",
+        "IntegrationRequested",
+        "CommitIntegrated",
+        "PolicyViolationDetected"
+      ]
+    },
+    "task_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "id"
+      ],
+      "properties": {
+        "role": {
+          "type": "string",
+          "enum": [
+            "manager",
+            "claude",
+            "codex",
+            "subagent",
+            "integrator",
+            "owner",
+            "system",
+            "mock"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "session_id": {
+          "type": "string"
+        },
+        "model": {
+          "type": "string"
+        }
+      }
+    },
+    "payload": {
+      "type": "object"
+    },
+    "prev_hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    }
+  }
+}

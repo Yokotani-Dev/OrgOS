@@ -1,0 +1,53 @@
+---
+task_id: T-OS-413
+timestamp: '2026-05-15T05:43:00Z'
+status: passed
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-413"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 8
+  violation_count: 0
+  reverted_count: 0
+  revert_failed_count: 0
+files:
+- file: ".ai/queue/integration/.gitkeep"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .ai/queue/integration/.gitkeep'
+- file: ".claude/hooks/pretool_policy.py"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/hooks/pretool_policy.py'
+- file: ".claude/schemas/integration-queue.v1.json"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/schemas/integration-queue.v1.json'
+- file: scripts/org/integrator-commit.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/integrator-commit.sh'
+- file: scripts/org/request-integration.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/request-integration.sh'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-day2-policy.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-week2-integrator.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

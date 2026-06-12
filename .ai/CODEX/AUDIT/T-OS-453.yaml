@@ -1,0 +1,23 @@
+---
+task_id: T-OS-453
+timestamp: '2026-05-16T19:31:31Z'
+status: passed
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-453"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 2
+  violation_count: 0
+  reverted_count: 0
+  revert_failed_count: 0
+files:
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-tasks-legacy-marker.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

@@ -1,0 +1,19 @@
+{
+  "acquired_at": "2026-05-16T03:43:17Z",
+  "actor": {
+    "id": "claude-opus-4.7",
+    "role": "manager"
+  },
+  "allowed_paths": [
+    ".claude/state/kernel-mode.json"
+  ],
+  "branch": "task/T-OS-427-kernel-mode-enforce",
+  "expires_at": "2026-05-16T03:53:17Z",
+  "heartbeat_at": "2026-05-16T03:43:17Z",
+  "lease_id": "LS-20260516T034317Z-T-OS-427-a74e3a55",
+  "notes": "release_reason=done",
+  "released_at": "2026-05-16T03:53:17Z",
+  "schema_version": "orgos.lease.v1",
+  "status": "released",
+  "task_id": "T-OS-427"
+}

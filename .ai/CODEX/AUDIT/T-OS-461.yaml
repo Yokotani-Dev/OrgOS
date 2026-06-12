@@ -1,0 +1,28 @@
+---
+task_id: T-OS-461
+timestamp: '2026-05-18T15:43:56Z'
+status: violations_reverted
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-461"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 2
+  violation_count: 1
+  reverted_count: 1
+  revert_failed_count: 0
+files:
+- file: ".ai/DECISIONS.md"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-script-consolidation.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

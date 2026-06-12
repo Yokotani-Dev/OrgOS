@@ -13,7 +13,7 @@
     "KernelSelfModification": "warn",
     "IntegratorIsScriptNotAgent": "warn"
   },
-  "set_at": "2026-05-16T03:42:37Z",
+  "set_at": "2026-05-20T02:41:07Z",
   "set_by": "youyokotani",
-  "notes": "StateMutationViaOrgTool set to enforce."
+  "notes": "IntegratorOnlyCommit set to enforce."
 }

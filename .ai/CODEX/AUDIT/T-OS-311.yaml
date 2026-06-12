@@ -1,0 +1,38 @@
+---
+task_id: T-OS-311
+timestamp: '2026-05-16T08:50:41Z'
+status: violations_reverted
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-311"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 3
+  violation_count: 2
+  reverted_count: 2
+  revert_failed_count: 0
+files:
+- file: ".ai/CODEX/RESULTS/T-OS-311.json"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: ".ai/REVIEW/PACKETS/T-OS-311.md"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: ".claude/commands/org-brief.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/commands/org-brief.md'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-org-brief-journey.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

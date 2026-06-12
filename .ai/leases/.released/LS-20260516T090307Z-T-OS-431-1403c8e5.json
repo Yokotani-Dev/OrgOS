@@ -1,0 +1,26 @@
+{
+  "acquired_at": "2026-05-16T09:03:07Z",
+  "actor": {
+    "id": "claude-opus-4.7",
+    "role": "manager"
+  },
+  "allowed_paths": [
+    "scripts/org/",
+    "tests/kernel/",
+    ".claude/rules/secret-management.md",
+    ".claude/commands/org-brief.md",
+    ".claude/state/kernel-mode.json",
+    ".ai/RUNBOOKS/shellcheck.md",
+    ".ai/CODEX/ORDERS/",
+    ".ai/TASKS.yaml"
+  ],
+  "branch": "task/T-OS-431-batch",
+  "expires_at": "2026-05-16T09:13:07Z",
+  "heartbeat_at": "2026-05-16T09:03:07Z",
+  "lease_id": "LS-20260516T090307Z-T-OS-431-1403c8e5",
+  "notes": "release_reason=cancelled",
+  "released_at": "2026-05-16T18:43:32Z",
+  "schema_version": "orgos.lease.v1",
+  "status": "released",
+  "task_id": "T-OS-431"
+}

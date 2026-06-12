@@ -1,0 +1,20 @@
+{
+  "acquired_at": "2026-05-16T03:57:30Z",
+  "actor": {
+    "id": "claude-opus-4.7",
+    "role": "manager"
+  },
+  "allowed_paths": [
+    ".ai/REVIEW/T-OS-400/HARDEN_DIGEST.md",
+    ".ai/TASKS.yaml"
+  ],
+  "branch": "task/T-OS-428-final",
+  "expires_at": "2026-05-16T04:07:30Z",
+  "heartbeat_at": "2026-05-16T03:57:30Z",
+  "lease_id": "LS-20260516T035730Z-T-OS-428-c0e31400",
+  "notes": "release_reason=done",
+  "released_at": "2026-05-16T04:40:11Z",
+  "schema_version": "orgos.lease.v1",
+  "status": "released",
+  "task_id": "T-OS-428"
+}

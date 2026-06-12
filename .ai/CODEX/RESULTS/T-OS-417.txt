@@ -1,0 +1,31 @@
+Implemented T-OS-417. No `git add`, `git commit`, or `git push` were run; `git diff --cached --stat` is empty. `.ai/TASKS.yaml` was not modified.
+
+```yaml
+schema_version: "1.0"
+task_id: T-OS-417
+status: DONE
+changed_files:
+  - scripts/org/validate-tasks-yaml.py
+  - scripts/org/update-task.py
+  - tests/kernel/test-day2-policy.sh
+  - tests/kernel/test-week2-yaml.sh
+  - tests/kernel/run-kernel-tests.sh
+  - .ai/CODEX/RESULTS/T-OS-417.json
+  - .ai/REVIEW/PACKETS/T-OS-417.md
+verification:
+  tests_run: true
+  tests_passed: true
+  commands:
+    - bash tests/kernel/test-week2-yaml.sh
+    - bash tests/kernel/test-day2-policy.sh --only test_krt_013_tasks_yaml_edit_denied
+    - bash tests/kernel/test-day2-policy.sh --only test_krt_014_tasks_yaml_write_denied
+    - PYTHONPYCACHEPREFIX=/private/tmp/orgos-pycache python3 -m py_compile scripts/org/validate-tasks-yaml.py scripts/org/update-task.py .claude/hooks/pretool_policy.py
+    - scripts/org/validate-tasks-yaml.py .ai/TASKS.yaml
+    - bash tests/kernel/run-kernel-tests.sh
+  notes:
+    - "ruamel.yaml is not installed in this workspace; PyYAML is installed and the strict fallback path was verified."
+    - "No requirements/Pipfile/pyproject file exists, so no dependency manifest was updated."
+    - "pretool_policy.py already contained the .ai/TASKS.yaml protected-state matcher in this worktree; KRT-013/KRT-014 now lock that behavior."
+```
+
+Full kernel suite passed: Day0 5/5, Day1 6/6, Day2 14/14, Week2 integrator 6/6, Week2 YAML 7/7, Week3 lease 8/8.

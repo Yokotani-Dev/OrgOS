@@ -1,0 +1,43 @@
+---
+task_id: T-OS-442
+timestamp: '2026-05-16T19:00:11Z'
+status: violations_reverted
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-442"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 4
+  violation_count: 2
+  reverted_count: 2
+  revert_failed_count: 0
+files:
+- file: ".ai/CODEX/RESULTS/T-OS-442.json"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: ".ai/REVIEW/PACKETS/T-OS-442.md"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: scripts/org/list-tasks-sqlite.py
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/list-tasks-sqlite.py'
+- file: scripts/org/show-task.py
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/show-task.py'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-task-queries.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

@@ -1,0 +1,33 @@
+---
+task_id: T-OS-444
+timestamp: '2026-05-16T19:10:18Z'
+status: passed
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-444"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 4
+  violation_count: 0
+  reverted_count: 0
+  revert_failed_count: 0
+files:
+- file: ".claude/schemas/orgos-event.v1.json"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/schemas/orgos-event.v1.json'
+- file: scripts/org/append-event.py
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: scripts/org/append-event.py'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-events-append.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'

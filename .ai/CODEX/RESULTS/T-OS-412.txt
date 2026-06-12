@@ -1,0 +1,18 @@
+Implemented T-OS-412 changes in the worktree.
+
+Changed:
+- [.claude/hooks/pretool_policy.py](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412/.claude/hooks/pretool_policy.py): mode flag, invariant evaluation, warn/enforce/disabled handling, `--test-fixture`
+- [scripts/codex/run-in-worktree.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412/scripts/codex/run-in-worktree.sh): `--mock-codex`
+- [scripts/org/set-kernel-mode.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412/scripts/org/set-kernel-mode.sh): mode helper
+- [tests/kernel/test-day2-policy.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412/tests/kernel/test-day2-policy.sh): KRT-001〜010
+- [tests/kernel/run-kernel-tests.sh](/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-412/tests/kernel/run-kernel-tests.sh): includes Day 2 tests
+
+Verification passed:
+- `bash tests/kernel/test-day2-policy.sh`: 8 passed, 0 failed, 2 skipped
+- `bash tests/kernel/run-kernel-tests.sh`: Day0 5 passed, Day1 6 passed, Day2 8 passed, 2 skipped
+- `py_compile` passed with `/tmp` pycache
+- shell syntax checks passed
+
+I did not run `git add`, `git commit`, or `git push`.
+
+Concern: writing the required parent-repo handoff file at `/Users/youyokotani/Dev/Private/OrgOS/.ai/CODEX/RESULTS/T-OS-412.txt` was blocked by the sandbox with `operation not permitted`. I left worktree `.ai/` untouched and wrote the YAML handoff fallback to `/private/tmp/OrgOS-T-OS-412-handoff.txt`.

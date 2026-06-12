@@ -99,8 +99,10 @@ capabilities:
         risk_level: low
         supports_dry_run: false
         owner_approval_required_for: []
+        # ISS-011: never resolve project_ref from eval-fixture facts.
         input_resolution_order:
-          - USER_PROFILE.facts
+          - USER_PROFILE.facts (owner_confirmed real value required; eval fixtures retired per ISS-011)
+          - Keychain via scripts/org/secret-get.sh orgos/supabase (if registered)
           - ENV
           - Owner
       - name: db_reset

@@ -213,7 +213,15 @@ COMMON_OPS: dict[str, list[dict[str, Any]]] = {
             "description": "Fetch API keys for a known project.",
             "command_template": "supabase projects api-keys --project-ref ${project_ref}",
             "required_inputs": [{"name": "project_ref", "type": "string"}],
-            "input_resolution_order": list(DEFAULT_INPUT_RESOLUTION_ORDER),
+            # ISS-011: the former USER_PROFILE fact for project_ref was an eval
+            # fixture ("abc123") and has been retired. Never resolve project_ref
+            # from a fixture; require an owner_confirmed value or fall through.
+            "input_resolution_order": [
+                "USER_PROFILE.facts (owner_confirmed real value required; fixture value 'abc123' retired per ISS-011 -- currently unresolved)",
+                "Keychain via scripts/org/secret-get.sh orgos/supabase (if registered)",
+                "ENV",
+                "Owner",
+            ],
             "risk_level": "low",
             "supports_dry_run": False,
             "owner_approval_required_for": [],

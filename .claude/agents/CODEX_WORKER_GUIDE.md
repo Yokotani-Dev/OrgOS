@@ -27,6 +27,7 @@ Work Order（`.ai/CODEX/ORDERS/<TASK_ID>.md`）に従って作業を進めます
 
 Work Order に記載された参考資料を読む：
 - `CODEX_WORKER_GUIDE.md`（このファイル、必読）
+- `.claude/skills/karpathy-guidelines.md`（実装時の必読: 過剰実装・暗黙の仮定・不要な変更を防ぐ 4 原則）
 - `.ai/PROJECT.md`
 - `.ai/GIT_WORKFLOW.md`
 - `.claude/skills/*`（該当するもの）

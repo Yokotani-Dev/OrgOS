@@ -1,0 +1,63 @@
+---
+task_id: T-OS-460
+timestamp: '2026-05-18T15:45:48Z'
+status: violations_reverted
+worktree_path: "/Users/youyokotani/Dev/Private/OrgOS/.worktrees/T-OS-460"
+tasks_file: "/Users/youyokotani/Dev/Private/OrgOS/.ai/TASKS.yaml"
+kernel_files: "/Users/youyokotani/Dev/Private/OrgOS/.claude/evals/KERNEL_FILES"
+summary:
+  allowed_count: 8
+  violation_count: 2
+  reverted_count: 2
+  revert_failed_count: 0
+files:
+- file: ".ai/CODEX/RESULTS/T-OS-460.json"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: ".ai/REVIEW/PACKETS/T-OS-460.md"
+  decision: outside_allowed_paths
+  action: revert
+  result: reverted
+  reason: does not match task allowed_paths
+- file: ".claude/rules/_archive/acceptance-pre-write.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/_archive/'
+- file: ".claude/rules/_archive/eval-loop.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/_archive/'
+- file: ".claude/rules/_archive/pre-implementation-risk-profile.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/_archive/'
+- file: ".claude/rules/acceptance-pre-write.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/acceptance-pre-write.md'
+- file: ".claude/rules/eval-loop.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/eval-loop.md'
+- file: ".claude/rules/pre-implementation-risk-profile.md"
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: .claude/rules/pre-implementation-risk-profile.md'
+- file: tests/kernel/run-kernel-tests.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
+- file: tests/kernel/test-rule-archive.sh
+  decision: allowed
+  action: none
+  result: allowed
+  reason: 'matches allowed_paths: tests/kernel/'
