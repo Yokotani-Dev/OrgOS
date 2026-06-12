@@ -1862,3 +1862,23 @@ All shell + python scripts under `scripts/` and `tests/` directories.
 
 ### トリガー
 Owner 依頼 + 監査結果 (課題発生)
+
+## OS-MUTATION-001: IntegratorOnlyCommit 時限降格による backlog 統合 (ISS-002) (2026-06-12)
+
+### 何を
+kernel enforce (2026-05-20) 以降 3 週間分の未コミット変更 174 ファイルを、main 上で 4+1 個の論理コミットに分割して統合した (T-OS-491/482/487/484)。
+NO PUSH (D-2026-06-11-001 / ISS-005 保留中)。
+
+### なぜ fallback か（integrator flow 不成立の実証 3 件）
+1. branch 制約: request-integration.sh は --branch main を拒否 (exit 2 実測)。integrator commit は task/* branch にのみ着地し、main への merge は手動 (docs/kernel-v2/dogfood-checklist.md L141)。enforce 下では checkout main / merge が deny され、降格しても dirty kernel-mode.json が checkout を git レベルで阻むデッドロック。
+2. collect-artifacts.sh 病理: 必須前提の artifact 収集が 90 秒 timeout (57,872 untracked 中 1,902 ファイル / 93MB で打ち切り)。.ai/ARTIFACTS/ の再帰スナップショット 1.5GB が原因。
+3. diff budget: tracked diff 5,863 行 > ハードコード上限 5,000 行 (request-integration.sh)。plan contract 検証は worktree 全体の diff を対象とするため、共有 dirty tree の分割統合は構造的に不可能。
+
+### 実施内容
+- 04:08:32Z: set-kernel-mode.sh --invariant IntegratorOnlyCommit warn (これのみ降格。ProtectedBranchNoTouch / StateMutationViaOrgTool 等は enforce 維持)
+- main 上で raw git commit x5 (3338df1 / 52b17e5 / d060225 / 6319ae3 / final)。kernel-mode.json は enforce 内容を index に先行 stage して GROUP-1 で commit
+- 復元: final commit 直後に git checkout -- .claude/state/kernel-mode.json で commit 済み enforce 内容を worktree に復元 (時限 window は本セッション内で閉鎖)
+
+### 付随判断
+- .ai/ARTIFACTS/T-OS-*/ (1.5GB / 57k files の再帰 runtime snapshot) は commit せず .gitignore に追加 (add-only, authority-layer の update_gitignore_add_only に準拠)。integrator 自体が internal path として commit から除外する設計 (T-OS-423..425) と整合
+- tests/activity/ の AKIA.../ghp_... は redaction テスト用 fake fixture (secret-management.md の mock 規定に準拠)。scanner 検出は false positive と判定し、52b17e5 はそのまま維持

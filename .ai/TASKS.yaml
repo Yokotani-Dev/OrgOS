@@ -2400,9 +2400,12 @@ tasks:
       完了(2026-06-11): DASHBOARD実値化(17/20+監査リンク+Known Issues節)。歴史的記録は明示マーク。検証PASS。'
   - id: T-OS-491
     title: '[ISS-002] kernel enforce以降の未コミット変更を統合コミット'
-    status: running
+    status: done
     priority: P0
     owner_role: integrator
     autonomy_level: execute_with_report
     risk_level: medium
     reversibility: reversible
+    notes: '2026-06-12 完了: ISS-002 backlog統合 4+1 commits on main (3338df1/52b17e5/d060225/6319ae3+final)。integrator
+      flow不成立を3 blocker実証後、監査承認済みfallback (IntegratorOnlyCommit時限warn) で実施。ARTIFACTS
+      runtime dumpはgitignore化。'
