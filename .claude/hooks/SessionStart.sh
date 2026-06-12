@@ -7,7 +7,7 @@ set -e
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 CONTROL_FILE="$PROJECT_ROOT/.ai/CONTROL.yaml"
 HANDOFF_FILE="$PROJECT_ROOT/.ai/HANDOFF.md"
-DEFAULT_CHECKSUM_VERIFIER="$PROJECT_ROOT/scripts/integrity/check-generated-checksums.py"
+DEFAULT_CHECKSUM_VERIFIER="$PROJECT_ROOT/scripts/org/check-generated-checksums.py"
 CHECKSUM_VERIFIER="${ORGOS_GENERATED_CHECKSUM_VERIFIER:-$DEFAULT_CHECKSUM_VERIFIER}"
 
 run_generated_checksum_check() {
@@ -26,6 +26,12 @@ run_generated_checksum_check() {
     verifier_mode="direct"
     verifier_label=$(command -v check-generated-checksums.py 2>/dev/null || printf '%s' "check-generated-checksums.py")
   else
+    # ISS-008: do not fail silently when the verifier is missing.
+    # Warn visibly but never block session start (exit 0).
+    echo ""
+    echo "⚠️ Owner warning: checksum verifier not found: $verifier_label"
+    echo "→ generated-view integrity check skipped (expected: scripts/org/check-generated-checksums.py)"
+    echo "Session continues (warn only)."
     return 0
   fi
 
@@ -62,7 +68,14 @@ echo "- Control plane: $CONTROL_FILE"
 run_generated_checksum_check
 
 # CONTROL.yaml から handoff.enabled を確認
-handoff_enabled=$(grep "enabled:" "$CONTROL_FILE" | grep -A 1 "handoff:" | tail -1 | sed 's/.*enabled: //' | tr -d ' ')
+# ISS-008(e): 旧 pipeline (`grep "enabled:" | grep -A 1 "handoff:"`) は
+# 「enabled: を含む行」の中から handoff: を探していたため恒常的に空だった。
+# awk でトップレベル handoff: ブロック内の enabled: を読む。
+handoff_enabled=$(awk '
+  /^handoff:/ { in_block = 1; next }
+  in_block && /^[^[:space:]]/ { in_block = 0 }
+  in_block && $1 == "enabled:" { print $2; exit }
+' "$CONTROL_FILE" 2>/dev/null || true)
 
 if [ "$handoff_enabled" = "true" ]; then
   echo ""

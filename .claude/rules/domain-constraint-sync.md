@@ -163,4 +163,4 @@ recovery_action: stop_and_request_owner_sync
 - `.claude/rules/user-journey-sync.md`: Journey が「どの業務フローで実現するか」を定め、Domain Constraint Sync がその flow 上の法令・policy 制約を定める。Journey step に規制 claim が含まれる場合は Domain Analysis Workshop を起動する。
 - `.claude/rules/request-intake-loop.md`: Step 3 で regulated domain trigger を検出し、Step 5 で未確認法令・policy risk を分類し、Step 6 で confirmed analysis がなければ `ask` または `defer` を選ぶ。
 - `.claude/rules/design-documentation.md`: DESIGN document は confirmed DOMAIN_ANALYSIS の prohibited/required mapping を設計制約として引用する。
-- `.claude/rules/eval-loop.md`: Evaluation は prohibited practice 違反、required practice 欠落、expired analysis 参照を regression として扱う。
+- `.claude/rules/_archive/eval-loop.md` (kernel に superseded・archive 済み): Evaluation は prohibited practice 違反、required practice 欠落、expired analysis 参照を regression として扱う。

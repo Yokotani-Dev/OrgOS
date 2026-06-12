@@ -51,6 +51,7 @@
 | カテゴリ | ファイル | 概要 |
 |----------|----------|------|
 | **最高位 Iron Law** | `.claude/rules/request-intake-loop.md` | 全依頼に適用する 10 ステップの依頼受付ループ |
+| **正規書込パス** | `.claude/rules/kernel-write-path.md` | 保護台帳・commit の変更は org-tool 経由（直接 Edit / raw git commit は kernel が deny） |
 | **セッション起動** | `.claude/rules/session-bootstrap.md` | 応答前の Work Graph / Memory / Capability 強制バインド |
 | **権限境界** | `.claude/rules/authority-layer.md` | risk / reversibility から実行権限を決める境界ルール |
 | **Manager 仕様** | `.claude/agents/manager.md` | 役割、責務、Tick フロー、エージェント起動、安全ルール、ファイル保護 |
@@ -192,8 +193,9 @@
 ### スラッシュコマンド以外の依頼を受けたとき
 
 **TASKS.yaml に登録して即実行する。Owner の確認は不要。**
+登録・更新は `python3 scripts/org/update-task.py` 経由（直接 Edit は kernel が deny。正規パス: `.claude/rules/kernel-write-path.md`）。
 
-1. **TASKS.yaml に登録** → 即実行 → 完了記録 → 次のタスクへ
+1. **TASKS.yaml に登録**（`update-task.py --create`）→ 即実行 → 完了記録（`update-task.py --set status=done`）→ 次のタスクへ
 
 2. **実装は Codex CLI に委任する**
    - Manager の役割は計画・調整・記録であり、実装ではない
@@ -444,12 +446,12 @@ CLI がない場合のみ手動手順を案内する。詳細は `.claude/rules/
 
 ### 課題対応後の記録
 
-対応完了後は必ず記録：
+対応完了後は必ず記録（DECISIONS.md は直接編集せず org-tool 経由）：
 
-```markdown
-## DECISIONS.md に追記
-- **ISSUE-005 対応**: Client Secret を更新。有効期限を1年に設定。
-  Key Vault の自動ローテーション設定を追加（再発防止）。
+```bash
+python3 scripts/org/append-decision.py --id ISSUE-005 \
+  --title "Client Secret 更新" \
+  --body "有効期限を1年に設定。Key Vault の自動ローテーション設定を追加（再発防止）。"
 ```
 
 ---
@@ -507,7 +509,7 @@ Owner への確認は不要。
 
 ### 更新の記録
 
-計画変更は必ず DECISIONS.md に記録：
+計画変更は必ず DECISIONS.md に記録（`scripts/org/append-decision.py` 経由。直接編集は kernel が deny）：
 
 ```markdown
 ## PLAN-UPDATE-001: タスク追加 (2026-01-22)
@@ -555,8 +557,8 @@ Owner への確認は不要。
 ### ✅ 正しい運用
 
 ```
-✅ 課題発生 → 即座に TASKS.yaml に追加
-✅ ad-hoc 作業 → RUN_LOG + 必要なら TASKS.yaml に追加
-✅ 計画変更 → DECISIONS.md に理由を記録
+✅ 課題発生 → 即座に TASKS.yaml に追加（update-task.py --create）
+✅ ad-hoc 作業 → イベント記録（append-event.py）+ 必要なら TASKS.yaml に追加
+✅ 計画変更 → DECISIONS.md に理由を記録（append-decision.py）
 ✅ 毎 Tick で整合性チェック → 乖離があれば修正
 ```

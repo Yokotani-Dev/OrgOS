@@ -120,7 +120,7 @@ Quality Contract は Phase 2 SYNTHESIS の **Owner Touchpoint Type A (Direction)
 
 - `.claude/rules/user-journey-sync.md`: Journey が「何のために」、Quality Contract が「どこまで作る」
 - `.claude/rules/design-documentation.md`: DESIGN フェーズの設計品質と接続
-- `.claude/rules/eval-loop.md`: 評価基準は Quality Contract の definition_of_done から derive
+- `.claude/rules/_archive/eval-loop.md` (kernel に superseded・archive 済み): 評価基準は Quality Contract の definition_of_done から derive
 - `.claude/rules/request-intake-loop.md`: Step 5 (Risk classification) で quality_level を入力に使う
 - `.claude/rules/authority-layer.md`: production 昇格は `owner_only` autonomy_level に該当
 - `.claude/rules/ai-driven-development.md`: 「Manager が自律判断すること」リストから quality_level を明示的に除外

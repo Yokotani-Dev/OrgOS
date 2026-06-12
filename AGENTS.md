@@ -47,7 +47,7 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 - 許可されるのは：checkout, add, commit（タスクブランチのみ）
 
 ### 2. 共有台帳の直接編集禁止
-以下のファイルは **絶対に編集してはならない**（Manager だけが更新する）：
+以下のファイルは **絶対に編集してはならない**（Manager だけが `scripts/org/` の org-tool 経由で更新する。kernel は直接 Edit を deny する）：
 - `.ai/TASKS.yaml`
 - `.ai/DASHBOARD.md`
 - `.ai/STATUS.md`
@@ -81,8 +81,8 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 - テスト実行（確認目的）
 - レビュー結果の出力（下記参照）
 - **コード編集は原則禁止**（レビューのみ）
-- **レビュー基準**: `.claude/rules/review-criteria.md` に従う
-- **セキュリティ基準**: `.claude/rules/security.md` に従う
+- **レビュー基準**: `.claude/skills/review-criteria.md` に従う
+- **セキュリティ基準**: `.claude/skills/security.md` に従う
 
 **重点チェック項目:**
 - エラーハンドリングの適切さ
@@ -123,7 +123,7 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 
 ### `.ai/CODEX/RESULTS/<TASK_ID>-review.json` (Reviewer)
 
-**Severity の定義** (参照: `.claude/rules/review-criteria.md`):
+**Severity の定義** (参照: `.claude/skills/review-criteria.md`):
 - `critical`: セキュリティ脆弱性、データ損失リスク → 即座に修正必須、マージ不可
 - `major`: バグ、パフォーマンス問題、設計違反 → 修正後に再レビュー
 - `minor`: コード品質、可読性 → 修正推奨
@@ -193,11 +193,15 @@ Work Order は `.ai/CODEX/ORDERS/<TASK_ID>.md` に置かれる。
 ## 実行フロー
 
 1. Work Order を読む
-2. 指定された Skills/Rules を確認
+2. ベースライン必読を確認（Work Order への記載有無に関わらず常に読む）:
+   - 全 worker: `.claude/agents/CODEX_WORKER_GUIDE.md`（作業フロー・出力形式・Handoff Packet）
+   - 実装タスク: `.claude/skills/karpathy-guidelines.md`（過剰実装・暗黙の仮定・不要な変更を防ぐ 4 原則）
+   - Reviewer: `.claude/skills/review-criteria.md`, `.claude/skills/security.md`
+   続けて Work Order 指定の Skills/Rules（task 固有のもの）を確認する
 3. 必要なファイルを確認
 4. タスクを実行
 5. 結果を所定のフォーマットで出力
-6. **共有台帳は触らない**（Manager が結果を読んで更新する）
+6. **共有台帳は触らない**（Manager が結果を読み、`scripts/org/` の正規ツール経由で更新する。正規書込パス: `.claude/rules/kernel-write-path.md`）
 
 ---
 

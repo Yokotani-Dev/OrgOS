@@ -21,11 +21,16 @@ done
 METRICS_DIR="$REPO_ROOT/.ai/METRICS/manager-quality"
 mkdir -p "$METRICS_DIR"
 
+# ISS-011: judge against the committed eval fixture profile, not live memory.
+# Override with MQ_PROFILE_PATH if needed.
+PROFILE_PATH="${MQ_PROFILE_PATH:-$SCRIPT_DIR/fixtures/USER_PROFILE.yaml}"
+
 ARGS=(
   "$SCRIPT_DIR/report.py"
   run
   --repo-root "$REPO_ROOT"
   --output-dir "$METRICS_DIR"
+  --profile-path "$PROFILE_PATH"
 )
 
 if [[ "$JSON_OUTPUT" == "true" ]]; then

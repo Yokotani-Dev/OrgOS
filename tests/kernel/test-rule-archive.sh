@@ -15,7 +15,25 @@ ARCHIVED_RULES=(
 
 ARCHIVED_NOTICE='> **ARCHIVED 2026-05-17**: This rule is superseded by the kernel.'
 PRE_ARCHIVE_RULE_COUNT=32
-EXPECTED_CURRENT_RULE_COUNT=$((PRE_ARCHIVE_RULE_COUNT - ${#ARCHIVED_RULES[@]}))
+
+# NOTE (2026-06-11, audit P2-7): rules added legitimately AFTER the 2026-05-17
+# archive event. The original absolute count (32 - 3 = 29) broke as soon as a
+# sanctioned new rule landed. Each addition must be allowlisted here so that
+# unexpected rule proliferation still fails this test.
+POST_ARCHIVE_ADDED_RULES=(
+  "kernel-write-path.md"
+)
+
+expected_current_rule_count() {
+  local count rule
+  count=$((PRE_ARCHIVE_RULE_COUNT - ${#ARCHIVED_RULES[@]}))
+  for rule in "${POST_ARCHIVE_ADDED_RULES[@]}"; do
+    if [ -f "$RULES_DIR/$rule" ]; then
+      count=$((count + 1))
+    fi
+  done
+  printf '%d' "$count"
+}
 
 pass_count=0
 fail_count=0
@@ -65,9 +83,10 @@ test_archived_notice_is_first_line() {
 }
 
 test_top_level_rule_count_decreased_by_three() {
-  local current_count
+  local current_count expected_count
+  expected_count=$(expected_current_rule_count)
   current_count=$(find "$RULES_DIR" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')
-  [ "$current_count" -eq "$EXPECTED_CURRENT_RULE_COUNT" ] || fail "expected $EXPECTED_CURRENT_RULE_COUNT top-level rules, got $current_count"
+  [ "$current_count" -eq "$expected_count" ] || fail "expected $expected_count top-level rules, got $current_count"
 }
 
 test_parallel_session_policy_stays_top_level() {

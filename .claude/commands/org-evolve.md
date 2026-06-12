@@ -63,11 +63,20 @@ OrgOS のファイル群を走査し、改善可能な項目を列挙する。
 
 #### 1.1 既存 Eval の実行
 
+exit code を明示的に捕捉し、fail（exit 1 + JSON 出力あり）と skip（スクリプト不在・出力なし）を区別する。`|| echo` での fallback は fail 時に JSON が 2 行出力され判定不定になるため禁止。
+
 ```bash
-.claude/evals/run-all.sh --json 2>/dev/null || echo '{"overall":"skip"}'
+set +e
+eval_before_json=$(.claude/evals/run-all.sh --json 2>/dev/null)
+eval_before_exit=$?
+set -e
+if [[ -z "$eval_before_json" ]]; then
+  eval_before_json='{"overall":"skip"}'   # 出力なし（不在/実行不能）のみ skip
+fi
+# eval_before_exit=0 → pass / eval_before_exit≠0 かつ JSON あり → fail（JSON をそのまま使う）
 ```
 
-結果を `eval_baseline` として保持。
+結果を `eval_before`（baseline）として保持。**fail でもここでは中止しない** — Step 5 の baseline 比較に使う。
 
 #### 1.2 参照パス検証
 
@@ -241,22 +250,53 @@ EOF
 
 #### 5.1 既存 Eval の再実行
 
+Step 1.1 と同じ exit code 捕捉パターンで実行する:
+
 ```bash
-.claude/evals/run-all.sh --json 2>/dev/null || echo '{"overall":"skip"}'
+set +e
+eval_after_json=$(.claude/evals/run-all.sh --json 2>/dev/null)
+eval_after_exit=$?
+set -e
+if [[ -z "$eval_after_json" ]]; then
+  eval_after_json='{"overall":"skip"}'   # 出力なし（不在/実行不能）のみ skip
+fi
 ```
 
 結果を `eval_after` として保持。
 
-#### 5.2 判定
+#### 5.2 判定 — BASELINE 比較
+
+**`eval_after.overall == "fail"` 単独では REVERT しない。** 既存の fail（baseline 時点で red の suite）はこの変更の責任ではない。REVERT は `eval_after` が `eval_before` より**悪化**した場合のみ。
+
+悪化の正確な定義 — **suite ごとの failing case 数**を比較する:
 
 ```python
-# 必須条件: 既存 Eval が全 pass
-if eval_after.overall == "fail":
-    verdict = "REVERT"  # Eval 失敗
+# failing case 数 = results[] の各 suite について、
+#   status=="fail" の suite: details 内の "❌" 行数（0 行なら 1 とみなす）
+#   status!="fail" の suite: 0
+def failing_cases_per_suite(eval_json):
+    counts = {}
+    for r in eval_json.get("results", []):
+        if r["status"] == "fail":
+            counts[r["eval"]] = max(r["details"].count("❌"), 1)
+        else:
+            counts[r["eval"]] = 0
+    return counts
 
-# Eval が pass なら改善を確認
-elif eval_after.overall in ["pass", "skip"]:
-    # Step 1 と同じ分析を再実行し、対象メトリクスが改善したか確認
+before = failing_cases_per_suite(eval_before)  # Step 1.1 の baseline
+after  = failing_cases_per_suite(eval_after)
+
+# WORSE = いずれかの suite で failing case 数が baseline を上回った
+# （baseline に無い suite は before=0 として比較 → 新規 fail は悪化）
+worse = any(after.get(s, 0) > before.get(s, 0) for s in after)
+
+if eval_before.overall == "skip" or eval_after.overall == "skip":
+    # 比較不能 → 従来どおり対象メトリクスのみで判定
+    verdict = "KEEP" if metric_improved_or_maintained else "REVERT"
+elif worse:
+    verdict = "REVERT"  # baseline より悪化（新規 fail suite / fail 件数増を含む）
+else:
+    # baseline 同等以上 → 対象メトリクスの改善を確認
     # 例: broken_refs が減った、duplicates が減った、etc.
     if metric_improved_or_maintained:
         verdict = "KEEP"

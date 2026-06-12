@@ -5,11 +5,13 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 JSONL_DIR="${JSONL_DIR:-$REPO_ROOT/.ai/METRICS/manager-quality}"
+# ISS-011: judge against the committed eval fixture profile, not live memory.
+PROFILE_PATH="${MQ_PROFILE_PATH:-$SCRIPT_DIR/fixtures/USER_PROFILE.yaml}"
 
 mkdir -p "$JSONL_DIR"
 
 set +e
-eval_output="$("$PYTHON_BIN" "$SCRIPT_DIR/report.py" run --repo-root "$REPO_ROOT" --output-dir "$JSONL_DIR" --json)"
+eval_output="$("$PYTHON_BIN" "$SCRIPT_DIR/report.py" run --repo-root "$REPO_ROOT" --output-dir "$JSONL_DIR" --profile-path "$PROFILE_PATH" --json)"
 eval_exit=$?
 regression_output="$("$PYTHON_BIN" "$SCRIPT_DIR/report.py" regression --jsonl-dir "$JSONL_DIR" --json)"
 regression_exit=$?

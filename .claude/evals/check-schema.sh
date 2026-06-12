@@ -36,7 +36,10 @@ if [[ -f "$TASKS_FILE" ]]; then
   fi
 
   # Check: valid status values
-  VALID_STATUSES="queued|running|blocked|review|done|archived|pending_review"
+  # Mirrors kernel SSOT: scripts/org/import-tasks-yaml.py ACTIVE_STATUSES
+  # (queued|running|blocked|review) + scripts/org/archive-tasks.py
+  # TERMINAL_STATUSES (done|cancelled|superseded).
+  VALID_STATUSES="queued|running|blocked|review|done|cancelled|superseded|archived|pending_review"
   while IFS= read -r line; do
     status_val=$(echo "$line" | awk '{print $2}' | tr -d '"')
     if [[ -n "$status_val" ]] && ! echo "$status_val" | grep -qE "^($VALID_STATUSES)$"; then

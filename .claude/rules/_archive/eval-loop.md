@@ -180,4 +180,4 @@ eval_policy:
 
 - 記事: "Verification Loops and Evals"
 - Anthropic: "Demystifying evals for AI agents" (Jan 2026)
-- [.claude/skills/testing.md](../skills/testing.md)
+- [.claude/skills/testing.md](../../skills/testing.md)

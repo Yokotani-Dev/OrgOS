@@ -26,3 +26,20 @@
 .claude/state/git.lock
 .claude/state/expected_branch_*
 .worktrees/
+
+# Git hygiene (audit 2026-06-10 P3#23, P2#10): runtime backups / session state
+.ai/TASKS.yaml.bak.*
+# Session/policy runtime state — only kernel-mode.json is legitimate tracked config
+.claude/state/*
+!.claude/state/kernel-mode.json
+# Runtime lock artifact (scheduler)
+.claude/scheduled_tasks.lock
+
+# Kernel v2 runtime artifact snapshots (collect-artifacts.sh) — durable on disk, not tracked.
+# 1.5GB / 57k files of recursive snapshots (snapshots-of-snapshots via files/untracked + files/generated);
+# integrator flow already treats these as internal paths excluded from commits (T-OS-423..425).
+# Added during ISS-002 backlog integration 2026-06-12 (T-OS-491).
+.ai/ARTIFACTS/T-OS-*/
+.ai/artifacts/T-OS-*/
+# Events ledger runtime lock (hash-chained JSONL files themselves stay tracked)
+.ai/events/.events.lock

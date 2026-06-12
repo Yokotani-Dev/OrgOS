@@ -143,10 +143,17 @@ def load_suite(repo_root: Path) -> tuple[list[dict[str, Any]], dict[str, dict[st
     return cases, metrics
 
 
-def load_runtime_context(repo_root: Path) -> RuntimeContext:
+def load_runtime_context(
+    repo_root: Path,
+    profile_path: Path | None = None,
+    capabilities_path: Path | None = None,
+) -> RuntimeContext:
+    # ISS-011: eval cases must not depend on (or pollute) live memory.
+    # Pass --profile-path/--capabilities-path to inject committed fixtures;
+    # defaults remain the live paths for backward compatibility.
     ai_root = repo_root / ".ai"
-    profile = load_optional_yaml(ai_root / "USER_PROFILE.yaml")
-    capabilities_doc = load_optional_yaml(ai_root / "CAPABILITIES.yaml")
+    profile = load_optional_yaml(profile_path or (ai_root / "USER_PROFILE.yaml"))
+    capabilities_doc = load_optional_yaml(capabilities_path or (ai_root / "CAPABILITIES.yaml"))
     tasks_doc = load_optional_yaml(ai_root / "TASKS.yaml")
     goals_doc = load_optional_yaml(ai_root / "GOALS.yaml")
     control_doc = load_optional_yaml(ai_root / "CONTROL.yaml")
@@ -1293,9 +1300,14 @@ def regression_report(
     return report
 
 
-def run_suite(repo_root: Path, jsonl_dir: Path | None = None) -> tuple[list[CaseResult], dict[str, dict[str, Any]]]:
+def run_suite(
+    repo_root: Path,
+    jsonl_dir: Path | None = None,
+    profile_path: Path | None = None,
+    capabilities_path: Path | None = None,
+) -> tuple[list[CaseResult], dict[str, dict[str, Any]]]:
     cases, metrics = load_suite(repo_root)
-    context = load_runtime_context(repo_root)
+    context = load_runtime_context(repo_root, profile_path=profile_path, capabilities_path=capabilities_path)
     case_results = [judge_case(case, context) for case in cases]
     effective_jsonl_dir = jsonl_dir or (repo_root / ".ai" / "METRICS" / "manager-quality")
     return case_results, metric_summary(case_results, metrics, repo_root, effective_jsonl_dir)
@@ -1401,8 +1413,12 @@ def regression_self_test(repo_root: Path) -> list[str]:
     return issues
 
 
-def self_test(repo_root: Path) -> tuple[bool, list[str]]:
-    case_results, _ = run_suite(repo_root)
+def self_test(
+    repo_root: Path,
+    profile_path: Path | None = None,
+    capabilities_path: Path | None = None,
+) -> tuple[bool, list[str]]:
+    case_results, _ = run_suite(repo_root, profile_path=profile_path, capabilities_path=capabilities_path)
     by_id = {item.case_id: item for item in case_results}
     issues = []
 
@@ -1441,6 +1457,17 @@ def main() -> int:
     run_parser = sub.add_parser("run")
     run_parser.add_argument("--repo-root", required=True)
     run_parser.add_argument("--output-dir", required=True)
+    run_parser.add_argument(
+        "--profile-path",
+        default=None,
+        help="USER_PROFILE.yaml to judge against (default: <repo-root>/.ai/USER_PROFILE.yaml)."
+        " Pass the eval fixture to keep cases independent of live memory (ISS-011).",
+    )
+    run_parser.add_argument(
+        "--capabilities-path",
+        default=None,
+        help="CAPABILITIES.yaml to judge against (default: <repo-root>/.ai/CAPABILITIES.yaml).",
+    )
     run_parser.add_argument("--json", action="store_true")
 
     regression_parser = sub.add_parser("regression")
@@ -1456,13 +1483,20 @@ def main() -> int:
 
     selftest_parser = sub.add_parser("selftest")
     selftest_parser.add_argument("--repo-root", required=True)
+    selftest_parser.add_argument("--profile-path", default=None)
+    selftest_parser.add_argument("--capabilities-path", default=None)
 
     args = parser.parse_args()
 
     if args.command == "run":
         repo_root = Path(args.repo_root)
         output_dir = Path(args.output_dir)
-        case_results, metrics_summary = run_suite(repo_root, output_dir)
+        case_results, metrics_summary = run_suite(
+            repo_root,
+            output_dir,
+            profile_path=Path(args.profile_path) if args.profile_path else None,
+            capabilities_path=Path(args.capabilities_path) if args.capabilities_path else None,
+        )
         run_date = date.today().isoformat()
         run_id = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
         output_path = output_dir / f"{run_date}.jsonl"
@@ -1475,7 +1509,11 @@ def main() -> int:
         return 1 if summary["critical_failure"] else 0
 
     if args.command == "selftest":
-        ok, issues = self_test(Path(args.repo_root))
+        ok, issues = self_test(
+            Path(args.repo_root),
+            profile_path=Path(args.profile_path) if args.profile_path else None,
+            capabilities_path=Path(args.capabilities_path) if args.capabilities_path else None,
+        )
         if ok:
             print("manager-quality selftest: ok")
             return 0

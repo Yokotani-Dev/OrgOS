@@ -1,5 +1,23 @@
 # OrgOS Export Manifest
 # エクスポート対象ファイルの定義
+#
+# 依存閉包ポリシー (ISS-006 / ISS-007, AUDIT-2026-06-10):
+#   配布ファイル（publish/core）が参照する rules / agents / hooks / scripts /
+#   schemas / templates は、すべて publish に含める（参照閉包）。
+#   閉包は tests/kernel/test-manifest-closure.sh で機械検証する。
+#
+# 意図的に配布しないもの（理由付き）:
+#   - .claude/evals/manager-quality/:
+#       gitignored なローカル生成物（USER_PROFILE / CAPABILITIES）を直読みするため
+#       配布先で再現不能。run-all.sh は -f ガードで安全にスキップする
+#   - .claude/evals/check-oip-format.sh:
+#       INTELLIGENCE 変更時のみ実行（run-all.sh の -f ガード済み・OrgOS-Dev 専用）
+#   - scripts/goals/update-active-graph.sh:
+#       未実装（coherence-mode.md の参照は設計記述のみ, ISS-028）
+#   - .ai/CODEX/codex-wsl.sh:
+#       実体は配布される .ai/TEMPLATES/codex-wsl.sh から導入先で生成する (T-OS-WIN-3)
+#   - .claude/rules/_archive/:
+#       archive 済み rule は配布しない（残存する死参照は ISS-025 / ISS-030 で修正）
 
 version_file: ".ai/VERSION.yaml"
 
@@ -7,27 +25,34 @@ version_file: ".ai/VERSION.yaml"
 rules:
   - agent-coordination
   - ai-driven-development
+  - anthropic-aup-compliance
   - authority-layer
   - capability-preflight
   - coherence-mode
   - cross-session-consistency
   - design-documentation
-  - eval-loop
+  - domain-constraint-sync
   - handoff-protocol
+  - kernel-write-path
   - literacy-adaptation
   - memory-lifecycle
   - next-step-guidance
   - output-management
   - owner-task-minimization
+  - parallel-session-policy
   - patterns
   - performance
   - plan-sync
   - proactive-mode
   - project-flow
+  - quality-contract
   - rationalization-prevention
   - request-intake-loop
+  - secret-management
   - session-bootstrap
   - session-management
+  - specialist-subagents
+  - user-journey-sync
 
 # publish: 公開リポジトリに同期するファイル
 publish:
@@ -47,6 +72,13 @@ publish:
   - ".ai/TEMPLATES/DASHBOARD.md"
   - ".ai/TEMPLATES/OWNER_INBOX.md"
   - ".ai/TEMPLATES/OWNER_COMMENTS.md"
+  # 設計テンプレート（design-documentation / specialist-subagents が参照）
+  - ".ai/TEMPLATES/THREAT_MODEL.md"
+  - ".ai/TEMPLATES/DATA_MODEL_FULL.md"
+  - ".ai/TEMPLATES/AUTHORITY_BOUNDARY.md"
+  - ".ai/TEMPLATES/DOMAIN_ANALYSIS.md"
+  # Windows WSL wrapper テンプレート（agent-coordination.md が参照）
+  - ".ai/TEMPLATES/codex-wsl.sh"
   # コマンド（通常利用: 6コマンド）
   - ".claude/commands/org-start.md"
   - ".claude/commands/org-tick.md"
@@ -54,7 +86,7 @@ publish:
   - ".claude/commands/org-import.md"
   - ".claude/commands/org-settings.md"
   - ".claude/commands/issue.md"
-  # コマンド（追加: 6コマンド）
+  # コマンド（追加: 8コマンド）
   - ".claude/commands/org-release.md"
   - ".claude/commands/org-publish.md"
   - ".claude/commands/org-admin.md"
@@ -62,7 +94,10 @@ publish:
   - ".claude/commands/org-dashboard.md"
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
-  # エージェント（12エージェント）
+  - ".claude/commands/org-journal.md"
+  # エージェント（18ファイル: manager / CODEX_WORKER_GUIDE / specialist 4 を含む）
+  - ".claude/agents/manager.md"
+  - ".claude/agents/CODEX_WORKER_GUIDE.md"
   - ".claude/agents/org-planner.md"
   - ".claude/agents/org-architect.md"
   - ".claude/agents/org-integrator.md"
@@ -75,7 +110,11 @@ publish:
   - ".claude/agents/org-tdd-coach.md"
   - ".claude/agents/org-e2e-runner.md"
   - ".claude/agents/org-doc-updater.md"
-  # Skills（技術知識ベース: 14ファイル）
+  - ".claude/agents/org-domain-analyst.md"
+  - ".claude/agents/org-threat-modeler.md"
+  - ".claude/agents/org-data-modeler.md"
+  - ".claude/agents/org-security-architect.md"
+  # Skills（技術知識ベース: 15ファイル）
   - ".claude/skills/coding-standards.md"
   - ".claude/skills/backend-patterns.md"
   - ".claude/skills/frontend-patterns.md"
@@ -90,40 +129,118 @@ publish:
   - ".claude/skills/testing.md"
   - ".claude/skills/review-criteria.md"
   - ".claude/skills/literacy-reference.md"
-  # Rules（品質基準: 23ファイル）
+  - ".claude/skills/karpathy-guidelines.md"
+  # Rules（品質基準: 30ファイル）
+  # NOTE: eval-loop.md は kernel に superseded され .claude/rules/_archive/ へ
+  # 移動したため publish 対象から除外（manifest は実在ファイルのみ列挙する）
   - ".claude/rules/agent-coordination.md"
   - ".claude/rules/ai-driven-development.md"
+  - ".claude/rules/anthropic-aup-compliance.md"
   - ".claude/rules/authority-layer.md"
   - ".claude/rules/capability-preflight.md"
   - ".claude/rules/coherence-mode.md"
   - ".claude/rules/cross-session-consistency.md"
   - ".claude/rules/design-documentation.md"
-  - ".claude/rules/eval-loop.md"
+  - ".claude/rules/domain-constraint-sync.md"
   - ".claude/rules/handoff-protocol.md"
+  - ".claude/rules/kernel-write-path.md"
   - ".claude/rules/literacy-adaptation.md"
   - ".claude/rules/memory-lifecycle.md"
   - ".claude/rules/next-step-guidance.md"
   - ".claude/rules/output-management.md"
   - ".claude/rules/owner-task-minimization.md"
+  - ".claude/rules/parallel-session-policy.md"
   - ".claude/rules/patterns.md"
   - ".claude/rules/performance.md"
   - ".claude/rules/plan-sync.md"
   - ".claude/rules/proactive-mode.md"
   - ".claude/rules/project-flow.md"
+  - ".claude/rules/quality-contract.md"
   - ".claude/rules/rationalization-prevention.md"
   - ".claude/rules/request-intake-loop.md"
+  - ".claude/rules/secret-management.md"
   - ".claude/rules/session-bootstrap.md"
   - ".claude/rules/session-management.md"
-  # Evals
+  - ".claude/rules/specialist-subagents.md"
+  - ".claude/rules/user-journey-sync.md"
+  # Schemas（配布 rules / agents / scripts が参照するもの）
+  - ".claude/schemas/handoff-packet.yaml"
+  - ".claude/schemas/journey.yaml"
+  - ".claude/schemas/quality-contract.yaml"
+  - ".claude/schemas/domain-constraint.yaml"
+  - ".claude/schemas/plan-contract.v1.json"
+  # Evals（run-all.sh が無条件に呼ぶ 4 チェック + -f ガード付き 3 チェック）
   - ".claude/evals/run-all.sh"
+  - ".claude/evals/check-kernel-boundary.sh"
+  - ".claude/evals/check-schema.sh"
+  - ".claude/evals/check-agent-defs.sh"
   - ".claude/evals/check-security.sh"
   - ".claude/evals/check-consistency.sh"
   - ".claude/evals/check-duplicates.sh"
   - ".claude/evals/check-refs.sh"
   - ".claude/evals/check-skill-compliance.sh"
   - ".claude/evals/KERNEL_FILES"
+  # Hooks（settings.json が登録する hook 一式 + pretool_policy が import する policy_core）
+  - ".claude/hooks/pretool_policy.py"
+  - ".claude/hooks/policy_core.py"
+  - ".claude/hooks/session_start_context.py"
+  - ".claude/hooks/stop_gate.py"
+  - ".claude/hooks/session_memory.py"
+  - ".claude/hooks/SessionStart.sh"
   # Scripts
   - ".claude/scripts/run-parallel.sh"
+  # Session（session-bootstrap / proactive-mode / cross-session-consistency が要求）
+  - "scripts/session/bootstrap.sh"
+  - "scripts/session/common.sh"
+  - "scripts/session/load-ledger.sh"
+  - "scripts/session/bind-request.sh"
+  - "scripts/session/suggest-next.sh"
+  - "scripts/session/priority-ranker.sh"
+  # Platform（org-import / org-start / agent-coordination が要求）
+  - "scripts/platform/detect.sh"
+  # Capabilities（capability-preflight が要求: scan.sh + probe 一式）
+  - "scripts/capabilities/scan.sh"
+  - "scripts/capabilities/probe/cli-codex.sh"
+  - "scripts/capabilities/probe/cli-gh.sh"
+  - "scripts/capabilities/probe/cli-git.sh"
+  - "scripts/capabilities/probe/cli-supabase.sh"
+  - "scripts/capabilities/probe/cli-vercel.sh"
+  - "scripts/capabilities/probe/cli-stripe.sh"
+  - "scripts/capabilities/probe/cli-aws.sh"
+  - "scripts/capabilities/probe/cli-generic.sh"
+  # Memory lint（memory-lifecycle が要求。security/common.sh は lint が source する）
+  - "scripts/memory/check-no-plain-secrets.sh"
+  - "scripts/memory/normalize-lint.sh"
+  - "scripts/memory/promote-lint.sh"
+  - "scripts/security/common.sh"
+  # Org tools（kernel-write-path / manager.md / org-tick / CLAUDE.md が要求する正規書込パス）
+  - "scripts/org/update-task.py"
+  - "scripts/org/append-event.py"
+  - "scripts/org/append-decision.py"
+  - "scripts/org/generate-dashboard.py"
+  - "scripts/org/acquire-lease.sh"
+  - "scripts/org/release-lease.sh"
+  - "scripts/org/request-integration.sh"
+  - "scripts/org/integrator-commit.sh"
+  - "scripts/org/collect-artifacts.sh"
+  - "scripts/org/verify-artifact-manifest.py"
+  - "scripts/org/secret-get.sh"
+  - "scripts/org/secret-set.sh"
+  # Org tools（check-schema.sh が参照）
+  - "scripts/org/archive-tasks.py"
+  - "scripts/org/import-tasks-yaml.py"
+  # Org tools（SessionStart.sh hook が参照: generated-view checksum 検証）
+  - "scripts/org/check-generated-checksums.py"
+  # Codex worktree wrapper（parallel-session-policy が要求）
+  - "scripts/codex/run-in-worktree.sh"
+  - "scripts/codex/pre-exec-validate.sh"
+  - "scripts/codex/post-exec-audit.sh"
+  # Activity Ledger（中央アクティビティログ: scripts/activity は自己完結）
+  - "scripts/activity/log-event.sh"
+  - "scripts/activity/journal.sh"
+  - "scripts/activity/bridge-kernel-events.sh"
+  - "scripts/activity/mcp-journal-server.py"
+  - "scripts/activity/install-mcp.sh"
   # 設定
   - ".claude/settings.json"
   # Git hooks
@@ -133,18 +250,184 @@ publish:
   - ".github/workflows/test.yaml"
 
 # core: 上書きしてOK（OrgOSのコア機能）- /org-import用
+# core = publish から公開リポジトリ専用メタ（README / QUICKSTART / .githooks / .github）
+# と初期テンプレ以外の OrgOS ランタイム一式。
+# NOTE: CLAUDE.md / AGENTS.md / .claude/settings.json は導入先で強制上書きされる
+# （org-import.md の注意事項を参照）。
 core:
   - ".ai/VERSION.yaml"
   - ".ai/CHANGELOG.md"
   - ".ai/RESOURCES/README.md"
+  # テンプレート一式（導入先の .ai/TEMPLATES/ を最新化。.ai/ への展開は templates: で制御）
+  - ".ai/TEMPLATES/BRIEF.md"
+  - ".ai/TEMPLATES/CONTROL.yaml"
+  - ".ai/TEMPLATES/DASHBOARD.md"
+  - ".ai/TEMPLATES/OWNER_INBOX.md"
+  - ".ai/TEMPLATES/OWNER_COMMENTS.md"
+  - ".ai/TEMPLATES/THREAT_MODEL.md"
+  - ".ai/TEMPLATES/DATA_MODEL_FULL.md"
+  - ".ai/TEMPLATES/AUTHORITY_BOUNDARY.md"
+  - ".ai/TEMPLATES/DOMAIN_ANALYSIS.md"
+  - ".ai/TEMPLATES/codex-wsl.sh"
+  # コマンド一式（org-import.md の「コマンド全部」と一致させる: ISS-006）
   - ".claude/commands/org-start.md"
   - ".claude/commands/org-tick.md"
   - ".claude/commands/org-brief.md"
   - ".claude/commands/org-import.md"
+  - ".claude/commands/org-settings.md"
+  - ".claude/commands/issue.md"
+  - ".claude/commands/org-release.md"
+  - ".claude/commands/org-publish.md"
+  - ".claude/commands/org-admin.md"
+  - ".claude/commands/org-evolve.md"
+  - ".claude/commands/org-dashboard.md"
+  - ".claude/commands/org-goals.md"
+  - ".claude/commands/org-learn.md"
+  - ".claude/commands/org-journal.md"
+  # エージェント一式（CLAUDE.md が参照する manager.md を含む: ISS-006）
+  - ".claude/agents/manager.md"
+  - ".claude/agents/CODEX_WORKER_GUIDE.md"
+  - ".claude/agents/org-planner.md"
+  - ".claude/agents/org-architect.md"
+  - ".claude/agents/org-integrator.md"
+  - ".claude/agents/org-scribe.md"
+  - ".claude/agents/org-os-maintainer.md"
+  - ".claude/agents/org-reviewer.md"
+  - ".claude/agents/org-security-reviewer.md"
+  - ".claude/agents/org-build-fixer.md"
+  - ".claude/agents/org-refactor-cleaner.md"
+  - ".claude/agents/org-tdd-coach.md"
+  - ".claude/agents/org-e2e-runner.md"
+  - ".claude/agents/org-doc-updater.md"
+  - ".claude/agents/org-domain-analyst.md"
+  - ".claude/agents/org-threat-modeler.md"
+  - ".claude/agents/org-data-modeler.md"
+  - ".claude/agents/org-security-architect.md"
+  # Skills 一式（CLAUDE.md / AGENTS.md が参照: ISS-006）
+  - ".claude/skills/coding-standards.md"
+  - ".claude/skills/backend-patterns.md"
+  - ".claude/skills/frontend-patterns.md"
+  - ".claude/skills/tdd-workflow.md"
+  - ".claude/skills/research-skill.md"
+  - ".claude/skills/web-design-guidelines.md"
+  - ".claude/skills/refactoring-patterns.md"
+  - ".claude/skills/requirements-specification.md"
+  - ".claude/skills/task-breakdown.md"
+  - ".claude/skills/deployment-planning.md"
+  - ".claude/skills/security.md"
+  - ".claude/skills/testing.md"
+  - ".claude/skills/review-criteria.md"
+  - ".claude/skills/literacy-reference.md"
+  - ".claude/skills/karpathy-guidelines.md"
+  # Rules 一式（CLAUDE.md の最高位 Iron Law 参照先を含む: ISS-006）
+  - ".claude/rules/agent-coordination.md"
+  - ".claude/rules/ai-driven-development.md"
+  - ".claude/rules/anthropic-aup-compliance.md"
+  - ".claude/rules/authority-layer.md"
+  - ".claude/rules/capability-preflight.md"
+  - ".claude/rules/coherence-mode.md"
+  - ".claude/rules/cross-session-consistency.md"
+  - ".claude/rules/design-documentation.md"
+  - ".claude/rules/domain-constraint-sync.md"
+  - ".claude/rules/handoff-protocol.md"
+  - ".claude/rules/kernel-write-path.md"
+  - ".claude/rules/literacy-adaptation.md"
+  - ".claude/rules/memory-lifecycle.md"
+  - ".claude/rules/next-step-guidance.md"
+  - ".claude/rules/output-management.md"
+  - ".claude/rules/owner-task-minimization.md"
+  - ".claude/rules/parallel-session-policy.md"
+  - ".claude/rules/patterns.md"
+  - ".claude/rules/performance.md"
+  - ".claude/rules/plan-sync.md"
+  - ".claude/rules/proactive-mode.md"
+  - ".claude/rules/project-flow.md"
+  - ".claude/rules/quality-contract.md"
+  - ".claude/rules/rationalization-prevention.md"
+  - ".claude/rules/request-intake-loop.md"
+  - ".claude/rules/secret-management.md"
+  - ".claude/rules/session-bootstrap.md"
+  - ".claude/rules/session-management.md"
+  - ".claude/rules/specialist-subagents.md"
+  - ".claude/rules/user-journey-sync.md"
+  # Schemas
+  - ".claude/schemas/handoff-packet.yaml"
+  - ".claude/schemas/journey.yaml"
+  - ".claude/schemas/quality-contract.yaml"
+  - ".claude/schemas/domain-constraint.yaml"
+  - ".claude/schemas/plan-contract.v1.json"
+  # Evals（org-tick / org-evolve のゲートが run-all.sh を要求）
+  - ".claude/evals/run-all.sh"
+  - ".claude/evals/check-kernel-boundary.sh"
+  - ".claude/evals/check-schema.sh"
+  - ".claude/evals/check-agent-defs.sh"
+  - ".claude/evals/check-security.sh"
+  - ".claude/evals/check-consistency.sh"
+  - ".claude/evals/check-duplicates.sh"
+  - ".claude/evals/check-refs.sh"
+  - ".claude/evals/check-skill-compliance.sh"
+  - ".claude/evals/KERNEL_FILES"
+  # Hooks + 設定（settings.json は hooks と同一セットでのみ配布する: ISS-007）
+  - ".claude/hooks/pretool_policy.py"
+  - ".claude/hooks/policy_core.py"
+  - ".claude/hooks/session_start_context.py"
+  - ".claude/hooks/stop_gate.py"
+  - ".claude/hooks/session_memory.py"
+  - ".claude/hooks/SessionStart.sh"
+  - ".claude/settings.json"
+  # Scripts
+  - ".claude/scripts/run-parallel.sh"
+  - "scripts/session/bootstrap.sh"
+  - "scripts/session/common.sh"
+  - "scripts/session/load-ledger.sh"
+  - "scripts/session/bind-request.sh"
+  - "scripts/session/suggest-next.sh"
+  - "scripts/session/priority-ranker.sh"
+  - "scripts/platform/detect.sh"
+  - "scripts/capabilities/scan.sh"
+  - "scripts/capabilities/probe/cli-codex.sh"
+  - "scripts/capabilities/probe/cli-gh.sh"
+  - "scripts/capabilities/probe/cli-git.sh"
+  - "scripts/capabilities/probe/cli-supabase.sh"
+  - "scripts/capabilities/probe/cli-vercel.sh"
+  - "scripts/capabilities/probe/cli-stripe.sh"
+  - "scripts/capabilities/probe/cli-aws.sh"
+  - "scripts/capabilities/probe/cli-generic.sh"
+  - "scripts/memory/check-no-plain-secrets.sh"
+  - "scripts/memory/normalize-lint.sh"
+  - "scripts/memory/promote-lint.sh"
+  - "scripts/security/common.sh"
+  - "scripts/org/update-task.py"
+  - "scripts/org/append-event.py"
+  - "scripts/org/append-decision.py"
+  - "scripts/org/generate-dashboard.py"
+  - "scripts/org/acquire-lease.sh"
+  - "scripts/org/release-lease.sh"
+  - "scripts/org/request-integration.sh"
+  - "scripts/org/integrator-commit.sh"
+  - "scripts/org/collect-artifacts.sh"
+  - "scripts/org/verify-artifact-manifest.py"
+  - "scripts/org/secret-get.sh"
+  - "scripts/org/secret-set.sh"
+  - "scripts/org/archive-tasks.py"
+  - "scripts/org/import-tasks-yaml.py"
+  - "scripts/org/check-generated-checksums.py"
+  - "scripts/codex/run-in-worktree.sh"
+  - "scripts/codex/pre-exec-validate.sh"
+  - "scripts/codex/post-exec-audit.sh"
+  - "scripts/activity/log-event.sh"
+  - "scripts/activity/journal.sh"
+  - "scripts/activity/bridge-kernel-events.sh"
+  - "scripts/activity/mcp-journal-server.py"
+  - "scripts/activity/install-mcp.sh"
+  # ルート
   - ".orgos-manifest.yaml"
   - "CLAUDE.md"
+  - "AGENTS.md"
 
 # preserve: 既存があればスキップ（プロジェクト固有データ）
+# NOTE: preserve はインポート先（target）側の判定にのみ使う。
+# このリポジトリ（source）に実在しないパス（例: .ai/STATUS.yaml）を含んでよい。
 preserve:
   - ".ai/PROJECT.md"
   - ".ai/TASKS.yaml"
@@ -181,3 +464,17 @@ create_dirs:
   - ".ai/TEMPLATES"
   - ".claude/commands"
   - ".claude/agents"
+  - ".claude/rules"
+  - ".claude/skills"
+  - ".claude/schemas"
+  - ".claude/evals"
+  - ".claude/hooks"
+  - ".claude/scripts"
+  - "scripts/session"
+  - "scripts/platform"
+  - "scripts/capabilities/probe"
+  - "scripts/memory"
+  - "scripts/security"
+  - "scripts/org"
+  - "scripts/codex"
+  - "scripts/activity"

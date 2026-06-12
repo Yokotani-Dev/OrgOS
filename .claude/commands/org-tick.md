@@ -12,11 +12,12 @@ OrgOS ManagerとしてTickを1回実行する。
 ### 2. Ownerコメント処理 + 新規依頼のタスク化
 
 #### 2.1 Ownerコメント反映
-Ownerコメントがあれば、DECISIONS/TASKS/PROJECT/CONTROLへ反映し、処理済みをOWNER_COMMENTSに明記
+Ownerコメントがあれば、DECISIONS/TASKS/PROJECT/CONTROLへ反映し、処理済みをOWNER_COMMENTSに明記。
+反映は org-tool 経由（TASKS: `scripts/org/update-task.py` / DECISIONS: `scripts/org/append-decision.py`。直接 Edit は kernel が deny — `.claude/rules/kernel-write-path.md`）
 
 #### 2.2 新規依頼のタスク化（割り込みタスク受付）
 
-Owner からの新しい依頼（コメント or 直接のチャットメッセージ）を検出した場合、**実行前に必ず TASKS.yaml に登録する**。
+Owner からの新しい依頼（コメント or 直接のチャットメッセージ）を検出した場合、**実行前に必ず TASKS.yaml に登録する**（`python3 scripts/org/update-task.py T-XXX --create --title "..." --status queued`。直接 Edit は kernel が deny）。
 
 ```python
 # 疑似コード
@@ -291,10 +292,10 @@ def check_plan_sync():
 
 更新が必要な場合：
 
-1. **TASKS.yaml を更新**
-   - 新タスク追加（適切な deps を設定）
-   - 既存タスクの status/blocker を更新
-   - 不要になったタスクを削除または archived に
+1. **TASKS.yaml を更新**（`scripts/org/update-task.py` 経由。直接 Edit は kernel が deny）
+   - 新タスク追加（`--create`、deps は `--set` で設定）
+   - 既存タスクの status/blocker を更新（`--set status=...`）
+   - 不要になったタスクを archived に（`--set status=archived`）
 
 2. **PROJECT.md を更新**（スコープ変更時）
    - ゴール/成果物の変更を反映

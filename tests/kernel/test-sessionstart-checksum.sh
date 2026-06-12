@@ -95,6 +95,71 @@ test_sessionstart_warns_owner_on_checksum_mismatch() {
   rm -rf "$tmp_dir"
 }
 
+# --- ISS-008 regression tests -------------------------------------------
+# These tests intentionally avoid env injection so that wiring breakage
+# (unregistered hook, wrong default verifier path, silent fallback) is caught.
+
+test_sessionstart_hook_is_executable() {
+  [ -x "$SESSIONSTART_HOOK" ] || fail "SessionStart.sh must have the executable bit (chmod +x)"
+}
+
+test_sessionstart_registered_in_settings() {
+  local settings="$REPO_ROOT/.claude/settings.json"
+  [ -f "$settings" ] || fail "settings.json not found at $settings"
+  python3 - "$settings" <<'EOF_PY' || fail "SessionStart.sh is not registered as a SessionStart hook in .claude/settings.json"
+import json, sys
+data = json.load(open(sys.argv[1]))
+entries = data.get("hooks", {}).get("SessionStart", [])
+commands = [h.get("command", "") for e in entries for h in e.get("hooks", [])]
+sys.exit(0 if any(".claude/hooks/SessionStart.sh" in c for c in commands) else 1)
+EOF_PY
+}
+
+test_default_verifier_path_exists_on_disk() {
+  # Parse the default straight from the hook source — no env override allowed
+  # to mask a wrong path (the original ISS-008 failure mode).
+  local default_line
+  default_line=$(grep -E '^DEFAULT_CHECKSUM_VERIFIER=' "$SESSIONSTART_HOOK" || true)
+  [ -n "$default_line" ] || fail "DEFAULT_CHECKSUM_VERIFIER assignment not found in SessionStart.sh"
+  printf '%s\n' "$default_line" | grep -Fq 'scripts/org/check-generated-checksums.py' \
+    || fail "default verifier must point at scripts/org/check-generated-checksums.py, got: $default_line"
+  [ -f "$REPO_ROOT/scripts/org/check-generated-checksums.py" ] \
+    || fail "default verifier missing on disk: $REPO_ROOT/scripts/org/check-generated-checksums.py"
+}
+
+test_sessionstart_warns_when_verifier_missing() {
+  local tmp_dir output_path status
+  tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-sessionstart-checksum.XXXXXX")
+  output_path="$tmp_dir/output"
+
+  set +e
+  ORGOS_GENERATED_CHECKSUM_VERIFIER="$tmp_dir/does-not-exist.py" \
+    bash "$SESSIONSTART_HOOK" >"$output_path" 2>&1
+  status=$?
+  set -e
+
+  [ "$status" -eq 0 ] || fail "SessionStart should remain warn-only when verifier is missing, got $status"
+  assert_contains "$output_path" "checksum verifier not found" "missing verifier must produce a visible warning (no silent return 0)"
+  rm -rf "$tmp_dir"
+}
+
+test_sessionstart_end_to_end_default_verifier() {
+  # Run with NO env injection: the hook must locate the real verifier on disk.
+  local tmp_dir output_path status
+  tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-sessionstart-checksum.XXXXXX")
+  output_path="$tmp_dir/output"
+
+  set +e
+  env -u ORGOS_GENERATED_CHECKSUM_VERIFIER bash "$SESSIONSTART_HOOK" >"$output_path" 2>&1
+  status=$?
+  set -e
+
+  [ "$status" -eq 0 ] || fail "SessionStart end-to-end run should exit 0, got $status"
+  assert_contains "$output_path" "OrgOS SessionStart:" "end-to-end run should produce session banner"
+  assert_not_contains "$output_path" "checksum verifier not found" "default verifier must be found on disk (no fallback warning)"
+  rm -rf "$tmp_dir"
+}
+
 run_test() {
   local name="$1"
   current_test_failed=0
@@ -121,6 +186,11 @@ main() {
     "")
       run_test test_sessionstart_runs_checksum_verifier
       run_test test_sessionstart_warns_owner_on_checksum_mismatch
+      run_test test_sessionstart_hook_is_executable
+      run_test test_sessionstart_registered_in_settings
+      run_test test_default_verifier_path_exists_on_disk
+      run_test test_sessionstart_warns_when_verifier_missing
+      run_test test_sessionstart_end_to_end_default_verifier
       ;;
     *)
       echo "unknown argument: $1" >&2

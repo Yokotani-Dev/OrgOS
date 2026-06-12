@@ -43,16 +43,35 @@ setup_event_fixture() {
   git clone --quiet "$REPO_ROOT" "$repo"
   git -C "$repo" worktree add --quiet "$worktree" HEAD
   cp "$COLLECTOR" "$repo/scripts/org/collect-artifacts.sh"
+  # NOTE (2026-06-11, audit P2-7): the original mock read a full event JSON from
+  # stdin, which matched a pre-kernel-v2 append-event contract. The real
+  # scripts/org/append-event.py is now a CLI (--event-type/--task-id/
+  # --actor-role/--actor-id/--payload-json) writing a hash-chained monthly
+  # ledger. This mock mirrors the current CLI contract (same pattern as
+  # tests/kernel/test-integrator-events.sh) and flattens output into
+  # .ai/EVENTS.jsonl for assertion.
   cat > "$repo/scripts/org/append-event.py" <<'PY'
 #!/usr/bin/env python3
+import argparse
 import json
-import os
-import sys
 from pathlib import Path
 
-event = json.load(sys.stdin)
-repo_root = Path(os.environ["TEST_EVENT_ROOT"])
-events_path = repo_root / ".ai" / "EVENTS.jsonl"
+parser = argparse.ArgumentParser()
+parser.add_argument("--event-type", required=True)
+parser.add_argument("--task-id", required=True)
+parser.add_argument("--actor-role", required=True)
+parser.add_argument("--actor-id", required=True)
+parser.add_argument("--payload-json", default="{}")
+args = parser.parse_args()
+
+event = {
+    "event_type": args.event_type,
+    "task_id": args.task_id,
+    "actor": {"role": args.actor_role, "id": args.actor_id},
+    "payload": json.loads(args.payload_json),
+}
+root = Path(__file__).resolve().parents[2]
+events_path = root / ".ai" / "EVENTS.jsonl"
 events_path.parent.mkdir(parents=True, exist_ok=True)
 with events_path.open("a", encoding="utf-8") as handle:
     json.dump(event, handle, sort_keys=True)
@@ -78,8 +97,7 @@ run_collect_with_events() {
 
   (
     cd "$repo"
-    TEST_EVENT_ROOT="$repo" \
-      "$repo/scripts/org/collect-artifacts.sh" \
+    "$repo/scripts/org/collect-artifacts.sh" \
         --task-id "$task_id" \
         --run-id "20260517T000000Z-$task_id-1234abcd" \
         --worktree-path "$worktree" \
