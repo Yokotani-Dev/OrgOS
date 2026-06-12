@@ -5,7 +5,35 @@
 > 質問への回答は: `echo "D-XXX A" >> .ai/OWNER_COMMENTS.md` または「D-XXX A」と発話。
 
 ## 高優先度決済 (response < 24h 推奨)
-(なし)
+
+### D-2026-06-11-001 [type_a_direction] ISS-005: 開発リポジトリ全体が PUBLIC (Yokotani-Dev/OrgOS) に push 済み。配布モデルをどちらに確定するか（確定まで push 全面保留中）
+- 推奨選択: B
+- 回答: `echo "D-2026-06-11-001 <A|B|C>" >> .ai/OWNER_COMMENTS.md`
+
+```decision-card
+id: D-2026-06-11-001
+type: type_a_direction
+decision: 'ISS-005: 開発リポジトリ全体が PUBLIC (Yokotani-Dev/OrgOS) に push 済み。配布モデルをどちらに確定するか（確定まで push 全面保留中）'
+recommendation: DEFER
+recommendation_reason: OrgOS の .ai/ 台帳は Owner の業務内容・意思決定・作業パターンを含む。実害(secret)は未検出だが Chief of Staff の記録は private が原則。B は一度の手間で恒久的に安全
+risk: high
+options:
+- key: A
+  label: 公開直開発を正式採用
+  consequence: 今の public 直 push を正式運用化。sessions/CODEX注文書/バックアップを gitignore + git 履歴から除去し、org-publish キュレーション配布は廃止。手間小だが公開リスク管理は gitignore 頼みになる
+  is_recommended: false
+- key: B
+  label: private 復帰 + キュレーション公開再建（推奨）
+  consequence: origin を private に戻し、公開側は manifest ベースの 1-commit/release で再構築。台帳・作業ログ・思考過程が外部に出ない。GitHub 設定変更 + 公開側履歴リセットが一度だけ必要
+  is_recommended: true
+- key: C
+  label: 現状維持
+  consequence: public のまま継続。実シークレットは未検出だが、台帳438ファイル(セッションログ・意思決定・タスク履歴)が公開され続ける。非推奨
+  is_recommended: false
+default_if_no_response: defer_7d
+deadline: '2026-06-18T23:59:59+09:00'
+status: pending
+```
 
 ## 中優先度決済 (response < 7d)
 (なし)

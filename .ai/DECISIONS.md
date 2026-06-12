@@ -1842,3 +1842,23 @@ scripts/ tree contains 123 files. No `*.bak` or `*.old` backups present. All scr
 ### Files audited
 
 All shell + python scripts under `scripts/` and `tests/` directories.
+
+## PLAN-UPDATE-025: OrgOS 進化サイクル: 監査31課題 + Activity Ledger 完成 + Wave-1/2 修正 (2026-06-10〜11) (2026-06-11)
+
+### 変更内容
+- Owner 依頼 (2026-06-10):「OrgOS の課題洗い出し・あるべき姿策定・進化」+「全リポジトリ横断の実行ログ集約 DB」+「フォルダ構成の人間用/機械用分離」
+- T-OS-480: 全体監査完了 — 確定 31 課題 / 根本原因 5 系統 (.ai/AUDIT/AUDIT-2026-06-10-orgos-structural.md)
+- T-OS-481〜483, 486: Central Activity Ledger 完成 (設計 confirmed → 実装 → テスト 5/5 PASS → orgos-dashboard /journal + MCP server "orgos-journal" user-scope 登録済)
+- T-OS-487〜490: 監査 Wave-1 修正完了 — kernel-write-path.md 新設 / append-decision.py 新設 (本記録が初使用) / eval schema 41 errors→pass / USER_PROFILE fixture 汚染除去 / DASHBOARD 実値化
+- Wave-2 (進行中): SessionStart 配線 / manifest 依存閉包 / kernel suite 欠落 / git 衛生
+- T-OS-484 (ToBe v3) draft 作成済、T-OS-485 (フォルダ整理) は設計段階
+
+### 理由
+監査により「指示層が kernel enforce (2026-05-20) に未追随 → 3 週間コミットゼロ・105 変更未保存」(ISS-001/002) を P0 と判定。Owner 包括承認 (2026-06-11「許可なく全部進めて大丈夫」) の下で自律修正。
+
+### 影響 / 保留
+- git push は ISS-005 (public リポジトリに dev ツリー全体が公開済) の Owner 判断まで全面保留
+- scripts/ 数 123→128+ (activity 群追加)。tests/kernel/test-script-consolidation.sh は固定数検証から「T-OS-461 監査記録の存在検証」に意味変更 (kernel 保護下で live count 同期は不可能なため)
+
+### トリガー
+Owner 依頼 + 監査結果 (課題発生)

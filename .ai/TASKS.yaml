@@ -2203,3 +2203,206 @@ tasks:
     risk_level: high
     notes: CLAUDE.md is a KERNEL_FILE — slimming requires direct Owner edit. Defer
       to manual.
+  - id: T-OS-470
+    title: '[ad-hoc] Karpathy coding guidelines を OrgOS skill として反映'
+    status: done
+    priority: P2
+    owner_role: manager
+    allowed_paths:
+      - .claude/skills/karpathy-guidelines.md
+      - .claude/agents/CODEX_WORKER_GUIDE.md
+      - .claude/skills/coding-standards.md
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Source: github.com/multica-ai/andrej-karpathy-skills. 4原則(Think Before
+      Coding/Simplicity First/Surgical Changes/Goal-Driven Execution)を実装者向けskillとして新設。CLAUDE.md/manager.mdはKERNEL_FILESのため非編集。
+
+      完了: karpathy-guidelines.md 新設 + CODEX_WORKER_GUIDE/coding-standards から参照配線。kernel境界違反なし。
+
+      補足: T-OS-471で到達経路をAGENTS.md(auto-load)に修正。CODEX_WORKER_GUIDE配線(10/128到達)の不十分性をカバー。'
+  - id: T-OS-471
+    title: '[ad-hoc] karpathy skill 到達経路をAGENTS.mdポインタ1行で修正(Owner承認済)'
+    status: done
+    priority: P2
+    owner_role: manager
+    allowed_paths:
+      - AGENTS.md
+    autonomy_level: owner_only
+    risk_level: medium
+    reversibility: reversible
+    notes: 'Owner明示承認(2026-06-01)。AGENTS.md実行フローstep2に karpathy-guidelines必読ポインタを1行追加。pointer-not-payload。reachability欠陥(0/128
+      Work Order参照)を修正。AGENTS.mdはKERNEL_FILE→hookブロック時はpaste-ready diff提供。
+
+      完了: AGENTS.md:196 にポインタ1行追加。hook=warn(non-block)で通過。Codex全実行で karpathy が無条件到達。'
+  - id: T-OS-472
+    title: '[ad-hoc] baseline必読をAGENTS.md(auto-load)に集約しWork Order転記依存を断つ+退行ガード'
+    status: done
+    priority: P2
+    owner_role: manager
+    allowed_paths:
+      - AGENTS.md
+      - tests/kernel/test-baseline-refs.sh
+      - tests/kernel/run-kernel-tests.sh
+    autonomy_level: owner_only
+    risk_level: medium
+    reversibility: reversible
+    notes: 'Owner明示承認(2026-06-01,「修正しよ」)。根本原因=baseline参照をWork Order手書き転記する設計(manager.md:399)でdrift(CODEX_WORKER_GUIDE
+      10/128, karpathy 0/128)。Part A: AGENTS.md step2をbaseline(全worker:CODEX_WORKER_GUIDE/実装:karpathy)+task固有に再構成しauto-load
+      100%到達。Part B: test-baseline-refs.shで不変条件を機械検証(Week8: mechanically close)。
+
+      完了: AGENTS.md step2をbaseline集約(auto-load 100%到達)。副次発見=Reviewer baseline参照が.claude/rules/(不在)を指す既存バグ→.claude/skills/(実在)に訂正(4箇所)。test-baseline-refs.sh新設しkernel
+      suite登録、退行検出も確認。全kernel test pass(SUITE_EXIT=0)。'
+  - id: T-OS-480
+    title: '[Owner依頼] OrgOS 全体監査 — 8次元並列で課題を洗い出し反証検証する'
+    status: done
+    priority: P1
+    owner_role: manager
+    autonomy_level: silent_execute
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-10)。読み取り専用監査。Workflow wf_022ae1a3-de1 で rules/scripts/ledger/distribution/kernel/memory-eval/owner-experience/security
+      の8次元を並列監査→adversarial verify→統合レポート。
+
+      完了(2026-06-11): 確定31課題/棄却1。レポート=.ai/AUDIT/AUDIT-2026-06-10-orgos-structural.md、findings
+      JSON同梱。根本原因5系統(RC-1 指示層がkernelに未追随/RC-2 配布検証なし/RC-3 納品ギャップ/RC-4 台帳世代交代の中途/RC-5
+      計測系の自己汚染)。'
+  - id: T-OS-481
+    title: '[Owner依頼] Central Activity Ledger 設計 — 全リポジトリ横断の実行ログ集約DB'
+    status: done
+    priority: P0
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner注文: OrgOSは複数リポジトリに分散するため、実行ログを ~/.orgos/ の単一ストアに集約し、その日に考えたこと・実行したことを一覧できる機能。設計書=.ai/DESIGN/ACTIVITY_LEDGER.md。allowed_paths:
+      .ai/DESIGN/ACTIVITY_LEDGER.md
+
+      Owner指示(2026-06-10): 実装前に要件・アーキテクチャ確認したい→設計書をdraftに変更しOwnerレビューへ。
+
+      完了(2026-06-10): Owner承認「いいと思う！」。レビュー過程でMCP要件(R6)とUI要件(orgos-dashboard Journal画面=案A)を追加。UIモック
+      outputs/2026-06-10/journal-ui-mock.html 承認済。'
+  - id: T-OS-482
+    title: '[Owner依頼] Activity Ledger 実装 — writer/query/digest CLI + hook統合 + 配布'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible
+    notes: 'deps: T-OS-481。中央ストア ~/.orgos/activity/events-YYYYMM.jsonl (orgos-activity.v1)。allowed_paths:
+      scripts/activity/, .claude/skills/org-journal/, .orgos-manifest.yaml, .claude/settings.json
+
+      BLOCKED: Owner設計レビュー待ち。実装Workflow wf_38f79551-e1a は起動直後に停止済み(生成ファイルなし、ワーキングツリー清浄確認済み)。
+
+      スコープ拡張: MCPサーバ(mcp-journal-server.py + install-mcp.sh)を追加。実装Workflow再起動。
+
+      完了(2026-06-11): log-event/journal/bridge/MCP server/install-mcp 全実装。activity
+      suite 5/5 PASS、kernel suite green。実E2E: bridge 24件取込+journal表示確認。セキュリティ強化済(redaction/rotation/injection対策)。'
+  - id: T-OS-483
+    title: '[Owner依頼] Activity Ledger テスト + E2E 検証'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'deps: T-OS-482。複数リポジトリからの append 競合、digest 出力、後方互換を検証。kernel suite に登録。allowed_paths:
+      tests/activity/, tests/kernel/run-kernel-tests.sh
+
+      完了(2026-06-11): tests/activity 5ファイル(スキーマ/redaction/journal/bridge冪等/並行20本/MCP
+      roundtrip)。kernel suiteに登録済。'
+  - id: T-OS-484
+    title: '[Owner依頼] 監査統合 — ToBe v3 策定 + 高価値修正 + 残課題タスク化'
+    status: queued
+    priority: P1
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'deps: T-OS-480。確定課題をseverity順に整理。low-risk即修正、Owner判断はOWNER_INBOX化、残りqueuedタスク化。allowed_paths:
+      .ai/DESIGN/ORGOS_TOBE_V3.md, .ai/'
+  - id: T-OS-485
+    title: '[Owner依頼] OS内フォルダ構成の整理 — 人間が開く場所と機械用を明確分離'
+    status: queued
+    priority: P1
+    owner_role: manager
+    autonomy_level: ask_before_execute
+    risk_level: high
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-10):「人間が開くフォルダとそうじゃないものを明確に分けてほしい」。kernel/hooks/manifest
+      のパス参照に波及する構造変更のため、監査結果(T-OS-480)を踏まえて移行マップを設計→Owner承認→段階実装。deps: T-OS-480, T-OS-484'
+  - id: T-OS-486
+    title: '[Owner依頼] orgos-dashboard に Journal 画面追加（案A・承認済）'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible
+    notes: 'Owner承認(2026-06-10)。対象=~/Dev/Private/orgos-dashboard (別リポジトリ)。API route
+      /api/journal + /journal ページ + ナビ導線。見た目はjournal-ui-mock.html準拠。npm run build
+      で検証。
+
+      完了(2026-06-11): orgos-dashboard に /journal ページ+/api/journal+ナビタブ実装。npm run build
+      GREEN。API動作確認済(port 3611)。'
+  - id: T-OS-487
+    title: '[Fix:ISS-001/002] 指示層をkernel正規書込パスに移行(kernel-write-path.md新設+全指示書パッチ)'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible
+    notes: 'Owner包括承認(2026-06-11「許可なく全部進めて大丈夫」)。allowed_paths: .claude/rules/kernel-write-path.md(新規),
+      CLAUDE.md, AGENTS.md, .claude/agents/manager.md, .claude/commands/org-tick.md,
+      .claude/rules/project-flow.md, .claude/rules/plan-sync.md, .claude/rules/rationalization-prevention.md
+
+      完了(2026-06-11): kernel-write-path.md新設+append-decision.py新設+CLAUDE.md/org-tick.md/manager.md配線済(検証PASS)。残ギャップ:
+      project-flow.mdのorg-tool注記(最終クリーンアップで対応)。'
+  - id: T-OS-488
+    title: '[Fix:ISS-009] eval信号回復 — status enum統一/org-evolve REVERT判定修正/dead refs除去'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'allowed_paths: .claude/evals/check-schema.sh, .claude/evals/check-refs.sh,
+      .claude/commands/org-evolve.md
+
+      完了(2026-06-11): schema eval 41 errors→pass、reference-paths fail→pass。org-evolve
+      REVERT判定をbaseline比較に変更。'
+  - id: T-OS-489
+    title: '[Fix:ISS-011] memory汚染除去 — fixture facts retire + report.py --profile-path分離'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible
+    notes: 'allowed_paths: .ai/USER_PROFILE.yaml, .claude/evals/manager-quality/,
+      .ai/CAPABILITIES.yaml
+
+      完了(2026-06-11): fixture facts 4件をretired_factsへ隔離(active facts清浄を検証PASS)。report.py
+      --profile-path分離。manager-quality 17/20のMQ-007/019/020は別根本原因(capability drift/handoff
+      packet)で別タスク。'
+  - id: T-OS-490
+    title: '[Fix:ISS-010] 台帳の虚偽表示是正 — DASHBOARD実値化(generate-dashboard.py経由)'
+    status: done
+    priority: P1
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'allowed_paths: .ai/DASHBOARD.md (scripts/org/generate-dashboard.py 経由)
+
+      完了(2026-06-11): DASHBOARD実値化(17/20+監査リンク+Known Issues節)。歴史的記録は明示マーク。検証PASS。'
+  - id: T-OS-491
+    title: '[ISS-002] kernel enforce以降の未コミット変更を統合コミット'
+    status: running
+    priority: P0
+    owner_role: integrator
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible

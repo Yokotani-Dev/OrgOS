@@ -12,16 +12,14 @@ Pending Decision Cards from `.ai/OWNER_INBOX.md`.
 | Metric | Window | Value | Source |
 | --- | --- | --- | --- |
 | Owner decisions | 7d | 0 | .ai/OWNER_INBOX.md |
-| Autonomous applies | 30d | 1 | .ai/EVOLUTION/applied/ |
-| Questions by priority | 30d | P0:0 / P1:5 / P2:71 | .ai/EVOLUTION/events.jsonl |
+| Autonomous applies | 30d | 0 | .ai/EVOLUTION/applied/ |
+| Questions by priority | 30d | P0:0 / P1:0 / P2:0 | .ai/EVOLUTION/events.jsonl |
 
 ## Autonomous Results
 
 Recent application records from `.ai/EVOLUTION/applied/` within 7 days.
 
-| Record | Applied At | Stage | Autonomy | Applied By | Target |
-| --- | --- | --- | --- | --- | --- |
-| AR-2026-05-10-001 | 2026-05-10T08:57:37Z | shadow | ask_before_execute | system | .ai/OIP/OIP-001-plan-sync.md |
+(なし)
 
 ## Blocked
 
@@ -35,31 +33,17 @@ Recent 30-day evolution signals from `.ai/EVOLUTION/events.jsonl`. When `problem
 
 ### Problem Class Counts
 
-| Problem Class | Count |
-| --- | --- |
-| P1 | 5 |
-| P2 | 71 |
-| P3 | 5 |
+(なし)
 
 ### AI Capability Evolution
 
-| Capability Signal | Count |
-| --- | --- |
-| capability_degraded | 68 |
+(なし)
 
-| Autonomy Candidate | Capability Event Count |
-| --- | --- |
-| execute_with_report | 68 |
+(なし)
 
 ### Recent Signals
 
-| Event | Priority | Type | Source | Target |
-| --- | --- | --- | --- | --- |
-| EVO-2026-05-08-071 | P1 | oip_stale | oip_scanner | .ai/OIP/OIP-001-plan-sync.md |
-| EVO-2026-05-08-072 | P1 | oip_stale | oip_scanner | .ai/OIP/OIP-006-goal-hierarchy-management.md |
-| EVO-2026-05-08-073 | P2 | rule_stale | memory_scanner | .claude/rules/performance.md |
-| EVO-2026-05-08-074 | P2 | rule_stale | memory_scanner | .claude/rules/capability-preflight.md |
-| EVO-2026-05-08-075 | P2 | rule_stale | memory_scanner | .claude/rules/capability-preflight.md |
+(なし)
 <!-- ORGOS:RESULT-FIRST-DASHBOARD:END -->
 
 ---
@@ -71,11 +55,27 @@ Recent 30-day evolution signals from `.ai/EVOLUTION/events.jsonl`. When `problem
 | Stage | **RELEASE (自律運用: Phase 1-4 完遂 + SELFREVIEW)** |
 | Awaiting Owner | NO |
 | Paused | NO |
-| Manager Quality Score | **20/20 pass (全 6 指標達成)** |
+| Manager Quality Score | **17/20 pass** (2026-06-10 実行。MQ-007/019/020 fail、P0 指標 decision_trace_completeness 未達。詳細: [.ai/AUDIT/AUDIT-2026-06-10-orgos-structural.md](AUDIT/AUDIT-2026-06-10-orgos-structural.md) ISS-010) |
 
 ---
 
-## 🏆 OrgOS ToBe v2 完全達成 (2026-04-19)
+## ⚠️ Known Issues (2026-06-11 監査)
+
+2026-06-10 実施の構造監査で確定 31 課題・根本原因 5 件を特定。詳細: [.ai/AUDIT/AUDIT-2026-06-10-orgos-structural.md](AUDIT/AUDIT-2026-06-10-orgos-structural.md)
+
+- **RC-1**: ルール層が kernel より遅く進化 — kernel v2 enforce 後も指示書 (CLAUDE.md / rules / commands) が正規書込パス (org tools) を未案内
+- **RC-2**: 配布 manifest に機械検証がなく配布モデル崩壊 — 死参照で公開 CI が RED、dev ツリーが public に全量 push
+- **RC-3**: 「done」の定義に配線・本番経路での発火確認が含まれず、機構は作られても作動しない (納品ギャップ)
+- **RC-4**: 台帳 SSOT の世代交代が中途半端 — 旧台帳は凍結・deny、新台帳 (sqlite / generated views) は未実体化
+- **RC-5**: eval/計測系が信号喪失 + 自己汚染 — 恒常 red・41 日未実行・過去の全件 pass 記録は fixture 汚染を含み信頼不可
+
+修正進行中: T-OS-487〜490 (rules/kernel 整合・eval 信号回復・DASHBOARD 是正ほか)、Activity Ledger T-OS-482/486。
+
+---
+
+## 🏆 OrgOS ToBe v2 完全達成 (歴史的記録: 2026-04-19 時点)
+
+> ⚠️ 本節は 2026-04-19 時点の自己報告。スコアおよび「自動稼働」記述は 2026-06-10 監査 (ISS-010/011/012) で実態との乖離が確認済み。現在の実値は上記 🚦 Now を参照。
 
 ### Pro 指摘の 3 必須欠落 + Authority Layer 実装層 = **全クリア**
 
@@ -100,7 +100,7 @@ Recent 30-day evolution signals from `.ai/EVOLUTION/events.jsonl`. When `problem
 
 ---
 
-## 🏁 最終完了報告 (2026-04-19 朝)
+## 🏁 最終完了報告 (歴史的記録: 2026-04-19 時点)
 
 ### 達成した主要マイルストーン
 
@@ -131,7 +131,9 @@ Recent 30-day evolution signals from `.ai/EVOLUTION/events.jsonl`. When `problem
 
 ---
 
-## 🌅 Owner 向け 7 時間自律運用レポート (2026-04-18 夜 → 2026-04-19 朝)
+## 🌅 Owner 向け 7 時間自律運用レポート (歴史的記録: 2026-04-18 夜 → 2026-04-19 朝 時点)
+
+> ⚠️ 本節のスコアは 2026-06-10 監査 (ISS-011) で fixture 汚染を含む自己計測と判明。現在の実値は 🚦 Now を参照。
 
 ### 成果サマリー
 
@@ -176,14 +178,14 @@ Pro 指摘 3 大盲点すべて対応:
 2. ✅ 委譲プロトコル → Handoff Packet schema + 安全化
 3. ✅ 記憶ライフサイクル → memory-lifecycle.md 6 操作 Iron Law
 
-### 次フェーズ (Owner 承認待ち)
-実装層 (既存 OS ファイル) への統合は AGENTS.md 制約を考慮して保留中:
+### 次フェーズ (歴史的記録: 2026-04-19 時点の計画 — 現状とは乖離)
+当時は実装層 (既存 OS ファイル) への統合を Owner 承認待ちとして保留していた:
 - T-OS-154b: `manager.md` に request-intake-loop 埋め込み
 - T-OS-155b: 全 subagent に Handoff Packet 返却義務
 - T-OS-171-173: Authority Layer の実行エンジン化 (OS Mutation Protocol / RBAC / Approval Workflow)
 - T-OS-111: 12 agents に Iron Law 追加
 
-これらは **authority-layer.md の承認フレームワーク** が稼働可能になってから実行するのが安全。Owner の戦略判断をお願いします。
+2026-06-11 現在: 上記の枠組みは kernel v2 (機械的 enforcement、2026-05-15〜20) に supersede されており、Owner 承認待ち状態ではない。現在の課題と修正状況は「⚠️ Known Issues (2026-06-11 監査)」を参照。
 
 ---
 
@@ -282,7 +284,8 @@ Pro 指摘 3 大盲点すべて対応:
 → 詳細は [RUN_LOG.md](.ai/RUN_LOG.md) を参照
 
 直近:
-- 2026-04-19: **🎉 自律運用完遂: Manager Quality Eval 20/20 pass 達成**。Baseline 0/20 → 最終 20/20 (全 6 指標 target 達成)。T-OS-150〜170 すべて DONE。[詳細](.ai/DECISIONS.md#MQ-COMPLETE-001)
+- 2026-06-11: **構造監査反映 (ISS-010 修正)**。Manager Quality 実値 17/20 (2026-06-10 実行、MQ-007/019/020 fail)。旧表示の全件 pass は fixture 汚染 (ISS-011) を含み信頼不可。[監査レポート](AUDIT/AUDIT-2026-06-10-orgos-structural.md)
+- 2026-04-19 (歴史的記録: 2026-04-19 時点。2026-06-10 監査 ISS-011 で信頼不可と判定): **🎉 自律運用完遂: Manager Quality Eval 20/20 pass 達成**。Baseline 0/20 → 最終 20/20 (全 6 指標 target 達成)。T-OS-150〜170 すべて DONE。[詳細](.ai/DECISIONS.md#MQ-COMPLETE-001)
 - 2026-04-18: **ChatGPT Pro レビュー受領 → ToBe v2 へ転換**。Pro 判定 △。「制御システム」への転換。本質的盲点 3 つ（評価関数/委譲プロトコル/記憶ライフサイクル）を認識。T-OS-150〜157 追加。PLAN-UPDATE-018。[Pro レビュー全文](.ai/DESIGN/CHATGPT_PRO_REVIEW_2026-04-18.md)
 - 2026-04-18: **ToBe 設計書 v1 作成** - 「作業者 → 参謀長」への転換案。4 新レイヤー (Memory/Coherence/Capability/Inquiry) 導入。[.ai/DESIGN/ORGOS_TOBE.md](.ai/DESIGN/ORGOS_TOBE.md)。Pro レビューにより v2 へ更新予定。
 - 2026-04-18: **セルフレビュー実施 + 全ギャップのタスク化** - スコア 76/100。T-OS-110〜144（20 タスク）を 4 波構成で追加。PLAN-UPDATE-017。完遂後スコア 95+ 目標。

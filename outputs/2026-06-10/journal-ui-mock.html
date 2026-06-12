@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrgOS Journal — UIモック</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1a202c; --sub: #64748b;
+    --accent: #4f46e5; --line: #e2e8f0;
+    --think: #f59e0b; --act: #10b981;
+    --repo1: #6366f1; --repo2: #0ea5e9; --repo3: #f43f5e; --repo4: #10b981;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; background: var(--bg); color: var(--ink); }
+  .mock-banner { background:#fef3c7; color:#92400e; text-align:center; padding:6px; font-size:12px; font-weight:600; }
+  header { background: var(--card); border-bottom:1px solid var(--line); padding:14px 28px; display:flex; align-items:center; gap:24px; position:sticky; top:0; z-index:10;}
+  header h1 { font-size:18px; font-weight:700; }
+  header h1 span { color:var(--accent); }
+  .datenav { display:flex; align-items:center; gap:10px; background:var(--bg); border-radius:10px; padding:6px 12px; }
+  .datenav button { border:none; background:none; font-size:16px; cursor:pointer; color:var(--sub); }
+  .datenav .date { font-weight:700; font-size:15px; }
+  .viewtoggle { display:flex; background:var(--bg); border-radius:10px; overflow:hidden; }
+  .viewtoggle div { padding:6px 16px; font-size:13px; cursor:pointer; color:var(--sub); }
+  .viewtoggle .on { background:var(--accent); color:#fff; border-radius:10px; font-weight:600; }
+  .search { margin-left:auto; background:var(--bg); border-radius:10px; padding:8px 14px; font-size:13px; color:var(--sub); width:260px; }
+  main { max-width:1100px; margin:24px auto; padding:0 24px; }
+  .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .scard { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 20px; }
+  .scard .num { font-size:26px; font-weight:800; }
+  .scard .lbl { font-size:12px; color:var(--sub); margin-top:2px; }
+  .chips { display:flex; gap:8px; margin-bottom:20px; }
+  .chip { font-size:12px; padding:5px 13px; border-radius:99px; border:1px solid var(--line); background:var(--card); cursor:pointer; color:var(--sub); font-weight:600;}
+  .chip.on { color:#fff; border:none; }
+  .chip.c-all.on{ background:var(--ink);} .chip.c1.on{background:var(--repo1);} .chip.c2.on{background:var(--repo2);} .chip.c3.on{background:var(--repo3);}
+  .cols { display:grid; grid-template-columns: 5fr 7fr; gap:20px; align-items:start; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; }
+  .panel h2 { font-size:14px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .titem { display:flex; gap:12px; padding:11px 0; border-bottom:1px dashed var(--line); }
+  .titem:last-child { border-bottom:none; }
+  .time { font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; padding-top:2px; min-width:38px;}
+  .badge { font-size:10px; font-weight:700; color:#fff; border-radius:6px; padding:2px 8px; height:fit-content; margin-top:1px; white-space:nowrap;}
+  .b1{background:var(--repo1);} .b2{background:var(--repo2);} .b3{background:var(--repo3);}
+  .txt { font-size:13.5px; line-height:1.55; }
+  .txt small { color:var(--sub); display:block; font-size:11.5px; margin-top:2px;}
+  .repoblock { margin-bottom:18px; }
+  .repoblock h3 { font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .dot { width:9px; height:9px; border-radius:99px; display:inline-block;}
+  .repoblock .meta { font-size:11px; color:var(--sub); font-weight:400; margin-left:4px;}
+  .evt { display:flex; gap:10px; padding:7px 0 7px 18px; font-size:13px; align-items:baseline;}
+  .etype { font-size:10.5px; font-weight:700; border-radius:5px; padding:1px 7px; white-space:nowrap;}
+  .e-done{ background:#d1fae5; color:#065f46;} .e-commit{ background:#e0e7ff; color:#3730a3;} .e-sess{ background:#f1f5f9; color:#64748b;} .e-note{ background:#fef3c7; color:#92400e;}
+  .tasklink { color:var(--accent); font-weight:600; font-size:12px; }
+  footer { text-align:center; color:var(--sub); font-size:12px; padding:30px; }
+</style>
+</head>
+<body>
+<div class="mock-banner">⚠️ これはUIモック（見本）です — データはダミー。この見た目の本物を orgos-dashboard に組み込めます</div>
+<header>
+  <h1>🛰 OrgOS <span>Journal</span></h1>
+  <div class="datenav"><button>◀</button><span class="date">2026年6月10日 (火)</span><button>▶</button></div>
+  <div class="viewtoggle"><div class="on">日</div><div>週</div><div>月</div></div>
+  <div class="search">🔍 横断検索（例: Webhook で決めたこと）</div>
+</header>
+<main>
+  <div class="summary">
+    <div class="scard"><div class="num">3</div><div class="lbl">作業したリポジトリ</div></div>
+    <div class="scard"><div class="num">21</div><div class="lbl">イベント</div></div>
+    <div class="scard"><div class="num">4</div><div class="lbl">セッション</div></div>
+    <div class="scard"><div class="num">5.2h</div><div class="lbl">推定作業時間</div></div>
+  </div>
+
+  <div class="chips">
+    <div class="chip c-all on">すべて</div>
+    <div class="chip c1">OrgOS</div>
+    <div class="chip c2">TMC</div>
+    <div class="chip c3">BusinessDX</div>
+  </div>
+
+  <div class="cols">
+    <div class="panel">
+      <h2>💭 考えたこと <span style="color:var(--sub);font-weight:400">(4)</span></h2>
+      <div class="titem"><div class="time">10:02</div><div class="badge b1">OrgOS</div>
+        <div class="txt">Activity Ledger のストアは追記専用方式にする<small>壊れにくさ優先。検索索引は v2 で追加</small></div></div>
+      <div class="titem"><div class="time">10:45</div><div class="badge b1">OrgOS</div>
+        <div class="txt">フォルダ構成は「人間用 / 機械用」分離で再設計する方針</div></div>
+      <div class="titem"><div class="time">14:30</div><div class="badge b2">TMC</div>
+        <div class="txt">招待レス機構は Phase2 に分割。先に Webhook 検証を固める<small>リスク低減を優先した判断</small></div></div>
+      <div class="titem"><div class="time">16:10</div><div class="badge b3">BusinessDX</div>
+        <div class="txt">顧客デモは preview 環境で実施、本番昇格は承認後</div></div>
+    </div>
+
+    <div class="panel">
+      <h2>⚙️ 実行したこと <span style="color:var(--sub);font-weight:400">(17)</span></h2>
+      <div class="repoblock">
+        <h3><span class="dot" style="background:var(--repo1)"></span>OrgOS <span class="meta">09:51 – 12:30 ・ 2セッション</span></h3>
+        <div class="evt"><div class="time">10:15</div><span class="etype e-note">作成</span><span>Activity Ledger 設計 <span class="tasklink">T-OS-481</span></span></div>
+        <div class="evt"><div class="time">11:40</div><span class="etype e-done">完了</span><span>全体監査 — 課題23件確定 <span class="tasklink">T-OS-480</span></span></div>
+        <div class="evt"><div class="time">12:28</div><span class="etype e-commit">commit</span><span>feat: activity ledger v1</span></div>
+      </div>
+      <div class="repoblock">
+        <h3><span class="dot" style="background:var(--repo2)"></span>TMC <span class="meta">14:02 – 15:40</span></h3>
+        <div class="evt"><div class="time">14:55</div><span class="etype e-done">完了</span><span>Webhook 署名検証の実装 <span class="tasklink">T-12</span></span></div>
+        <div class="evt"><div class="time">15:38</div><span class="etype e-commit">commit</span><span>fix: invitation token TTL</span></div>
+      </div>
+      <div class="repoblock">
+        <h3><span class="dot" style="background:var(--repo3)"></span>BusinessDX <span class="meta">16:00 – 17:10</span></h3>
+        <div class="evt"><div class="time">16:05</div><span class="etype e-note">メモ</span><span>デモ環境の構成メモ（preview URL 共有）</span></div>
+        <div class="evt"><div class="time">17:08</div><span class="etype e-done">完了</span><span>ダッシュボード初期表示の高速化 <span class="tasklink">T-8</span></span></div>
+      </div>
+    </div>
+  </div>
+</main>
+<footer>OrgOS Journal — すべてのリポジトリの活動が自動でここに集まります（データ: ~/.orgos/activity/）</footer>
+</body>
+</html>
