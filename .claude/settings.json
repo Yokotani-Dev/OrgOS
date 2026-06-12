@@ -46,6 +46,18 @@
           {
             "type": "command",
             "command": "bash scripts/session/bootstrap.sh 2>/dev/null || echo 'bootstrap skipped'"
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/activity/log-event.sh --type session_start --title 'session start' --source hook --stdin-hook 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/activity/bridge-kernel-events.sh 2>/dev/null || true"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/SessionStart.sh || true"
           }
         ]
       }
@@ -71,6 +83,10 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/session_memory.py end"
+          },
+          {
+            "type": "command",
+            "command": "bash scripts/activity/log-event.sh --type session_end --title 'session end' --source hook --stdin-hook 2>/dev/null || true"
           }
         ]
       }
