@@ -2314,14 +2314,17 @@ tasks:
       roundtrip)。kernel suiteに登録済。'
   - id: T-OS-484
     title: '[Owner依頼] 監査統合 — ToBe v3 策定 + 高価値修正 + 残課題タスク化'
-    status: queued
+    status: done
     priority: P1
     owner_role: manager
     autonomy_level: execute_with_report
     risk_level: low
     reversibility: reversible
     notes: 'deps: T-OS-480。確定課題をseverity順に整理。low-risk即修正、Owner判断はOWNER_INBOX化、残りqueuedタスク化。allowed_paths:
-      .ai/DESIGN/ORGOS_TOBE_V3.md, .ai/'
+      .ai/DESIGN/ORGOS_TOBE_V3.md, .ai/
+
+      v2.0.0 リリース完了(2026-06-13): commit 9bc0738, tag v2.0.0, push成功(main + tag)。GitHub
+      Actions起動。'
   - id: T-OS-485
     title: '[Owner依頼] OS内フォルダ構成の整理 — 人間が開く場所と機械用を明確分離'
     status: queued
@@ -2411,34 +2414,50 @@ tasks:
       runtime dumpはgitignore化。'
   - id: T-OS-492
     title: '[Fix] integrator フロー欠陥4件 — protected-branch deadlock/collect-artifacts再帰1.5GB/5000行cap/plan-contract全木diff'
-    status: queued
+    status: done
     priority: P1
     owner_role: implementer-agent
     autonomy_level: execute_with_report
     risk_level: medium
     reversibility: reversible
     notes: '出典: T-OS-491統合作業の実地検証(2026-06-12)。request-integration.shがmain統合を構造的に不可能にしている。collect-artifacts.shはsnapshot-of-snapshotで57k
-      files/1.5GB生成(.ai/ARTIFACTSはgitignore済)。'
+      files/1.5GB生成(.ai/ARTIFACTSはgitignore済)。
+
+      Fix verified GREEN: integrator main-integration mode (--allow-main flag + 4
+      kernel tests), collect-artifacts artifact-store exclusion (EXCLUDED_PREFIXES,
+      0 leakage in fixture), diff caps. Kernel suite SUITE_EXIT=0.'
   - id: T-OS-493
     title: '[Fix] manager-quality 残3ケース — MQ-007 capability scan配線 / MQ-019,020 handoff
       packet'
-    status: queued
+    status: done
     priority: P1
     owner_role: implementer-agent
     autonomy_level: execute_with_report
     risk_level: low
     reversibility: reversible
-    notes: eval 17/20→20/20へ。capability manifest 53日stale(毎Tick scan未配線)とdecision_trace_completeness
+    notes: 'eval 17/20→20/20へ。capability manifest 53日stale(毎Tick scan未配線)とdecision_trace_completeness
       9%が原因。
+
+      2026-06-13 完了: manager-quality eval 20/20 (decision_trace_completeness 9.09%→100%).
+      修正: scan.sh cli_vercel env_ls/env_pull seed, report.py audit を canonical .md/.txt
+      に限定, codex RESULTS handoff packet を v1.0 schema 化. 検証: bash .claude/evals/manager-quality/run.sh
+      → 20/20 全6指標pass. DASHBOARD 17/20行の更新は PLAN-UPDATE-029 の integrator note 参照.
+
+      Closed in remaining-fixes batch: manager-quality 20/20 pass=20 fail=0, decision_trace_completeness
+      100.0% (>95% target). evals/run-all.sh pass (8/0, 1 benign warn).'
   - id: T-OS-494
     title: '[Wave-4] orgos.sqlite 実体化 + generated views — RC-4 台帳世代交代の完遂'
-    status: queued
+    status: done
     priority: P1
     owner_role: implementer-agent
     autonomy_level: execute_with_report
     risk_level: medium
     reversibility: reversible
-    notes: ToBe v3 §5 W4-4。SessionStart checksum警告(GLOSSARY検証不能)もこれで解消。generate-dashboard.py再生成も復活。
+    notes: 'ToBe v3 §5 W4-4。SessionStart checksum警告(GLOSSARY検証不能)もこれで解消。generate-dashboard.py再生成も復活。
+
+      Fix verified GREEN: orgos.sqlite materialized (.ai/orgos.sqlite 249856B) + 3
+      generated views (TASKS/DASHBOARD/GLOSSARY). SessionStart.sh HOOK_EXIT=0, NO
+      checksum/stale warnings. rebuild-shadow.py added.'
   - id: T-OS-495
     title: '[Wave-3] フォルダ移行 Stage 1 — 参照ゼロ〜LOWの安全移動 + .ai/README 案内板'
     status: done
@@ -2506,7 +2525,7 @@ tasks:
   - id: T-OS-498
     title: '[互換-残] migrate残リスク2件: 同月events衝突の_from_legacy可視化 + session_start_context
       legacy fallback'
-    status: queued
+    status: done
     priority: P2
     owner_role: implementer-agent
     autonomy_level: execute_with_report
@@ -2514,4 +2533,7 @@ tasks:
     reversibility: reversible
     notes: '出典: T-OS-497敵対的検証。どちらもMINOR/自己治癒。(1)events-YYYYMM衝突時のlegacyがglob外→bridge
       replay不可視(データは保全)。(2)hook#1 session_start_context.pyが_machine/sessionsのみ参照(legacy
-      fallbackなし)→初回1セッションだけ空、bootstrap直後に治癒。'
+      fallbackなし)→初回1セッションだけ空、bootstrap直後に治癒。
+
+      Fix verified GREEN: events-month merge visibility (_from_legacy) + session-context
+      legacy fallback. layout-migration 7 tests pass incl merge-collision-keeps-both.'
