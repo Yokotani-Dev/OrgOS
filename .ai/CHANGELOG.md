@@ -4,6 +4,38 @@
 
 ---
 
+## v2.0.0 (2026-06-13) — Observability + Structural Clarity
+
+### 🎯 Headline
+全リポジトリの活動を 1 つのジャーナルに集約する **Central Activity Ledger** を導入。あわせて構造監査(31 確定課題)に基づき OrgOS の整合性を回復し、フォルダ構成を「人間が触る場所 / 機械の実行時データ」に二層化。既存リポジトリは後方互換層により安全に自動移行する。
+
+### ✨ 追加 — Central Activity Ledger（横断実行ログ）
+- `~/.orgos/activity/events-YYYYMM.jsonl`（追記専用・月次シャード）に全リポジトリの活動を集約
+- `scripts/activity/log-event.sh`（writer・secret 自動マスキング）/ `journal.sh`（日次ダイジェスト）/ `bridge-kernel-events.sh`（既存 kernel イベントの冪等取込）
+- `/org-journal` コマンド + stdio MCP サーバ `orgos-journal`（user スコープ・全プロジェクトから `journal_get`/`activity_search`/`activity_log`）
+- orgos-dashboard に `/journal` 画面（日次ビュー、💭考えたこと / ⚙️実行したこと）
+- SessionStart / Stop フックで自動記録
+
+### 🔧 修正 — 構造監査 31 課題（5 根本原因）
+- **ISS-001/002**: kernel 正規書込パスを `kernel-write-path.md` に文書化 + `append-decision.py` 新設 → 3 週間のコミット凍結を解消
+- **ISS-009**: eval 信号回復（check-schema enum に cancelled/superseded、org-evolve を baseline 差分判定へ）
+- **ISS-011**: memory 汚染除去（eval fixture facts を retire、`report.py --profile-path` で本番/fixture 分離）
+- **ISS-010**: DASHBOARD の虚偽表示是正（実測値 + 監査リンク）
+- **ISS-006/007/008**: manifest 依存閉包テスト、SessionStart checksum hook 配線
+- 監査レポート: `.ai/AUDIT/AUDIT-2026-06-10-orgos-structural.md`
+
+### 💥 BREAKING — フォルダ構成の二層化
+- `.ai/` 直下 = 人間が読む台帳のみ。機械の実行時データ（events/leases/queue/sessions/codex/evolution/artifacts ほか 19 ディレクトリ）を **`.ai/_machine/`** へ移動
+- `scripts/` を 21 → 13 ディレクトリ + `_archive/` に統合。ルート整理（`requirements.md` → `docs/archive/`、`.collaborator`/`.DS_Store` 削除）
+- VSCode は `.vscode/settings.json` でエンジンルームを非表示、`README.md` に構成地図
+- kernel パス定数（CODEX/leases/plans）を更新
+
+### 🛡 後方互換 — 既存リポジトリ保護（T-OS-497）
+- 冪等な `scripts/org/migrate-layout.sh`（SessionStart + `/org-import` 配線）で旧レイアウトを自動移行（状態分裂・データ喪失なし）
+- dual-path リゾルバ（新パス→旧パス fallback）を安全網として配備
+- `/org-publish` プリフライト: 互換層が manifest に無ければ配布中止（Iron Law）
+- migration テスト 6 本を kernel suite に登録。全 kernel test green
+
 ## v1.0.0 (2026-05-20) — Production-Ready Kernel
 
 ### 🎯 Headline

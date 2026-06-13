@@ -1,10 +1,13 @@
 # OrgOS WebConsole Version
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "1.0.0"
-released_at: "2026-05-20"
+current: "2.0.0"
+released_at: "2026-06-13"
 
 history:
+  - version: "2.0.0"
+    date: "2026-06-13"
+    description: "v2.0 — Observability + Structural Clarity. Central Activity Ledger (cross-repo ~/.orgos/activity: log-event/journal/bridge CLIs + stdio MCP server orgos-journal + orgos-dashboard /journal page) で全リポジトリの活動を1ジャーナルに集約。構造監査(31確定課題/5根本原因)に基づく修正: kernel正規書込パス文書化(kernel-write-path.md + append-decision.py)で3週間のコミット凍結(ISS-002)を解消、eval信号回復(schema enum統一 + org-evolve baseline比較), memory汚染除去(fixture facts retired + report.py --profile-path分離), manifest依存閉包テスト, SessionStart checksum hook配線。**BREAKING**: .ai/ 二層化 — 人間用台帳を.ai/直下に、機械実行時データ(events/leases/queue/sessions/codex/evolution/artifacts等19dir)を.ai/_machine/へ。scripts/ 統合(21→13 + _archive)。ルート整理(requirements.md→docs/archive)。後方互換層(T-OS-497): 冪等migrate-layout.sh(SessionStart+org-import配線) + dual-pathリゾルバ + org-publishプリフライトgateにより既存リポジトリは状態分裂なく自動移行。全kernel test green。"
   - version: "1.0.0"
     date: "2026-05-20"
     description: "v1.0 — Production-Ready Kernel. GPT-5.5 Pro 8-week migration Week 4-8 complete. SQLite shadow (.ai/orgos.sqlite) + EVENTS.jsonl hash-chained truth ledger + Generated views (TASKS/DASHBOARD/GLOSSARY .generated.*) + Plan Contract (.ai/plans/<task>.plan.yaml with JSON Schema) + integrator-commit plan validation gate. 8 Constitutional Invariants (added PlanContractRequired): IntegratorOnlyCommit / PerTaskWorktree / ProtectedBranchNoTouch / LeaseBeforeWrite / StateMutationViaOrgTool (now also denies generated files) / DurableArtifactBeforeCleanup / OwnerApprovalForIrreversibleOps / PlanContractRequired. SessionStart checksum verifier detects manual edits to generated files. Evidence-Gated Done (check-task-done.py) requires lease/artifact/commit events before task done. 3 rules archived to _archive (acceptance-pre-write, eval-loop, pre-implementation-risk-profile — superseded by kernel mechanisms). All 14 Week 4-8 tasks implemented + 117 kernel tests passing (0 failures)."

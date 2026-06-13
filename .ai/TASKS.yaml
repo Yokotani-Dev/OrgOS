@@ -2503,3 +2503,15 @@ tasks:
       PASSED safe_to_publish=true (idempotency 3x clean / partial converge / chain
       survives move+append / collision both survive / dry-run no-op). 6/6 green, kernel
       suite SUITE_EXIT=0.'
+  - id: T-OS-498
+    title: '[互換-残] migrate残リスク2件: 同月events衝突の_from_legacy可視化 + session_start_context
+      legacy fallback'
+    status: queued
+    priority: P2
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: '出典: T-OS-497敵対的検証。どちらもMINOR/自己治癒。(1)events-YYYYMM衝突時のlegacyがglob外→bridge
+      replay不可視(データは保全)。(2)hook#1 session_start_context.pyが_machine/sessionsのみ参照(legacy
+      fallbackなし)→初回1セッションだけ空、bootstrap直後に治癒。'
