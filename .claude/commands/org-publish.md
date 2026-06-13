@@ -79,8 +79,24 @@ echo "ローカル: $LOCAL_TAG"
 | タグ存在確認 | ローカルにタグが存在するか | ❌ 中止 |
 | ファイル整合性 | manifestのpublishファイルがすべて存在するか | ❌ 中止 |
 | 依存閉包チェック | settings.json の hooks・配布 rules/agents が参照する scripts/schemas が publish に含まれるか（ISS-006/007） | ❌ 中止 |
+| 互換層プリフライト | `scripts/org/migrate-layout.sh` が publish 対象に含まれるか（T-OS-497・既存リポジトリ保護） | ❌ 中止 |
 | 削除ファイル検出 | 前バージョンにあって今回ないファイル | ⚠️ 警告 |
 | 機密情報スキャン | .env, secrets, API keyなどの混入 | ❌ 中止 |
+
+#### c-1. 互換層プリフライト（Iron Law — 既存リポジトリ保護, T-OS-497）
+
+**Iron Law: `scripts/org/migrate-layout.sh` が publish 対象に含まれていなければ publish を中止する。**
+
+新レイアウト（機械用ディレクトリを `.ai/_machine/` 配下に集約）は、既存リポジトリにまだ届いていない。互換層（`migrate-layout.sh` + `resolve-machine-dir.{sh,py}`）を配布せずに新レイアウトを publish すると、`/org-import` で更新した既存リポジトリは旧データ（`.ai/CODEX` `.ai/events` 等）と新コードが見るパスが分裂し、events ハッシュチェーン断絶・lease 無効・Evidence-Gated Done 破綻を起こす。詳細は `.ai/DESIGN/LAYOUT_MIGRATION_COMPAT.md` を参照。
+
+```bash
+# Iron-Law preflight: migrate-layout.sh が publish に含まれていなければ中止
+if ! grep -qF 'scripts/org/migrate-layout.sh' .orgos-manifest.yaml; then
+  echo "❌ ABORT: 互換層 (scripts/org/migrate-layout.sh) が .orgos-manifest.yaml の publish に含まれていません。" >&2
+  echo "   新レイアウトを publish する前に互換層 (T-OS-497) を配布対象に追加してください。" >&2
+  exit 1
+fi
+```
 
 依存閉包チェックの実行:
 

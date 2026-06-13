@@ -167,6 +167,16 @@ EOF
 [ -x scripts/platform/detect.sh ] || echo "WARN: scripts/platform/detect.sh が配布されていません（取得元バージョンが古い可能性）"
 ```
 
+### 5.4. レイアウト移行（既存リポジトリ保護）
+
+ファイルコピー後、`scripts/org/migrate-layout.sh` を実行する。これは **既存リポジトリの旧レイアウトを安全に移行する冪等ステップ** であり、新コードが見る `.ai/_machine/<name>` と、旧リポジトリにまだ残る `.ai/CODEX` `.ai/EVOLUTION` `.ai/events` 等の機械用ディレクトリの分裂（events ハッシュチェーン断絶・lease 無効・queue 孤立）を防ぐ。新規インストールや既に新レイアウトのリポジトリでは no-op として収束する（冪等）。詳細は `.ai/DESIGN/LAYOUT_MIGRATION_COMPAT.md` (T-OS-497) を参照。
+
+```bash
+if [ -f "scripts/org/migrate-layout.sh" ]; then
+  bash scripts/org/migrate-layout.sh
+fi
+```
+
 ### 5.5. platform の記録
 
 `.ai/CONTROL.yaml` が存在する状態になったら platform を確定して記録する。

@@ -2482,3 +2482,24 @@ tasks:
     notes: 'blocker: OWNER_INBOX D-2026-06-11-001。判断まで git push 全面保留継続。推奨B=private復帰+キュレーション公開再建。
 
       解決(2026-06-13): Owner回答=案A(publicのまま正式採用)。push保留解除。履歴除去は不実施(secret実害なし)。OWNER-DECISION-ISS-005参照。'
+  - id: T-OS-497
+    title: '[互換] レイアウト移行の後方互換層 — migrate-layout.sh + dual-path + import/publish配線
+      + テスト'
+    status: done
+    priority: P0
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: high
+    reversibility: reversible
+    notes: 'Owner懸念(2026-06-13): org-import時に既存リポジトリ(旧レイアウト)が新コードと不整合。設計=.ai/DESIGN/LAYOUT_MIGRATION_COMPAT.md。Iron
+      Law: 互換層green前にpublish禁止。
+
+      2026-06-13 完了: migrate-layout.sh (idempotent, git-mv/mv, merge+_from_legacy
+      collision safe, events chain verify) + resolve-machine-dir.{sh,py} (new-then-legacy)
+      + bootstrap(SessionStart self-heal early)/org-import(5.4 migrate step)/org-publish(c-1
+      Iron-Law preflight) wiring + check-task-done evolution path via resolver + .orgos-manifest
+      (publish/core/create_dirs _machine) + 6 migration tests (run-kernel-tests に登録).
+      既存 OLD-layout リポジトリ (例 V-Platform) が upgrade 時に .ai/_machine へ安全収束。Verification
+      PASSED safe_to_publish=true (idempotency 3x clean / partial converge / chain
+      survives move+append / collision both survive / dry-run no-op). 6/6 green, kernel
+      suite SUITE_EXIT=0.'

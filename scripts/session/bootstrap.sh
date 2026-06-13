@@ -6,6 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 source "${SCRIPT_DIR}/common.sh"
 
+# Layout self-heal (T-OS-497): migrate old-layout machine dirs (.ai/CODEX etc.)
+# to the new .ai/_machine/<name> layout before anything reads a machine dir.
+# This runs EARLY so the SessionStart hook chain's later steps (activity log /
+# bridge) and bind/suggest see the migrated layout. Guarded: a missing or
+# failing migrate script must never abort bootstrap.
+if [[ -f "${REPO_ROOT}/scripts/org/migrate-layout.sh" ]]; then
+  bash "${REPO_ROOT}/scripts/org/migrate-layout.sh" --quiet || true
+fi
+
 required_files=(
   ".ai/USER_PROFILE.yaml"
   ".ai/CAPABILITIES.yaml"

@@ -1963,3 +1963,35 @@ Task: T-OS-495
 - Fix restore (warn→enforce): 2026-06-13T06:06:32Z
 
 復元後 kernel suite 再実行で SUITE_EXIT=0 / collect events 2 passed 0 failed を確認。kernel-mode.json は committed bytes と一致 (clean)。他 invariant は降格していない。NO PUSH。
+
+## PLAN-UPDATE-027: レイアウト移行 後方互換層 (T-OS-497) — 既存リポジトリ保護 (2026-06-13)
+
+### 変更内容
+- 追加: `scripts/org/migrate-layout.sh`（冪等な旧→新レイアウト移行スクリプト）
+- 追加: `scripts/org/resolve-machine-dir.sh` / `scripts/org/resolve_machine_dir.py`（new-then-legacy パス解決の安全網）
+- 追加: `tests/kernel/test-layout-migration.sh`（6 ケース）→ `run-kernel-tests.sh` に登録
+- 配線: `scripts/session/bootstrap.sh`（SessionStart で early self-heal、失敗しても bootstrap を中断しない）
+- 配線: `.claude/commands/org-import.md` §5.4（コピー後に migrate-layout.sh を実行）
+- 配線: `.claude/commands/org-publish.md` c-1（Iron-Law プリフライト: 互換層が publish に無ければ中止）
+- 配線: `scripts/org/check-task-done.py`（evolution events パスを resolver 経由に）
+- 配線: `.orgos-manifest.yaml`（publish + core に 3 スクリプト、create_dirs に `.ai/_machine`）
+
+### 何が作られたか
+旧レイアウト（`.ai/CODEX` `.ai/events` `.ai/EVOLUTION` `.ai/ARTIFACTS` 等がルート直下）の既存リポジトリが新コードを取り込むと、新コードは `.ai/_machine/*` を見て状態が分裂する（events ハッシュチェーン断絶 / lease 無効 / queue 孤立 / Evidence-Gated Done 破綻）。本互換層はこれを 2 重に防ぐ:
+1. 主対策 = 冪等な移行スクリプト。`git mv`（追跡）/ `mv`（非追跡）で `.ai/_machine/<name>` へ収束。途中状態・新旧両存（マージ + `_from_legacy` suffix で衝突安全）・events チェーンの移動後連続を verify。
+2. 安全網 = new-then-legacy パス解決ヘルパー。移行スクリプト実行前の一瞬や部分状態でも新コードが旧データを正しく読む。
+
+### `/org-publish` の安全化
+互換層が publish 対象（`.orgos-manifest.yaml`）に含まれることを Iron-Law プリフライトで強制。これで新レイアウトを publish しても、`/org-import` で更新した既存リポジトリは安全に移行する。Owner 懸念（org-import 時の不整合）に対応。
+
+### 残存リスク
+- 移行は `.ai/` 直下の機械用ディレクトリのみ対象。PROTECTED_STATE_FILES / 人間用文書（`.ai/DESIGN/` 等）は意図的に不動。
+- macOS case-insensitive FS の ARTIFACTS→artifacts のみ two-step case-safe move で保護。他の rename は親ディレクトリが異なるため単純 move で安全。
+- 大規模リポジトリでの初回移行は git mv 多数 → 初回 import のみ若干時間増（以後は no-op）。
+
+### 検証
+- 専用テスト 6/6 green（冪等 3x 差分ゼロ / 部分状態収束 / チェーン移動後 + append 連続 / 衝突両存 / dry-run no-op）。
+- kernel suite SUITE_EXIT=0。safe_to_publish=true。
+
+### トリガー
+新規要件（既存リポジトリ保護） + Owner 懸念的中（org-import にデータ移行が無かった）

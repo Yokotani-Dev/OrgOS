@@ -92,8 +92,18 @@ def is_expired(lease: dict) -> bool:
 
 
 def load_active_leases(cwd: str) -> list[dict]:
-    """Read .ai/_machine/leases/*.json from cwd. Returns active, non-expired leases."""
-    leases_dir = resolve_policy_root(cwd) / ".ai" / "_machine" / "leases"
+    """Read leases/*.json from cwd. Returns active, non-expired leases.
+
+    Layout compat (T-OS-497): prefer the new .ai/_machine/leases layout; fall
+    back to the legacy .ai/leases dir when _machine is absent (belt-and-
+    suspenders before migrate-layout.sh has run). Inlined two-path lookup
+    keeps this kernel hook free of cross-module imports.
+    """
+    ai_dir = resolve_policy_root(cwd) / ".ai"
+    leases_dir = ai_dir / "_machine" / "leases"
+    if not leases_dir.is_dir():
+        legacy_dir = ai_dir / "leases"
+        leases_dir = legacy_dir if legacy_dir.is_dir() else leases_dir
     if not leases_dir.is_dir():
         return []
 

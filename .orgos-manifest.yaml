@@ -231,6 +231,12 @@ publish:
   - "scripts/org/import-tasks-yaml.py"
   # Org tools（SessionStart.sh hook が参照: generated-view checksum 検証）
   - "scripts/org/check-generated-checksums.py"
+  # Layout compat layer（T-OS-497: 既存リポジトリの旧→新レイアウト安全移行）
+  # migrate-layout.sh = bootstrap / org-import が起動する冪等移行スクリプト
+  # resolve-machine-dir.{sh,py} = new-then-legacy パス解決の安全網
+  - "scripts/org/migrate-layout.sh"
+  - "scripts/org/resolve-machine-dir.sh"
+  - "scripts/org/resolve_machine_dir.py"
   # Codex worktree wrapper（parallel-session-policy が要求）
   - "scripts/codex/run-in-worktree.sh"
   - "scripts/codex/pre-exec-validate.sh"
@@ -412,6 +418,10 @@ core:
   - "scripts/org/archive-tasks.py"
   - "scripts/org/import-tasks-yaml.py"
   - "scripts/org/check-generated-checksums.py"
+  # Layout compat layer（T-OS-497: 既存リポジトリの旧→新レイアウト安全移行）
+  - "scripts/org/migrate-layout.sh"
+  - "scripts/org/resolve-machine-dir.sh"
+  - "scripts/org/resolve_machine_dir.py"
   - "scripts/codex/run-in-worktree.sh"
   - "scripts/codex/pre-exec-validate.sh"
   - "scripts/codex/post-exec-audit.sh"
@@ -456,6 +466,8 @@ templates:
 # create_dirs: インポート時に作成するディレクトリ
 create_dirs:
   - ".ai"
+  # 機械用ディレクトリのルート（T-OS-497: 新レイアウトの集約先）
+  - ".ai/_machine"
   - ".ai/RESOURCES"
   - ".ai/RESOURCES/docs"
   - ".ai/RESOURCES/designs"

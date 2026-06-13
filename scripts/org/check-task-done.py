@@ -12,7 +12,23 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
-DEFAULT_EVENTS_PATH = REPO_ROOT / ".ai" / "_machine" / "evolution" / "events.jsonl"
+
+
+def _default_events_path() -> Path:
+    """Resolve the evolution events.jsonl path (new-then-legacy, T-OS-497).
+
+    Prefers .ai/_machine/evolution; falls back to the legacy .ai/EVOLUTION dir
+    when the new layout is absent (belt-and-suspenders before migrate-layout.sh
+    has run). Degrades to the new path if the resolver helper is unavailable.
+    """
+    try:
+        from resolve_machine_dir import resolve_machine_dir  # sibling helper
+    except ImportError:
+        return REPO_ROOT / ".ai" / "_machine" / "evolution" / "events.jsonl"
+    return resolve_machine_dir("evolution", root=REPO_ROOT) / "events.jsonl"
+
+
+DEFAULT_EVENTS_PATH = _default_events_path()
 REQUIRED_EVENTS = {"VerificationPassed", "CommitIntegrated"}
 
 
