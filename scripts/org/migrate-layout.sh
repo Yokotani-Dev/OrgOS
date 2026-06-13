@@ -217,9 +217,112 @@ ensure_machine_dir() {
   mkdir -p "$MACHINE_DIR" 2>/dev/null
 }
 
+# is_events_ledger NAME -> 0 if NAME matches the recognized events ledger glob
+# (events-*.jsonl). The chain verifier and the activity bridge both glob
+# `events-*.jsonl`; a salvage name that escapes this glob makes the legacy
+# events invisible to replay even though the data is preserved on disk
+# (T-OS-498 Risk 1).
+is_events_ledger() {
+  case "$1" in
+    events-*.jsonl) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# merge_events_ledger LEGACY NEW_FILE — for a same-month events-*.jsonl
+# collision, append every legacy line whose event_id is not already present in
+# NEW_FILE, preserving the legacy order. Events keep their original hashes; the
+# bridge/verifier key on event_id and tolerate the appended lines (re-linking is
+# not required). A genuine content conflict (same event_id, different line) is
+# salvaged to a name that STILL matches the events-*.jsonl glob so replay can
+# see it, and is counted so the run surfaces it. Echoes "OK", "CONFLICT", or
+# "ERROR". The legacy file is consumed (removed) on OK / CONFLICT.
+merge_events_ledger() {
+  local legacy="$1"
+  local newf="$2"
+  # Conflict salvage path: <newf-without-.jsonl>-legacy-conflict.jsonl, which
+  # still ends in .jsonl and starts with events- so it matches events-*.jsonl.
+  local conflict_path="${newf%.jsonl}-legacy-conflict.jsonl"
+
+  LEGACY_FILE="$legacy" NEW_FILE="$newf" CONFLICT_FILE="$conflict_path" \
+    python3 - <<'PY'
+import json, os, sys
+
+legacy = os.environ["LEGACY_FILE"]
+newf = os.environ["NEW_FILE"]
+conflict = os.environ["CONFLICT_FILE"]
+
+
+def load(path):
+    rows = []
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            for raw in fh:
+                line = raw.rstrip("\n")
+                if not line.strip():
+                    continue
+                eid = None
+                try:
+                    eid = json.loads(line).get("event_id")
+                except Exception:
+                    eid = None
+                rows.append((eid, line))
+    except FileNotFoundError:
+        pass
+    return rows
+
+
+new_rows = load(newf)
+legacy_rows = load(legacy)
+
+# Map event_id -> exact line already present in the new file.
+present = {}
+for eid, line in new_rows:
+    if eid is not None:
+        present.setdefault(eid, line)
+
+append_lines = []   # legacy lines to append (missing event_ids), order preserved
+conflict_lines = []  # same event_id but different content
+for eid, line in legacy_rows:
+    if eid is None:
+        # No event_id to dedup on: treat as a content conflict to avoid silent
+        # duplication / loss; salvage it where replay can still see it.
+        conflict_lines.append(line)
+        continue
+    if eid in present:
+        if present[eid] != line:
+            conflict_lines.append(line)
+        # identical line already present -> nothing to do
+    else:
+        append_lines.append(line)
+        present[eid] = line
+
+status = "OK"
+try:
+    if append_lines:
+        with open(newf, "a", encoding="utf-8") as fh:
+            for line in append_lines:
+                fh.write(line + "\n")
+    if conflict_lines:
+        status = "CONFLICT"
+        with open(conflict, "a", encoding="utf-8") as fh:
+            for line in conflict_lines:
+                fh.write(line + "\n")
+except OSError as exc:
+    sys.stderr.write("merge_events_ledger: %s\n" % exc)
+    print("ERROR")
+    sys.exit(0)
+
+print(status)
+PY
+}
+
 # merge_into OLD NEW — move every entry of OLD into NEW. Never overwrite; on a
 # name collision keep both by suffixing the legacy entry with _from_legacy.
-# Then remove the now-empty OLD. Returns 0 on success, 1 on filesystem error.
+# Exception (T-OS-498 Risk 1): a same-month events-*.jsonl collision is merged
+# line-by-line into the existing new file so the legacy events stay visible to
+# the events-*.jsonl glob. Then remove the now-empty OLD. Returns 0 on success,
+# 1 on filesystem error.
 merge_into() {
   local old="$1"
   local new="$2"
@@ -234,6 +337,41 @@ merge_into() {
     dest="$new/$base"
 
     if [ -e "$dest" ]; then
+      # T-OS-498 Risk 1: same-month events ledger collision. Suffixing with
+      # _from_legacy escapes the events-*.jsonl glob and hides the legacy
+      # events from replay. Instead, merge the legacy lines (by event_id,
+      # order-preserving) into the existing new file. Conflicts are salvaged to
+      # a still-matching name and counted.
+      if is_events_ledger "$base" && [ -f "$entry" ] && [ -f "$dest" ]; then
+        if [ "$DRY_RUN" -eq 1 ]; then
+          log "  [dry-run] merge events ledger $entry -> $dest (by event_id)"
+          continue
+        fi
+        local er
+        er=$(merge_events_ledger "$entry" "$dest")
+        case "$er" in
+          OK)
+            log "  merge events ledger $entry -> $dest (legacy lines appended)"
+            ;;
+          CONFLICT)
+            warn "migrate-layout: events ledger conflict merging $base; legacy-conflict lines salvaged to ${dest%.jsonl}-legacy-conflict.jsonl (still matches events-*.jsonl)"
+            ERRORS=$((ERRORS + 1))
+            ;;
+          *)
+            warn "migrate-layout: ERROR merging events ledger $entry -> $dest"
+            return 1
+            ;;
+        esac
+        # Consume the legacy file (its content is now folded into the new file
+        # and/or the salvage file).
+        if is_tracked "$entry"; then
+          git -C "$REPO_ROOT" rm -q -f "$entry" 2>/dev/null || rm -f "$entry" 2>/dev/null || true
+        else
+          rm -f "$entry" 2>/dev/null || true
+        fi
+        continue
+      fi
+
       # Collision: keep both. Suffix the legacy copy.
       name="${base}_from_legacy"
       dest="$new/$name"

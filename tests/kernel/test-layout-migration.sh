@@ -49,6 +49,10 @@ assert_no_dir() {
   [ ! -e "$1" ] || fail "$2: expected $1 to NOT exist"
 }
 
+assert_file() {
+  [ -f "$1" ] || fail "$2: expected file $1"
+}
+
 assert_file_content() {
   local path="$1" expect="$2" msg="$3"
   [ -f "$path" ] || { fail "$msg: missing file $path"; return; }
@@ -79,6 +83,54 @@ out = os.environ["EVENTS_OUT"]
 with open(out, "w", encoding="utf-8") as fh:
     for e in (e1, e2):
         fh.write(json.dumps(e, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n")
+PY
+}
+
+# Write an events ledger from a space-separated list of event_ids (no chaining
+# required for the collision/merge test; each line is a minimal valid event
+# carrying a distinct event_id). Usage: write_events_by_ids PATH "EVT-1 EVT-2".
+write_events_by_ids() {
+  local out_path="$1"
+  local ids="$2"
+  EVENTS_OUT="$out_path" EVENTS_IDS="$ids" python3 - <<'PY'
+import json, os
+out = os.environ["EVENTS_OUT"]
+ids = os.environ["EVENTS_IDS"].split()
+with open(out, "w", encoding="utf-8") as fh:
+    for eid in ids:
+        ev = {"event_id": eid, "ts": "2026-06-01T00:00:00Z",
+              "event_type": "TaskUpdated", "task_id": "T-OS-1",
+              "actor": {"id": "a", "role": "manager"}, "payload": {},
+              "schema_version": "orgos-event.v1"}
+        fh.write(json.dumps(ev, ensure_ascii=False, sort_keys=True,
+                            separators=(",", ":")) + "\n")
+PY
+}
+
+# Echo the sorted set of event_ids present across every file matching the
+# events-*.jsonl glob under the given directory. This is exactly the visibility
+# the chain verifier / activity bridge have (they both glob events-*.jsonl), so
+# it proves the legacy month's events are replay-visible. Usage:
+#   event_ids_visible_via_glob DIR  ->  "EVT-1 EVT-2 EVT-3"
+event_ids_visible_via_glob() {
+  local dir="$1"
+  EV_DIR="$dir" python3 - <<'PY'
+import glob, json, os
+d = os.environ["EV_DIR"]
+ids = set()
+for path in glob.glob(os.path.join(d, "events-*.jsonl")):
+    with open(path, encoding="utf-8") as fh:
+        for raw in fh:
+            line = raw.strip()
+            if not line:
+                continue
+            try:
+                eid = json.loads(line).get("event_id")
+            except Exception:
+                continue
+            if eid:
+                ids.add(eid)
+print(" ".join(sorted(ids)))
 PY
 }
 
@@ -286,6 +338,53 @@ test_merge_collision_keeps_both() {
 }
 
 # ---------------------------------------------------------------------------
+# (5b) Same-month events ledger collision (T-OS-498 Risk 1):
+#   .ai/events/events-202606.jsonl and .ai/_machine/events/events-202606.jsonl
+#   both exist. The legacy month's events must be MERGED into the new month file
+#   (missing event_ids appended, order preserved) so they stay visible to the
+#   events-*.jsonl glob used by the chain verifier and the activity bridge —
+#   NOT salvaged to a _from_legacy name that escapes the glob.
+# ---------------------------------------------------------------------------
+test_merge_collision() {
+  local repo
+  repo=$(mk_tmp)/repo
+  mkdir -p "$repo"
+  (
+    cd "$repo" || exit 1
+    git init -q .
+    git config user.email "tester@example.test"
+    git config user.name "OrgOS Test"
+    git config commit.gpgsign false
+    mkdir -p .ai/events .ai/_machine/events
+  )
+  # Legacy month has EVT-1, EVT-2; new month has EVT-1 (identical), EVT-3.
+  # Expected after merge: EVT-2 appended -> {EVT-1, EVT-2, EVT-3} all visible.
+  write_events_by_ids "$repo/.ai/events/events-202606.jsonl" "EVT-1 EVT-2"
+  write_events_by_ids "$repo/.ai/_machine/events/events-202606.jsonl" "EVT-1 EVT-3"
+  ( cd "$repo" && git add -A && git commit -qm "events collision setup" )
+
+  run_migrate "$repo" --quiet >/dev/null || fail "(5b) migrate should exit 0"
+
+  # Legacy events dir consumed.
+  assert_no_dir "$repo/.ai/events" "(5b) old events dir gone after merge"
+
+  # The new month file STILL matches events-*.jsonl (no _from_legacy escape).
+  assert_file "$repo/.ai/_machine/events/events-202606.jsonl" \
+    "(5b) new month file present under events-*.jsonl glob"
+
+  # No _from_legacy salvage file (that name escapes the events-*.jsonl glob).
+  assert_no_dir "$repo/.ai/_machine/events/events-202606.jsonl_from_legacy" \
+    "(5b) no _from_legacy salvage (would be invisible to glob)"
+
+  # All three event_ids are visible via the events-*.jsonl glob — i.e. the
+  # legacy month's EVT-2 ended up replay-visible.
+  local visible
+  visible=$(event_ids_visible_via_glob "$repo/.ai/_machine/events")
+  [ "$visible" = "EVT-1 EVT-2 EVT-3" ] \
+    || fail "(5b) legacy events not all glob-visible: '$visible' != 'EVT-1 EVT-2 EVT-3'"
+}
+
+# ---------------------------------------------------------------------------
 # (6) --dry-run changes nothing.
 # ---------------------------------------------------------------------------
 test_dry_run_changes_nothing() {
@@ -346,6 +445,7 @@ main() {
       run_test test_events_chain_intact
       run_test test_partial_state_moves_remainder
       run_test test_merge_collision_keeps_both
+      run_test test_merge_collision
       run_test test_dry_run_changes_nothing
       ;;
     *)

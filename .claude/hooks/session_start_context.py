@@ -4,11 +4,40 @@ from pathlib import Path
 import os
 import re
 import subprocess
+import sys
 
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path.cwd()))
 CONTROL = ROOT / ".ai" / "CONTROL.yaml"
-SESSIONS_DIR = ROOT / ".ai" / "_machine" / "sessions"
 RUN_LOG_DAYS = 7
+
+
+def resolve_sessions_dir() -> Path:
+    """Resolve the sessions dir new-then-legacy (T-OS-498 Risk 2).
+
+    New layout keeps sessions under ``.ai/_machine/sessions``; a repo upgraded by
+    a bare ``git pull`` (before migrate-layout.sh self-heals) still has them at
+    the legacy ``.ai/sessions``. Prefer the resolver helper so the order matches
+    the rest of the kernel; fall back to inline new-then-legacy logic if the
+    helper cannot be imported. Always returns the new path when neither exists
+    (a missing dir is handled crash-safe downstream).
+    """
+    new_path = ROOT / ".ai" / "_machine" / "sessions"
+    legacy_path = ROOT / ".ai" / "sessions"
+    try:
+        sys.path.insert(0, str(ROOT / "scripts" / "org"))
+        from resolve_machine_dir import resolve_machine_dir  # type: ignore
+
+        return resolve_machine_dir("sessions", root=ROOT)
+    except Exception:
+        # Inline fallback: new wins, then legacy, then default to new.
+        if new_path.exists():
+            return new_path
+        if legacy_path.exists():
+            return legacy_path
+        return new_path
+
+
+SESSIONS_DIR = resolve_sessions_dir()
 
 def read_flag(key: str, default: bool = False) -> bool:
     """CONTROL.yaml からフラグを読む"""
