@@ -1995,3 +1995,23 @@ Task: T-OS-495
 
 ### トリガー
 新規要件（既存リポジトリ保護） + Owner 懸念的中（org-import にデータ移行が無かった）
+
+## OS-MUTATION-005: IntegratorOnlyCommit downgrade window — T-OS-497 互換層 commit (2026-06-13)
+
+### 操作
+T-OS-497（レイアウト移行 後方互換層）の成果を main にコミットするため、`IntegratorOnlyCommit` を一時的に `enforce` → `warn` に降格し、コミット後ただちに `enforce` に復帰した。先例: OS-MUTATION-001..004（同一手順）。
+
+### ウィンドウ
+- downgrade_start: 2026-06-13T06:59:50Z
+- downgrade_end:   2026-06-13T06:59:50Z（瞬間的・同一秒内）
+- commit_sha: e8d1859bdad42db2154c9dfc5744ce6e2561e715
+
+### コミット内容
+`feat(compat): idempotent layout migration + dual-path for existing-repo upgrades (T-OS-497)`
+16 files changed, 1301 insertions(+), 4 deletions(-)。新規: migrate-layout.sh / resolve-machine-dir.{sh,py} / test-layout-migration.sh。配線: bootstrap.sh / org-import.md / org-publish.md / check-task-done.py / pretool_policy.py（lease new-then-legacy）/ .orgos-manifest.yaml / run-kernel-tests.sh。
+
+### 検証
+専用テスト 6/6 green、kernel suite SUITE_EXIT=0。コミット後 `IntegratorOnlyCommit=enforce` を `--list` で確認済み。
+
+### 理由
+kernel v2 は raw `git commit` を deny する（`IntegratorOnlyCommit=enforce`）。本互換層はワークフロー駆動の直接コミット指示であり、integrator queue フローではなく、文書化された降格手順で commit した。push は行わない。
