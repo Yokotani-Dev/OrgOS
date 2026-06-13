@@ -1951,3 +1951,15 @@ Task: T-OS-495
 - Restore (warn→enforce): 2026-06-13T05:58:59Z
 
 復元後 kernel-mode.json は committed bytes と一致 (set_at の cosmetic timestamp 差のみだったため git checkout HEAD で確定)。最終状態は全 invariant enforce/warn 正常、IntegratorOnlyCommit=enforce + working tree clean。他 invariant (ProtectedBranchNoTouch=enforce 等) は降格していない。NO PUSH (Owner controls push timing)。
+
+## OS-MUTATION-004: IntegratorOnlyCommit 時限降格 — フォルダ明瞭化 follow-up fix (T-OS-495) (2026-06-13)
+
+フォルダ明瞭化コミット f2631aa が runtime file .ai/EVENTS.jsonl を誤って tracking に含め、tests/kernel/test-collect-events.sh (HEAD を git clone し ArtifactCollected event がちょうど1件であることを assert) を破壊し SUITE_EXIT=1 となった。
+
+修正コミット ee9aeb0 で .ai/EVENTS.jsonl を untrack + .gitignore に追加し、同時に T-OS-495 の audit trail (PLAN-UPDATE-026 / OS-MUTATION-003 / CommitIntegrated event) を close した。これを Integrator 不在で確定するため IntegratorOnlyCommit を再度 enforce→warn へ時限降格し直後に enforce へ復元した。
+
+- Fix downgrade (enforce→warn): 2026-06-13T06:06:12Z
+- Fix commit: ee9aeb0
+- Fix restore (warn→enforce): 2026-06-13T06:06:32Z
+
+復元後 kernel suite 再実行で SUITE_EXIT=0 / collect events 2 passed 0 failed を確認。kernel-mode.json は committed bytes と一致 (clean)。他 invariant は降格していない。NO PUSH。
