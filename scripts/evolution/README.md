@@ -4,15 +4,15 @@ This directory contains the Phase 2 Self-Evolution detector and synthesis entry 
 
 ## Detection Entry Point
 
-- `detect.sh`: runs scanners, normalizes their JSON output, assigns `EVO-YYYY-MM-DD-NNN` IDs, deduplicates same-day events, appends `.ai/EVOLUTION/events.jsonl` with `--json`, and prints YAML with `--stdout`.
+- `detect.sh`: runs scanners, normalizes their JSON output, assigns `EVO-YYYY-MM-DD-NNN` IDs, deduplicates same-day events, appends `.ai/_machine/evolution/events.jsonl` with `--json`, and prints YAML with `--stdout`.
 
 ## Scanners
 
-- `scanners/eval-scanner.sh`: reads `.ai/METRICS/manager-quality/*.jsonl` and `.ai/METRICS/daily-health/runs.jsonl`.
+- `scanners/eval-scanner.sh`: reads `.ai/_machine/metrics/manager-quality/*.jsonl` and `.ai/_machine/metrics/daily-health/runs.jsonl`.
 - `scanners/capability-scanner.sh`: reads `.ai/CAPABILITIES.yaml`; it does not call `scripts/capabilities/scan.sh` because that script writes the registry by design.
 - `scanners/oip-scanner.sh`: reads `.ai/OIP/*.md` and flags open Draft/proposed OIPs older than 14 days.
 - `scanners/memory-scanner.sh`: calls `scripts/memory/normalize-lint.sh --json` and scans `.claude/rules/*.md` headings read-only for duplication signals.
-- `scanners/intel-scanner.sh`: reads `.ai/INTELLIGENCE/config.yaml` and raw collection state.
+- `scanners/intel-scanner.sh`: reads `.ai/_machine/intelligence/config.yaml` and raw collection state.
 
 ## Helpers
 
@@ -21,10 +21,10 @@ This directory contains the Phase 2 Self-Evolution detector and synthesis entry 
 
 ## Synthesis Entry Points
 
-- `synthesize.sh`: reads `.ai/EVOLUTION/events.jsonl`, applies event filters, and writes `.ai/EVOLUTION/proposals/P-YYYY-MM-DD-NNN.yaml`.
+- `synthesize.sh`: reads `.ai/_machine/evolution/events.jsonl`, applies event filters, and writes `.ai/_machine/evolution/proposals/P-YYYY-MM-DD-NNN.yaml`.
 - `peer-review.sh`: reads a proposal, fills `reviewer_b` and `agreement`, and escalates disagreement to OWNER_INBOX through `scripts/inbox/add-decision.sh`.
-- `apply.sh`: reads a proposal and records a shadow or canary application in `.ai/EVOLUTION/applied/`.
-- `circuit-breaker.sh`: guards automatic apply loops with per-cycle, per-day, and revert counters in `.ai/EVOLUTION/circuit-breaker.yaml`.
+- `apply.sh`: reads a proposal and records a shadow or canary application in `.ai/_machine/evolution/applied/`.
+- `circuit-breaker.sh`: guards automatic apply loops with per-cycle, per-day, and revert counters in `.ai/_machine/evolution/circuit-breaker.yaml`.
 - `rollback.sh`: restores a canary target from its pre-apply snapshot and back-writes `rollback_ref` into the application record.
 
 The proposal and application scripts use fixture inputs for the current Phase 2 tasks. They do not call an LLM API.
@@ -65,7 +65,7 @@ bash scripts/evolution/rollback.sh AR-2026-05-10-001
 Application records follow `.claude/schemas/application-record.yaml` and are written as:
 
 ```text
-.ai/EVOLUTION/applied/AR-YYYY-MM-DD-NNN.yaml
+.ai/_machine/evolution/applied/AR-YYYY-MM-DD-NNN.yaml
 ```
 
 Each application record includes `iteration_counter`, a snapshot of circuit-breaker counters after the successful apply. This records `current_cycle_apply_count`, `today_apply_count`, revert count, configured limits, and breaker state for audit.
@@ -73,15 +73,15 @@ Each application record includes `iteration_counter`, a snapshot of circuit-brea
 Canary records also create:
 
 ```text
-.ai/EVOLUTION/applied/AR-YYYY-MM-DD-NNN.before
-.ai/EVOLUTION/applied/AR-YYYY-MM-DD-NNN.canary-monitor.yaml
+.ai/_machine/evolution/applied/AR-YYYY-MM-DD-NNN.before
+.ai/_machine/evolution/applied/AR-YYYY-MM-DD-NNN.canary-monitor.yaml
 ```
 
 Rollback creates:
 
 ```text
-.ai/EVOLUTION/applied/RB-YYYY-MM-DD-NNN.yaml
-.ai/EVOLUTION/applied/rollback-state.yaml
+.ai/_machine/evolution/applied/RB-YYYY-MM-DD-NNN.yaml
+.ai/_machine/evolution/applied/rollback-state.yaml
 ```
 
 When `rollback-state.yaml` reaches `consecutive_reverts: 3`, `apply.sh` stops before proposal preflight. A Manager/Owner review must reset that state before future automatic application.
@@ -91,7 +91,7 @@ When `rollback-state.yaml` reaches `consecutive_reverts: 3`, `apply.sh` stops be
 The Self-Evolution circuit breaker is single-host state stored at:
 
 ```text
-.ai/EVOLUTION/circuit-breaker.yaml
+.ai/_machine/evolution/circuit-breaker.yaml
 ```
 
 Default limits are static:

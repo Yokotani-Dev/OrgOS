@@ -205,12 +205,12 @@ append_task_context() {
 
   append_line "## Task Context: $id"
   append_blank
-  append_file ".ai/CODEX/ORDERS/$id.md"
+  append_file ".ai/_machine/codex/ORDERS/$id.md"
   append_file ".ai/HANDOFF.md"
-  append_file ".ai/CODEX/RESULTS/$id.md"
-  append_file ".ai/CODEX/RESULTS/$id.txt"
-  append_file ".ai/CODEX/RESULTS/$id.json"
-  append_file ".ai/REVIEW/PACKETS/$id.md"
+  append_file ".ai/_machine/codex/RESULTS/$id.md"
+  append_file ".ai/_machine/codex/RESULTS/$id.txt"
+  append_file ".ai/_machine/codex/RESULTS/$id.json"
+  append_file ".ai/_machine/review/PACKETS/$id.md"
 
   append_line "## Artifact Manifests: $id"
   append_blank
@@ -221,8 +221,7 @@ append_task_context() {
     append_file "${manifest_path#"$REPO_ROOT"/}"
   done < <(
     {
-      find "$REPO_ROOT/.ai/artifacts/$id" -type f -name artifact_manifest.json 2>/dev/null
-      find "$REPO_ROOT/.ai/ARTIFACTS/$id" -type f -name artifact_manifest.json 2>/dev/null
+      find "$REPO_ROOT/.ai/_machine/artifacts/$id" -type f -name artifact_manifest.json 2>/dev/null
     } | sort || true
   )
 

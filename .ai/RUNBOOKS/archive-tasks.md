@@ -19,13 +19,13 @@
 
 ### 1. Dry Run
 ```bash
-bash scripts/tasks/archive-done.sh --dry-run
+python3 scripts/org/archive-tasks.py --dry-run
 ```
 期待結果: 移動予定の task ID が標準出力に表示される。ファイルは変更されない。
 
 ### 2. Archive 実行
 ```bash
-bash scripts/tasks/archive-done.sh
+python3 scripts/org/archive-tasks.py
 ```
 期待結果:
 - `.ai/TASKS.yaml.bak.<timestamp>` が作成される
@@ -35,7 +35,7 @@ bash scripts/tasks/archive-done.sh
 
 ### 3. 冪等性確認
 ```bash
-bash scripts/tasks/archive-done.sh --dry-run
+python3 scripts/org/archive-tasks.py --dry-run
 ```
 期待結果: 何も出力されない。2 回目の通常実行も no-op になる。
 

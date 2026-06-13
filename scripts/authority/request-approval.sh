@@ -110,7 +110,7 @@ command -v ruby >/dev/null 2>&1 || die "ruby is required"
 request_id="$(uuidgen | tr '[:upper:]' '[:lower:]')"
 requested_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 display_time="$(date '+%Y-%m-%d %H:%M')"
-approvals_dir="$REPO_ROOT/.ai/APPROVALS"
+approvals_dir="$REPO_ROOT/.ai/_machine/approvals"
 approval_file="$approvals_dir/$request_id.yaml"
 owner_inbox="$REPO_ROOT/.ai/OWNER_INBOX.md"
 

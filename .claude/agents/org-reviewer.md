@@ -96,7 +96,7 @@ acceptance 条件: "POST /api/users が 201 を返す"
 
 #### Step 2-1: 変更内容の確認
 
-1. Review Packet を読む（`.ai/REVIEW/PACKETS/<TASK_ID>.md`）
+1. Review Packet を読む（`.ai/_machine/review/PACKETS/<TASK_ID>.md`）
 2. 変更されたファイルを確認
 3. git diff で差分を確認
 

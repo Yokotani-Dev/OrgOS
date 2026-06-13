@@ -9,7 +9,7 @@ Detects new model-alias, MCP, and CLI capabilities by comparing known entries in
 It does not call provider APIs and does not read secret-bearing environment
 variables.
 
-Default behavior writes proposal YAMLs to `.ai/EVOLUTION/proposals/` using the
+Default behavior writes proposal YAMLs to `.ai/_machine/evolution/proposals/` using the
 T-OS-324 evolution proposal shape:
 
 ```bash

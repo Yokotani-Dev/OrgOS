@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/EVOLUTION/events.jsonl}"
+EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/_machine/evolution/events.jsonl}"
 LIMIT="${1:-20}"
 
 python3 - "$EVENTS_PATH" "$LIMIT" <<'PY'

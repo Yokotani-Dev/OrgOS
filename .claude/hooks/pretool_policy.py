@@ -92,8 +92,8 @@ def is_expired(lease: dict) -> bool:
 
 
 def load_active_leases(cwd: str) -> list[dict]:
-    """Read .ai/leases/*.json from cwd. Returns active, non-expired leases."""
-    leases_dir = resolve_policy_root(cwd) / ".ai" / "leases"
+    """Read .ai/_machine/leases/*.json from cwd. Returns active, non-expired leases."""
+    leases_dir = resolve_policy_root(cwd) / ".ai" / "_machine" / "leases"
     if not leases_dir.is_dir():
         return []
 

@@ -28,8 +28,8 @@ REQUIRED_FILES=(
   ".claude/schemas/integration-queue.v1.json"
   ".claude/schemas/lease.v1.json"
   ".claude/evals/KERNEL_FILES"
-  ".ai/queue/integration/.gitkeep"
-  ".ai/leases.gitkeep"
+  ".ai/_machine/queue/integration/.gitkeep"
+  ".ai/_machine/leases.gitkeep"
   ".ai/BOOTSTRAP-OVERRIDES.md"
   ".orgos-kernel-version"
 )

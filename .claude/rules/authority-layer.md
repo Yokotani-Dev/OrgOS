@@ -97,7 +97,7 @@ os_mutation_protocol:
   preflight:
     - dry_run: diff 内容を確認
     - approval: ask_before_execute level 以上なら review task を生成
-    - backup: 変更前を .ai/BACKUPS/ に保存
+    - backup: 変更前を .ai/_machine/backups/ に保存
 
   postflight:
     - verify: eval で変更内容を検証
@@ -134,7 +134,7 @@ role_matrix:
 
   codex_reviewer:
     can_edit:
-      - .ai/CODEX/RESULTS/*R.md
+      - .ai/_machine/codex/RESULTS/*R.md
     approvals_required:
       - code_edit_forbidden
     read_only:
@@ -142,7 +142,7 @@ role_matrix:
 
   subagent_org_reviewer:
     can_edit:
-      - .ai/REVIEW/
+      - .ai/_machine/review/
     read_only:
       - source_files
 ```

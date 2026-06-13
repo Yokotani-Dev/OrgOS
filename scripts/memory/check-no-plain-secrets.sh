@@ -3,9 +3,9 @@ set -Eeuo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 
-if [[ -f "$ROOT_DIR/scripts/security/common.sh" ]]; then
-  # shellcheck source=../security/common.sh
-  source "$ROOT_DIR/scripts/security/common.sh"
+if [[ -f "$ROOT_DIR/scripts/memory/common.sh" ]]; then
+  # shellcheck source=./common.sh
+  source "$ROOT_DIR/scripts/memory/common.sh"
 fi
 
 json_escape() {

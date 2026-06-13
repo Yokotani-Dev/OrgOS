@@ -33,7 +33,7 @@ setup_repo_fixture() {
   local tmp_dir repo
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-lease-events.XXXXXX")
   repo="$tmp_dir/repo"
-  mkdir -p "$repo/scripts/org" "$repo/.ai/leases"
+  mkdir -p "$repo/scripts/org" "$repo/.ai/_machine/leases"
   cp "$ACQUIRE" "$repo/scripts/org/acquire-lease.sh"
   cp "$RELEASE" "$repo/scripts/org/release-lease.sh"
   chmod +x "$repo/scripts/org/acquire-lease.sh" "$repo/scripts/org/release-lease.sh"

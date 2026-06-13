@@ -175,7 +175,7 @@ retry_policy:
 
 ## Backward Compatibility
 
-既存の `.ai/CODEX/RESULTS/*.md` は非構造化 Markdown である。新 protocol では以下を許可する:
+既存の `.ai/_machine/codex/RESULTS/*.md` は非構造化 Markdown である。新 protocol では以下を許可する:
 
 - Option A: YAML frontmatter + Markdown 本文
 - Option B: Markdown 末尾に `yaml handoff_packet` fenced block

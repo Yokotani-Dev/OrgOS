@@ -39,10 +39,10 @@ setup_fixture() {
 
   mkdir -p \
     "$repo/.claude/rules" \
-    "$repo/.ai/CODEX/ORDERS" \
-    "$repo/.ai/CODEX/RESULTS" \
-    "$repo/.ai/REVIEW/PACKETS" \
-    "$repo/.ai/artifacts/T-CTX/20260516T000000Z-T-CTX-1234"
+    "$repo/.ai/_machine/codex/ORDERS" \
+    "$repo/.ai/_machine/codex/RESULTS" \
+    "$repo/.ai/_machine/review/PACKETS" \
+    "$repo/.ai/_machine/artifacts/T-CTX/20260516T000000Z-T-CTX-1234"
 
   cat > "$repo/.claude/rules/alpha.md" <<'EOF_RULE'
 # Alpha Rule
@@ -66,7 +66,7 @@ tasks:
     status: done
 EOF_TASKS
 
-  cat > "$repo/.ai/CODEX/ORDERS/T-CTX.md" <<'EOF_ORDER'
+  cat > "$repo/.ai/_machine/codex/ORDERS/T-CTX.md" <<'EOF_ORDER'
 # T-CTX Work Order
 Use token github_token=ghp_abcdefghijklmnopqrstuvwxyz1234567890AB.
 OpenAI key sk-proj-abcdefghijklmnopqrstuvwxyz1234567890 should be hidden.
@@ -77,16 +77,16 @@ EOF_ORDER
 Handoff content.
 EOF_HANDOFF
 
-  cat > "$repo/.ai/CODEX/RESULTS/T-CTX.md" <<'EOF_RESULT'
+  cat > "$repo/.ai/_machine/codex/RESULTS/T-CTX.md" <<'EOF_RESULT'
 # T-CTX Result
 Authorization: Bearer abcdefghijklmnopqrstuvwxyz123456
 EOF_RESULT
 
-  cat > "$repo/.ai/REVIEW/PACKETS/T-CTX.md" <<'EOF_PACKET'
+  cat > "$repo/.ai/_machine/review/PACKETS/T-CTX.md" <<'EOF_PACKET'
 # Review Packet
 EOF_PACKET
 
-  cat > "$repo/.ai/artifacts/T-CTX/20260516T000000Z-T-CTX-1234/artifact_manifest.json" <<'EOF_MANIFEST'
+  cat > "$repo/.ai/_machine/artifacts/T-CTX/20260516T000000Z-T-CTX-1234/artifact_manifest.json" <<'EOF_MANIFEST'
 {"schema_version":"orgos.artifact_manifest.v1","task_id":"T-CTX"}
 EOF_MANIFEST
 }

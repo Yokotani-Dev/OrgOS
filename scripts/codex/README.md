@@ -44,7 +44,7 @@ worktree. Files outside task `allowed_paths` are reverted. Files matching
 record is written to:
 
 ```text
-.ai/CODEX/AUDIT/<TASK_ID>.yaml
+.ai/_machine/codex/AUDIT/<TASK_ID>.yaml
 ```
 
 The scripts emit structured `key=value` logs to stderr for validation and audit
@@ -55,7 +55,7 @@ traceability.
 Old command:
 
 ```bash
-/opt/homebrew/bin/codex exec --full-auto - < .ai/CODEX/ORDERS/T-XXX.md
+/opt/homebrew/bin/codex exec --full-auto - < .ai/_machine/codex/ORDERS/T-XXX.md
 ```
 
 New command:
@@ -76,8 +76,8 @@ and should be handled by T-OS-362b.
 
    ```bash
    /opt/homebrew/bin/codex exec --full-auto --skip-git-repo-check \
-     --output-last-message ../../.ai/CODEX/RESULTS/<TASK_ID>.txt \
-     - < ../../.ai/CODEX/ORDERS/<TASK_ID>.md
+     --output-last-message ../../.ai/_machine/codex/RESULTS/<TASK_ID>.txt \
+     - < ../../.ai/_machine/codex/ORDERS/<TASK_ID>.md
    ```
 
 3. Removes the worktree after Codex exits.

@@ -44,7 +44,7 @@ setup_collect_fixture() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-day1-manifest.XXXXXX")
   repo="$tmp_dir/repo"
   worktree="$repo/.worktrees/$task_id"
-  artifact_dir="$repo/.ai/artifacts/$task_id/20260514T000000Z-$task_id-1234abcd"
+  artifact_dir="$repo/.ai/_machine/artifacts/$task_id/20260514T000000Z-$task_id-1234abcd"
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   last_msg_path="$tmp_dir/output-last-message.txt"
@@ -254,11 +254,11 @@ test_codex_handoff_via_tmp_path_succeeds() {
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   worktree_path="$repo/.worktrees/$task_id"
-  artifact_root="$repo/.ai/artifacts/$task_id"
+  artifact_root="$repo/.ai/_machine/artifacts/$task_id"
   handoff_tmp_dir="$tmp_dir/handoff-tmp"
 
   git clone --quiet "$REPO_ROOT" "$repo"
-  mkdir -p "$repo/scripts/codex" "$repo/scripts/org" "$repo/.ai/CODEX/ORDERS"
+  mkdir -p "$repo/scripts/codex" "$repo/scripts/org" "$repo/.ai/_machine/codex/ORDERS"
   cp "$WRAPPER" "$repo/scripts/codex/run-in-worktree.sh"
   cp "$COLLECTOR" "$repo/scripts/org/collect-artifacts.sh"
   cp "$VERIFIER" "$repo/scripts/org/verify-artifact-manifest.py"
@@ -302,7 +302,7 @@ fi
 exit 0
 EOF
   chmod +x "$codex_stub"
-  printf '# test order for %s\n' "$task_id" > "$repo/.ai/CODEX/ORDERS/$task_id.md"
+  printf '# test order for %s\n' "$task_id" > "$repo/.ai/_machine/codex/ORDERS/$task_id.md"
 
   (
     cd "$repo"
@@ -318,7 +318,7 @@ EOF
   handoff_file=$(find "$handoff_tmp_dir" -mindepth 1 -maxdepth 1 -type f -name "orgos-$task_id-*-handoff.txt" | head -n 1)
   assert_exists "$manifest_path" "wrapper should write artifact manifest"
   "$VERIFIER" "$manifest_path"
-  assert_not_exists "$repo/.ai/CODEX/RESULTS/$task_id.txt" "wrapper should not write legacy main repo handoff"
+  assert_not_exists "$repo/.ai/_machine/codex/RESULTS/$task_id.txt" "wrapper should not write legacy main repo handoff"
   assert_exists "$handoff_file" "mock Codex should write handoff to tmp path"
   assert_exists "$run_dir/output-last-message.txt" "collector should copy handoff into artifact store"
   assert_contains "$run_dir/output-last-message.txt" "e2e final message" "artifact handoff should contain final message"

@@ -2,7 +2,7 @@
 #
 # Purpose:
 # - canonical proposal shape for Phase 2 Self-Evolution synthesis
-# - proposal YAMLs are stored in .ai/EVOLUTION/proposals/P-YYYY-MM-DD-NNN.yaml
+# - proposal YAMLs are stored in .ai/_machine/evolution/proposals/P-YYYY-MM-DD-NNN.yaml
 # - LLM calls are intentionally out of scope for T-OS-324; reviewer fields may use stubs
 
 schema:

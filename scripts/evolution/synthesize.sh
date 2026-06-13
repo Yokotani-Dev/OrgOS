@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/EVOLUTION/events.jsonl}"
-OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/.ai/EVOLUTION/proposals}"
+EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/_machine/evolution/events.jsonl}"
+OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/.ai/_machine/evolution/proposals}"
 SCHEMA_PATH="${SCHEMA_PATH:-$REPO_ROOT/.claude/schemas/evolution-proposal.yaml}"
 
 usage() {

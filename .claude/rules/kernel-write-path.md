@@ -19,7 +19,7 @@
 | タスク status / フィールド更新 | `scripts/org/update-task.py --set FIELD=VALUE` |
 | タスク notes 追記 | `scripts/org/update-task.py --add-note` |
 | 決定記録（DECISIONS.md）追記 | `scripts/org/append-decision.py` |
-| プログラムイベント追記 | `scripts/org/append-event.py`（hash-chained `.ai/events/`） |
+| プログラムイベント追記 | `scripts/org/append-event.py`（hash-chained `.ai/_machine/events/`） |
 | ダッシュボード更新 | `scripts/org/generate-dashboard.py`（再生成のみ） |
 | commit / 統合 | `scripts/org/request-integration.sh` → `scripts/org/integrator-commit.sh` |
 | 書込権（lease）取得/解放 | `scripts/org/acquire-lease.sh` / `release-lease.sh` / `list-leases.sh` |
@@ -45,7 +45,7 @@ python3 scripts/org/append-decision.py --id PLAN-UPDATE-025 \
 # 長文は --body-file PATH または --body-file -（stdin）
 ```
 
-### プログラムイベント（.ai/events/ 月次 JSONL）
+### プログラムイベント（.ai/_machine/events/ 月次 JSONL）
 
 ```bash
 python3 scripts/org/append-event.py --event-type TaskUpdated \
@@ -77,14 +77,14 @@ LEASE_ID=$(bash scripts/org/acquire-lease.sh --task-id T-OS-XXX \
 # 3. artifact 収集 + manifest 検証
 RUN_ID="$(date -u +%Y%m%dT%H%M%SZ)-T-OS-XXX"
 bash scripts/org/collect-artifacts.sh --task-id T-OS-XXX --run-id "$RUN_ID" \
-  --worktree-path "$(pwd)" --artifact-dir ".ai/artifacts/T-OS-XXX/$RUN_ID" \
+  --worktree-path "$(pwd)" --artifact-dir ".ai/_machine/artifacts/T-OS-XXX/$RUN_ID" \
   --actor-role manager --actor-id claude-manager
-python3 scripts/org/verify-artifact-manifest.py ".ai/artifacts/T-OS-XXX/$RUN_ID/artifact_manifest.json"
+python3 scripts/org/verify-artifact-manifest.py ".ai/_machine/artifacts/T-OS-XXX/$RUN_ID/artifact_manifest.json"
 
 # 4. integration request（queue 投入）
 bash scripts/org/request-integration.sh --task-id T-OS-XXX \
   --worktree-path "$(pwd)" --branch task/T-OS-XXX-slug --base-branch main \
-  --artifact-manifest ".ai/artifacts/T-OS-XXX/$RUN_ID/artifact_manifest.json" \
+  --artifact-manifest ".ai/_machine/artifacts/T-OS-XXX/$RUN_ID/artifact_manifest.json" \
   --commit-message "feat: ..."
 
 # 5. integrator が commit（author: OrgOS Integrator）

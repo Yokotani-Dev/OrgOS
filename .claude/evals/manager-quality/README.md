@@ -14,10 +14,10 @@ scripts/eval/generate-regression-report.sh --date 2026-04-18
 scripts/eval/trend-calculator.sh
 ```
 
-- 実行結果は `.ai/METRICS/manager-quality/YYYY-MM-DD.jsonl` に 1 case = 1 line で追記されます。
+- 実行結果は `.ai/_machine/metrics/manager-quality/YYYY-MM-DD.jsonl` に 1 case = 1 line で追記されます。
 - `report.py selftest --repo-root <repo>` で category ごとの期待 pass/fail スナップショットを検証できます。
 - P0 指標 (`repeated_question_rate`, `context_miss_rate`) が target を満たさない場合、suite は exit code `1` を返します。
-- regression 検知は `.ai/METRICS/manager-quality/regression-YYYY-MM-DD.md` に payload を出力し、退行があれば exit code `2` を返します。
+- regression 検知は `.ai/_machine/metrics/manager-quality/regression-YYYY-MM-DD.md` に payload を出力し、退行があれば exit code `2` を返します。
 - `scripts/eval/trend-calculator.sh` は `owner_requests / total_tasks` の日次比率から 3 日 / 7 日 moving average を計算し、3 日未満なら `pending` を返します。
 
 ## Judge 実装状況
@@ -110,5 +110,5 @@ scripts/eval/trend-calculator.sh
 1. `cases/NN-name.yaml` を追加する。
 2. `id`, `title`, `category`, `symptom`, `scenario`, `input`, `expected_behavior`, `anti_pattern`, `metric`, `weight` を埋める。
 3. `metric` は `metrics.yaml` に定義済みの id を使う。
-4. `run.sh` を再実行して `.ai/METRICS/manager-quality/*.jsonl` に記録する。
+4. `run.sh` を再実行して `.ai/_machine/metrics/manager-quality/*.jsonl` に記録する。
 5. 退行検知対象にしたい場合は `scripts/eval/generate-regression-report.sh` で前回 run と比較する。

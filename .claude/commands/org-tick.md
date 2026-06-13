@@ -55,7 +55,7 @@ def process_new_requests(requests):
 awaiting_owner=true なら、進行を止め、DASHBOARDを更新して終了
 
 ### 4. Codex結果の回収
-`.ai/CODEX/RESULTS/` に新しい結果ファイルがあれば：
+`.ai/_machine/codex/RESULTS/` に新しい結果ファイルがあれば：
 - 結果を読み取り、タスクステータスを更新
 - `completed` → review へ移動（implementer）、または done へ移動（reviewer approved）
 - `blocked` / `failed` → blocked へ移動し、理由を記録
@@ -483,7 +483,7 @@ to_run = executable[:slots]
    git worktree add .worktrees/<TASK_ID> -b task/<TASK_ID>-<slug>
    ```
 
-2. Work Order を生成（`.ai/CODEX/ORDERS/<TASK_ID>.md`）
+2. Work Order を生成（`.ai/_machine/codex/ORDERS/<TASK_ID>.md`）
 
 3. 実行方法を決定：
    - **`codex.auto_exec: true`** → バックグラウンドで自動実行
@@ -513,7 +513,7 @@ Ownerに以下を表示：
 ./.claude/scripts/run-parallel.sh T-003 T-004
 
 # または個別実行
-cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/CODEX/ORDERS/T-003.md に従って実行"
+cd .worktrees/T-003 && codex exec "AGENTS.md を読み、../.ai/_machine/codex/ORDERS/T-003.md に従って実行"
 ```
 
 実行後、再度 `/org-tick` で結果を回収します。
@@ -576,7 +576,7 @@ def should_trigger_review(control, completed_task):
 
 レビューをトリガーする場合：
 - 完了タスクを `review` ステータスに移動
-- Review Packet が `.ai/REVIEW/PACKETS/<TASK_ID>.md` にあることを確認
+- Review Packet が `.ai/_machine/review/PACKETS/<TASK_ID>.md` にあることを確認
 - `org-reviewer` + `org-security-reviewer` を並列で起動
 - `tasks_since_last_review` カウンターをリセット
 
@@ -621,7 +621,7 @@ PR がない場合はこのステップをスキップ。
 
 | Level | 条件 | 処理 |
 |-------|------|------|
-| **Level 0** | 情報記録のみ（.ai/INTELLIGENCE/ 内のみ変更） | 自動マージ（Eval 不要） |
+| **Level 0** | 情報記録のみ（.ai/_machine/intelligence/ 内のみ変更） | 自動マージ（Eval 不要） |
 | **Level 1** | Userland 軽微変更（Kernel ファイル未変更） | Eval 実行 → pass なら自動マージ |
 | **Level 2** | Userland 重要変更 | Owner 承認待ち |
 | **Level 3** | Kernel ファイル変更あり | Owner 明示的承認必須 |
@@ -649,7 +649,7 @@ def determine_oip_level(pr):
         kernel_files = read_kernel_files_list()
         if any(f in kernel_files for f in pr.changed_files):
             level = 3
-        elif all(f.startswith(".ai/INTELLIGENCE/") for f in pr.changed_files):
+        elif all(f.startswith(".ai/_machine/intelligence/") for f in pr.changed_files):
             level = 0
         else:
             level = 2  # 不明な場合は Owner 承認必須

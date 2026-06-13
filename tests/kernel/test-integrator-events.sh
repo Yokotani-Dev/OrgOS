@@ -25,7 +25,7 @@ setup_repo_fixture() {
   worktree="$repo/.worktrees/$task_id"
   branch="task/$task_id-fixture"
 
-  mkdir -p "$repo/scripts/org" "$repo/.ai/queue/integration/pending"
+  mkdir -p "$repo/scripts/org" "$repo/.ai/_machine/queue/integration/pending"
   git -C "$repo" init --quiet --initial-branch=main
   git -C "$repo" config user.name "Test User"
   git -C "$repo" config user.email "test@example.invalid"
@@ -73,7 +73,7 @@ PY
 write_manifest() {
   local repo="$1"
   local task_id="$2"
-  local manifest_dir="$repo/.ai/artifacts/$task_id/20260515T000000Z-$task_id-event"
+  local manifest_dir="$repo/.ai/_machine/artifacts/$task_id/20260515T000000Z-$task_id-event"
   mkdir -p "$manifest_dir/logs"
   printf 'stdout\n' > "$manifest_dir/logs/stdout.log"
   python3 - "$manifest_dir" "$task_id" <<'PY'
@@ -126,7 +126,7 @@ write_queue_item() {
   local base_commit expected_head queue_path
   base_commit=$(git -C "$worktree" rev-parse main)
   expected_head=$(git -C "$worktree" rev-parse HEAD)
-  queue_path="$repo/.ai/queue/integration/pending/$task_id.json"
+  queue_path="$repo/.ai/_machine/queue/integration/pending/$task_id.json"
   python3 - "$queue_path" "$task_id" "$worktree" "$branch" "$base_commit" "$expected_head" "$manifest" "$target_branch" <<'PY'
 import json
 import sys

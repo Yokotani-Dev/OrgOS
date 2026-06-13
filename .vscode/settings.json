@@ -1,0 +1,35 @@
+{
+  // ============================================================
+  // OrgOS: エクスプローラーに「人間が触る場所」だけを表示する設定
+  //
+  // 表示されるもの:  .ai/ (台帳) / docs/ (説明書) / outputs/ (成果物) / README.md
+  // 隠れているもの:  OrgOS のエンジンルーム（kernel・スクリプト・テスト・AI指示書・CI設定）
+  //
+  // 解除方法: 見たい行の true を false に変えるだけ（この設定は表示のみで、
+  //           ファイル自体や OrgOS の動作には一切影響しません）
+  // ============================================================
+  "files.exclude": {
+    // --- 機械用: OrgOS のエンジンルーム（通常開く必要なし） ---
+    ".claude": true,
+    ".collaborator": true,
+    ".githooks": true,
+    ".github": true,
+    ".worktrees": true,
+    "scripts": true,
+    "tests": true,
+    ".ai/_machine": true,
+
+    // --- AI への指示書（編集は Manager に依頼） ---
+    "CLAUDE.md": true,
+    "AGENTS.md": true,
+
+    // --- ルートに残る補助ドキュメント ---
+    "ORGOS_QUICKSTART.md": true,
+
+    // --- 設定ファイル（位置固定の決まりもの） ---
+    ".gitignore": true,
+    ".orgos-manifest.yaml": true,
+    ".pre-commit-config.yaml": true,
+    "**/.DS_Store": true
+  }
+}

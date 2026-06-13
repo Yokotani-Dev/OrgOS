@@ -28,8 +28,8 @@ assert_contains() {
 assert_failed_item_and_event() {
   local repo="$1"
   local task_id="$2"
-  [ "$(find "$repo/.ai/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed queue item should be recorded for $task_id"
-  assert_contains "$repo/.ai/queue/integration/events.jsonl" "IntegrationFailed" "failure should emit IntegrationFailed"
+  [ "$(find "$repo/.ai/_machine/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed queue item should be recorded for $task_id"
+  assert_contains "$repo/.ai/_machine/queue/integration/events.jsonl" "IntegrationFailed" "failure should emit IntegrationFailed"
 }
 
 write_plan_schema() {
@@ -62,7 +62,7 @@ setup_repo_fixture() {
   worktree="$repo/.worktrees/$task_id"
   branch="task/$task_id-fixture"
 
-  mkdir -p "$repo/scripts/org" "$repo/.claude/schemas" "$repo/.ai/queue/integration" "$repo/.ai/plans"
+  mkdir -p "$repo/scripts/org" "$repo/.claude/schemas" "$repo/.ai/_machine/queue/integration" "$repo/.ai/_machine/plans"
   git -C "$repo" init --quiet --initial-branch=main
   git -C "$repo" config user.name "Test User"
   git -C "$repo" config user.email "test@example.invalid"
@@ -84,7 +84,7 @@ setup_repo_fixture() {
 write_manifest() {
   local repo="$1"
   local task_id="$2"
-  local manifest_dir="$repo/.ai/artifacts/$task_id/20260515T000000Z-$task_id-plan"
+  local manifest_dir="$repo/.ai/_machine/artifacts/$task_id/20260515T000000Z-$task_id-plan"
   mkdir -p "$manifest_dir/logs"
   printf 'stdout\n' > "$manifest_dir/logs/stdout.log"
   python3 - "$manifest_dir" "$task_id" <<'PY'
@@ -131,7 +131,7 @@ write_plan() {
   local repo="$1"
   local task_id="$2"
   shift 2
-  local plan_path="$repo/.ai/plans/$task_id.plan.yaml"
+  local plan_path="$repo/.ai/_machine/plans/$task_id.plan.yaml"
   {
     printf 'schema_version: orgos.plan_contract.v1\n'
     printf 'task_id: %s\n' "$task_id"
@@ -244,7 +244,7 @@ test_integrator_rejects_when_plan_invalid_schema() {
   {
     printf 'schema_version: orgos.plan_contract.v1\n'
     printf 'task_id: %s\n' "$task_id"
-  } > "$repo/.ai/plans/$task_id.plan.yaml"
+  } > "$repo/.ai/_machine/plans/$task_id.plan.yaml"
   printf 'allowed change\n' > "$worktree/README.md"
   request_queue_item "$repo" "$task_id" "$worktree" "$branch" "$manifest" "README.md" >/dev/null
 

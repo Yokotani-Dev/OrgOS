@@ -27,12 +27,12 @@ def lease(task_id, *paths):
 def make_repo():
     tmp = tempfile.TemporaryDirectory()
     root = Path(tmp.name)
-    (root / ".ai" / "plans").mkdir(parents=True)
+    (root / ".ai" / "_machine" / "plans").mkdir(parents=True)
     return tmp, root
 
 
 def write_plan(root, task_id):
-    (root / ".ai" / "plans" / f"{task_id}.plan.yaml").write_text(
+    (root / ".ai" / "_machine" / "plans" / f"{task_id}.plan.yaml").write_text(
         f"task_id: {task_id}\n",
         encoding="utf-8",
     )
@@ -59,7 +59,7 @@ def test_edit_without_plan_denied_in_enforce_mode():
     assert_equal(decision.invariant_id, "PlanContractRequired", "missing plan edit invariant")
     assert_equal(
         decision.reason,
-        "PlanContractRequired: .ai/plans/T-NO-PLAN.plan.yaml not found",
+        "PlanContractRequired: .ai/_machine/plans/T-NO-PLAN.plan.yaml not found",
         "missing plan edit reason",
     )
 
@@ -102,10 +102,10 @@ def test_edit_on_plan_contract_path_allowed_for_bootstrap():
         decision = policy_core.evaluate(
             "Edit",
             "",
-            ".ai/plans/T-BOOTSTRAP.plan.yaml",
+            ".ai/_machine/plans/T-BOOTSTRAP.plan.yaml",
             str(root),
             "codex",
-            [lease("T-BOOTSTRAP", ".ai/plans/")],
+            [lease("T-BOOTSTRAP", ".ai/_machine/plans/")],
             enforce(),
         )
     assert_equal(decision.outcome, "allow", "plan contract path bootstrap outcome")

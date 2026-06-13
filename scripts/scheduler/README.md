@@ -26,7 +26,7 @@ operation, but this Work Order keeps scheduled operation in `shadow`.
 Each run writes a structured log to:
 
 ```text
-.ai/SCHEDULER/runs/<timestamp>.log
+.ai/_machine/scheduler/runs/<timestamp>.log
 ```
 
 Failure classes:

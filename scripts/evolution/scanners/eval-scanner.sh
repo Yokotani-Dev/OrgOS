@@ -66,7 +66,7 @@ def event(**kwargs: Any) -> dict[str, Any]:
 
 events: list[dict[str, Any]] = []
 
-mq_dir = repo / ".ai" / "METRICS" / "manager-quality"
+mq_dir = repo / ".ai" / "_machine" / "metrics" / "manager-quality"
 mq_files = sorted(p for p in mq_dir.glob("*.jsonl") if p.is_file())
 if mq_files:
     latest = mq_files[-1]
@@ -99,7 +99,7 @@ else:
         severity="P2",
         confidence=0.7,
         novelty="first_seen",
-        target_artifacts=[{"path": ".ai/METRICS/manager-quality", "lines": []}],
+        target_artifacts=[{"path": ".ai/_machine/metrics/manager-quality", "lines": []}],
         evidence=[{"kind": "missing_eval_history", "snippet": "No Manager Quality JSONL runs were found."}],
         proposed_action="add",
         estimated_risk="low",
@@ -107,7 +107,7 @@ else:
         recommended_next="Run bash scripts/eval/manager-quality-runner.sh and store the first Manager Quality baseline.",
     ))
 
-health_jsonl = repo / ".ai" / "METRICS" / "daily-health" / "runs.jsonl"
+health_jsonl = repo / ".ai" / "_machine" / "metrics" / "daily-health" / "runs.jsonl"
 if health_jsonl.exists():
     latest_run: dict[str, Any] | None = None
     latest_line = 0
@@ -144,12 +144,12 @@ else:
         severity="P1",
         confidence=0.8,
         novelty="first_seen",
-        target_artifacts=[{"path": ".ai/METRICS/daily-health/runs.jsonl", "lines": []}],
+        target_artifacts=[{"path": ".ai/_machine/metrics/daily-health/runs.jsonl", "lines": []}],
         evidence=[{"kind": "missing_daily_health_history", "snippet": "daily-health runs.jsonl is missing."}],
         proposed_action="add",
         estimated_risk="low",
         autonomy_candidate="execute_with_report",
-        recommended_next="Run scripts/evolve/daily-health-check.sh once, then wire it to a daily trigger in a later task.",
+        recommended_next="Run scripts/evolution/daily-health-check.sh once, then wire it to a daily trigger in a later task.",
     ))
 
 print(json.dumps(events, ensure_ascii=False, separators=(",", ":")))

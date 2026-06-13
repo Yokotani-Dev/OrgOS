@@ -129,13 +129,13 @@ examples:
           - .ai/CONTROL.yaml
       codex_reviewer:
         can_edit:
-          - .ai/CODEX/RESULTS/*R.md
+          - .ai/_machine/codex/RESULTS/*R.md
         approvals_required:
           - code_edit_forbidden
         read_only:
           - review_target_files
       subagent_org_reviewer:
         can_edit:
-          - .ai/REVIEW/
+          - .ai/_machine/review/
         read_only:
           - source_files

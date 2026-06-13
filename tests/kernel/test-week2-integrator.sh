@@ -50,7 +50,7 @@ setup_repo_fixture() {
   git -C "$repo" init --quiet --initial-branch=main
   git -C "$repo" config user.name "Test User"
   git -C "$repo" config user.email "test@example.invalid"
-  mkdir -p "$repo/scripts/org" "$repo/.claude/hooks" "$repo/.claude/schemas" "$repo/.ai/queue/integration"
+  mkdir -p "$repo/scripts/org" "$repo/.claude/hooks" "$repo/.claude/schemas" "$repo/.ai/_machine/queue/integration"
   cp "$REQUEST" "$repo/scripts/org/request-integration.sh"
   cp "$INTEGRATOR" "$repo/scripts/org/integrator-commit.sh"
   cp "$REPO_ROOT/scripts/org/verify-artifact-manifest.py" "$repo/scripts/org/verify-artifact-manifest.py"
@@ -98,7 +98,7 @@ PY
 write_manifest() {
   local repo="$1"
   local task_id="$2"
-  local manifest_dir="$repo/.ai/artifacts/$task_id/20260515T000000Z-$task_id-1234abcd"
+  local manifest_dir="$repo/.ai/_machine/artifacts/$task_id/20260515T000000Z-$task_id-1234abcd"
   mkdir -p "$manifest_dir/logs"
   printf 'stdout\n' > "$manifest_dir/logs/stdout.log"
   python3 - "$manifest_dir" "$task_id" <<'PY'
@@ -231,8 +231,8 @@ test_request_integration_lease_lookup_succeeds() {
   branch=$(printf '%s\n' "$fixture" | sed -n '4p')
   manifest=$(write_manifest "$repo" "$task_id")
   printf 'change\n' > "$worktree/README.md"
-  mkdir -p "$repo/.ai/leases"
-  python3 - "$repo/.ai/leases/lease-$task_id.json" "$task_id" <<'PY'
+  mkdir -p "$repo/.ai/_machine/leases"
+  python3 - "$repo/.ai/_machine/leases/lease-$task_id.json" "$task_id" <<'PY'
 import json
 import sys
 from datetime import datetime, timedelta, timezone
@@ -341,7 +341,7 @@ test_integrator_commit_success() {
     --allowed-paths "README.md")
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
   head_msg=$(git -C "$worktree" log -1 --pretty=%s)
   commit_sha=$(git -C "$worktree" rev-parse HEAD)
 
@@ -394,7 +394,7 @@ test_integrator_commit_blocks_without_manifest() {
   set -e
 
   [ "$status" -ne 0 ] || fail "integrator should reject missing manifest"
-  [ "$(find "$repo/.ai/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed item should be recorded"
+  [ "$(find "$repo/.ai/_machine/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed item should be recorded"
   rm -rf "$tmp_dir"
 }
 
@@ -419,7 +419,7 @@ test_integrator_commit_blocks_diff_outside_allowed_paths() {
   printf 'outside\n' > "$worktree/outside.txt"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done while outside paths are present"
   assert_not_exists "$queue_path" "pending queue item should be consumed"
@@ -452,14 +452,14 @@ test_integrator_only_commits_allowed_paths_intersect() {
     --commit-message "test: intersect $task_id" \
     --allowed-paths "README.md,src/" >/dev/null
 
-  mkdir -p "$worktree/.ai/CODEX/AUDIT" "$worktree/.ai/sessions" "$worktree/.claude/state"
-  printf 'audit\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
-  printf 'session\n' > "$worktree/.ai/sessions/$task_id.jsonl"
+  mkdir -p "$worktree/.ai/_machine/codex/AUDIT" "$worktree/.ai/_machine/sessions" "$worktree/.claude/state"
+  printf 'audit\n' > "$worktree/.ai/_machine/codex/AUDIT/$task_id.log"
+  printf 'session\n' > "$worktree/.ai/_machine/sessions/$task_id.jsonl"
   printf 'pretool\n' > "$worktree/.claude/state/pretool_$task_id.jsonl"
   printf 'outside\n' > "$worktree/outside.txt"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
   changed_names=$(git -C "$worktree" show --name-only --pretty=format: HEAD)
 
   [ "$done_count" -eq 1 ] || fail "integrator should complete with irrelevant paths present"
@@ -467,8 +467,8 @@ test_integrator_only_commits_allowed_paths_intersect() {
   printf '%s\n' "$changed_names" | grep -Fxq "README.md" || fail "README.md should be committed"
   printf '%s\n' "$changed_names" | grep -Fxq "src/allowed.txt" || fail "allowed source should be committed"
   ! printf '%s\n' "$changed_names" | grep -Eq '^(\.ai/|\.claude/|outside\.txt$)' || fail "irrelevant paths should not be committed"
-  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/CODEX/AUDIT/$task_id.log" || fail "audit path should remain untracked"
-  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/sessions/$task_id.jsonl" || fail "session path should remain untracked"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/_machine/codex/AUDIT/$task_id.log" || fail "audit path should remain untracked"
+  git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".ai/_machine/sessions/$task_id.jsonl" || fail "session path should remain untracked"
   git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq ".claude/state/pretool_$task_id.jsonl" || fail "pretool path should remain untracked"
   git -C "$worktree" status --porcelain --untracked-files=all | grep -Fq "outside.txt" || fail "outside path should remain untracked"
   rm -rf "$tmp_dir"
@@ -494,8 +494,8 @@ test_integrator_refuses_empty_intersect() {
     --commit-message "test: empty intersect" \
     --allowed-paths "README.md")
   git -C "$worktree" checkout -- README.md
-  mkdir -p "$worktree/.ai/CODEX/AUDIT"
-  printf 'audit only\n' > "$worktree/.ai/CODEX/AUDIT/$task_id.log"
+  mkdir -p "$worktree/.ai/_machine/codex/AUDIT"
+  printf 'audit only\n' > "$worktree/.ai/_machine/codex/AUDIT/$task_id.log"
 
   set +e
   "$repo/scripts/org/integrator-commit.sh" --queue-item "$queue_path" --task-id "$task_id" >/dev/null 2>"$stderr_path"
@@ -504,7 +504,7 @@ test_integrator_refuses_empty_intersect() {
 
   [ "$status" -ne 0 ] || fail "integrator should reject empty allowed_paths intersect"
   assert_contains "$stderr_path" "no user diff within allowed_paths" "empty intersect should explain refusal"
-  [ "$(find "$repo/.ai/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed empty-intersect item should be recorded"
+  [ "$(find "$repo/.ai/_machine/queue/integration/failed" -name "$task_id.*.json" | wc -l | tr -d ' ')" -eq 1 ] || fail "failed empty-intersect item should be recorded"
   rm -rf "$tmp_dir"
 }
 
@@ -527,15 +527,15 @@ test_integrator_ignores_queue_state_transitions() {
     --artifact-manifest "$manifest" \
     --commit-message "test: ignore queue state $task_id" \
     --allowed-paths "README.md" >/dev/null
-  mkdir -p "$worktree/.ai/queue/integration/processing"
-  printf '{"status":"processing"}\n' > "$worktree/.ai/queue/integration/processing/$task_id.json"
+  mkdir -p "$worktree/.ai/_machine/queue/integration/processing"
+  printf '{"status":"processing"}\n' > "$worktree/.ai/_machine/queue/integration/processing/$task_id.json"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with queue state present"
   printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
-  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fq ".ai/queue/integration/" || fail "queue state should not be committed"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Fq ".ai/_machine/queue/integration/" || fail "queue state should not be committed"
   rm -rf "$tmp_dir"
 }
 
@@ -558,13 +558,13 @@ test_integrator_ignores_leases_and_artifacts() {
     --artifact-manifest "$manifest" \
     --commit-message "test: ignore internal state $task_id" \
     --allowed-paths "README.md" >/dev/null
-  mkdir -p "$worktree/.ai/leases" "$worktree/.ai/artifacts/$task_id" "$worktree/.ai/alerts"
-  printf '{"holder":"integrator"}\n' > "$worktree/.ai/leases/$task_id.json"
-  printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime.log"
+  mkdir -p "$worktree/.ai/_machine/leases" "$worktree/.ai/_machine/artifacts/$task_id" "$worktree/.ai/alerts"
+  printf '{"holder":"integrator"}\n' > "$worktree/.ai/_machine/leases/$task_id.json"
+  printf 'runtime artifact\n' > "$worktree/.ai/_machine/artifacts/$task_id/runtime.log"
   printf 'alert log\n' > "$worktree/.ai/alerts/$task_id.log"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with internal state present"
   printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
@@ -591,16 +591,16 @@ test_integrator_ignores_uppercase_legacy_paths() {
     --artifact-manifest "$manifest" \
     --commit-message "test: ignore uppercase legacy paths $task_id" \
     --allowed-paths "README.md" >/dev/null
-  mkdir -p "$worktree/.ai/ARTIFACTS/$task_id/legacy" "$worktree/.ai/artifacts/$task_id/runtime"
+  mkdir -p "$worktree/.ai/ARTIFACTS/$task_id/legacy" "$worktree/.ai/_machine/artifacts/$task_id/runtime"
   printf '{"legacy":true}\n' > "$worktree/.ai/ARTIFACTS/$task_id/legacy/artifact_manifest.json"
-  printf 'runtime artifact\n' > "$worktree/.ai/artifacts/$task_id/runtime/output.log"
+  printf 'runtime artifact\n' > "$worktree/.ai/_machine/artifacts/$task_id/runtime/output.log"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with uppercase legacy artifacts present"
   printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"
-  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Eqi '^\.ai/artifacts/' || fail "artifact paths should not be committed regardless of case"
+  ! git -C "$worktree" show --name-only --pretty=format: HEAD | grep -Eqi '^\.ai/_machine/artifacts/' || fail "artifact paths should not be committed regardless of case"
   rm -rf "$tmp_dir"
 }
 
@@ -627,7 +627,7 @@ test_integrator_ignores_claude_state_file() {
   printf 'pid=123 task_id=%s\n' "$task_id" > "$worktree/.claude/state/git.lock"
 
   output=$("$repo/scripts/org/integrator-commit.sh" --task-id "$task_id")
-  done_count=$(find "$repo/.ai/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
+  done_count=$(find "$repo/.ai/_machine/queue/integration/done" -name "$task_id.*.json" | wc -l | tr -d ' ')
 
   [ "$done_count" -eq 1 ] || fail "integrator should move queue item to done with claude state present"
   printf '%s\n' "$output" | grep -Eq '^[0-9a-f]{40}$' || fail "integrator should print commit sha"

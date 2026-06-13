@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$ROOT_DIR/scripts/security/common.sh"
+source "$ROOT_DIR/scripts/memory/common.sh"
 
 JSON_OUTPUT=0
 if [[ "${1:-}" == "--json" ]]; then

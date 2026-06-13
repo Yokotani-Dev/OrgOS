@@ -59,7 +59,7 @@ OrgOS ファイルの編集が可能です：
 - CLAUDE.md
 - AGENTS.md
 - .claude/**
-- requirements.md
+- docs/archive/requirements.md
 
 📌 管理者モードを終了する: /org-admin exit
    または CONTROL.yaml の allow_os_mutation を false に戻す
@@ -95,7 +95,7 @@ OrgOS ファイルは保護されています。
 | `CLAUDE.md` 編集 | Manager の振る舞い定義 |
 | `AGENTS.md` 編集 | Codex worker のルール |
 | `.ai/` テンプレート編集 | 台帳テンプレートの修正 |
-| `requirements.md` 編集 | OrgOS仕様書の更新 |
+| `docs/archive/requirements.md` 編集 | OrgOS仕様書の更新 |
 
 ---
 

@@ -95,7 +95,7 @@ test_append_creates_monthly_jsonl() {
   fixture=$(setup_fixture)
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
-  events_path="$repo/.ai/events/events-202605.jsonl"
+  events_path="$repo/.ai/_machine/events/events-202605.jsonl"
 
   append_fixture_event "$repo" TaskCreated "2026-05-17T01:02:03Z" '{"title":"demo"}' >/dev/null
 
@@ -122,7 +122,7 @@ test_append_hash_chain_links_events() {
   fixture=$(setup_fixture)
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
-  events_path="$repo/.ai/events/events-202605.jsonl"
+  events_path="$repo/.ai/_machine/events/events-202605.jsonl"
 
   append_fixture_event "$repo" TaskCreated "2026-05-17T01:02:03Z" >/dev/null
   append_fixture_event "$repo" TaskUpdated "2026-05-17T01:03:03Z" '{"status":"in_progress"}' >/dev/null
@@ -167,7 +167,7 @@ test_append_rejects_invalid_event_type() {
 
   [ "$status" -ne 0 ] || fail "invalid event type should fail"
   assert_contains "$stderr_path" "invalid choice" "argparse should report invalid event type"
-  [ ! -e "$repo/.ai/events/events-202605.jsonl" ] || fail "failed append should not create event file"
+  [ ! -e "$repo/.ai/_machine/events/events-202605.jsonl" ] || fail "failed append should not create event file"
   rm -rf "$tmp_dir"
 }
 
@@ -193,8 +193,8 @@ test_append_links_across_month_files() {
   fixture=$(setup_fixture)
   tmp_dir=$(printf '%s\n' "$fixture" | sed -n '1p')
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
-  may_path="$repo/.ai/events/events-202605.jsonl"
-  june_path="$repo/.ai/events/events-202606.jsonl"
+  may_path="$repo/.ai/_machine/events/events-202605.jsonl"
+  june_path="$repo/.ai/_machine/events/events-202606.jsonl"
 
   append_fixture_event "$repo" WorkerStarted "2026-05-31T23:59:59Z" >/dev/null
   append_fixture_event "$repo" WorkerFinished "2026-06-01T00:00:01Z" >/dev/null

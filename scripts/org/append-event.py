@@ -273,7 +273,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--payload-json", default="{}")
     parser.add_argument("--ts", help="Event timestamp, ISO 8601 with timezone. Defaults to current UTC.")
     parser.add_argument("--event-id")
-    parser.add_argument("--events-dir", help="Defaults to <repo>/.ai/events")
+    parser.add_argument("--events-dir", help="Defaults to <repo>/.ai/_machine/events")
     parser.add_argument("--repo-root", help="Repository root used when --events-dir is omitted")
     return parser
 
@@ -287,7 +287,7 @@ def main(argv: list[str]) -> int:
             args.ts = utc_now_iso()
         event_ts = parse_ts(args.ts)
         repo_root = Path(args.repo_root).resolve() if args.repo_root else find_repo_root(Path.cwd())
-        events_dir = Path(args.events_dir).resolve() if args.events_dir else repo_root / ".ai" / "events"
+        events_dir = Path(args.events_dir).resolve() if args.events_dir else repo_root / ".ai" / "_machine" / "events"
         _, event = append_event(events_dir, event_ts, args)
     except EventAppendError as exc:
         print(f"append-event.py: {exc}", file=sys.stderr)

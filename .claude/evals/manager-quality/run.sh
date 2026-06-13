@@ -18,7 +18,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-METRICS_DIR="$REPO_ROOT/.ai/METRICS/manager-quality"
+METRICS_DIR="$REPO_ROOT/.ai/_machine/metrics/manager-quality"
 mkdir -p "$METRICS_DIR"
 
 # ISS-011: judge against the committed eval fixture profile, not live memory.

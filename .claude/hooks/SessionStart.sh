@@ -92,7 +92,7 @@ if [ "$handoff_enabled" = "true" ]; then
 fi
 
 # セッション間のメモリをロード（既存の機能）
-SESSIONS_DIR="$PROJECT_ROOT/.ai/sessions"
+SESSIONS_DIR="$PROJECT_ROOT/.ai/_machine/sessions"
 if [ -d "$SESSIONS_DIR" ]; then
   latest_session=$(ls -t "$SESSIONS_DIR"/*.md 2>/dev/null | head -1)
   if [ -n "$latest_session" ]; then

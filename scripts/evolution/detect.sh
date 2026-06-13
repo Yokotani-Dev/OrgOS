@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/EVOLUTION/events.jsonl}"
+EVENTS_PATH="${EVENTS_PATH:-$REPO_ROOT/.ai/_machine/evolution/events.jsonl}"
 JSON_APPEND=0
 STDOUT_YAML=0
 SCANNER_FILTER=""
@@ -13,7 +13,7 @@ usage() {
 Usage: bash scripts/evolution/detect.sh [--json] [--stdout] [--scanner <name>]
 
 Options:
-  --json            Append new normalized events to .ai/EVOLUTION/events.jsonl as JSONL.
+  --json            Append new normalized events to .ai/_machine/evolution/events.jsonl as JSONL.
   --stdout          Print newly emitted events as YAML.
   --scanner <name>  Run only one scanner: eval, capability, oip, memory, intel.
 EOF

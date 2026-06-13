@@ -32,7 +32,7 @@ assert_nonempty() {
 
 setup_glossary_fixture() {
   local repo="$1"
-  mkdir -p "$repo/.claude/rules" "$repo/.ai/REVIEW/T-OS-400"
+  mkdir -p "$repo/.claude/rules" "$repo/.ai/_machine/review/T-OS-400"
   cat > "$repo/.claude/rules/kernel.md" <<'EOF_RULE'
 # Lease Before Write Protocol - Iron Law
 
@@ -41,7 +41,7 @@ setup_glossary_fixture() {
 Workers must respect allowed_paths and keep a per-task worktree.
 The Integrator owns commits, and the Owner approves irreversible operations.
 EOF_RULE
-  cat > "$repo/.ai/REVIEW/T-OS-400/SYNTHESIS.md" <<'EOF_SYNTHESIS'
+  cat > "$repo/.ai/_machine/review/T-OS-400/SYNTHESIS.md" <<'EOF_SYNTHESIS'
 # Kernel Synthesis
 
 ## Event Log and Projection

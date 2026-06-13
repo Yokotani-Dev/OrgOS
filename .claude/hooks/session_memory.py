@@ -2,7 +2,7 @@
 """
 セッション間メモリ永続化フック
 
-Stop 時: セッションの学びを .ai/sessions/ に保存
+Stop 時: セッションの学びを .ai/_machine/sessions/ に保存
 SessionStart 時: 直近のセッションログを読み込んでコンテキストに追加
 """
 import json
@@ -12,8 +12,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path.cwd()))
-SESSIONS_DIR = ROOT / ".ai" / "sessions"
-LEARNED_DIR = ROOT / ".ai" / "LEARNED"
+SESSIONS_DIR = ROOT / ".ai" / "_machine" / "sessions"
+LEARNED_DIR = ROOT / ".ai" / "_machine" / "learnings"
 STATUS_FILE = ROOT / ".ai" / "STATUS.md"
 DECISIONS_FILE = ROOT / ".ai" / "DECISIONS.md"
 RUN_LOG_DAYS = 7  # 直近N日間のセッションログを参照

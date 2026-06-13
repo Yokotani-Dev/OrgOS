@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Eval: OIP-AUTO Format Check
-# Validates that OIP-AUTO proposals (in PRs or .ai/INTELLIGENCE/) have required fields.
+# Validates that OIP-AUTO proposals (in PRs or .ai/_machine/intelligence/) have required fields.
 # Required fields: trigger, impact/影響範囲, risk/リスク, changes/変更対象
 #
 # Exit codes: 0=pass, 1=fail, 2=warn
@@ -44,9 +44,9 @@ check_oip_content() {
   fi
 }
 
-# Check OIP files in .ai/INTELLIGENCE/ (if any exist)
-if [[ -d "$REPO_ROOT/.ai/INTELLIGENCE/reports" ]]; then
-  for report_file in "$REPO_ROOT/.ai/INTELLIGENCE/reports"/*.md; do
+# Check OIP files in .ai/_machine/intelligence/ (if any exist)
+if [[ -d "$REPO_ROOT/.ai/_machine/intelligence/reports" ]]; then
+  for report_file in "$REPO_ROOT/.ai/_machine/intelligence/reports"/*.md; do
     [[ ! -f "$report_file" ]] && continue
     # Only check reports that contain OIP-AUTO sections
     if grep -q "OIP-AUTO" "$report_file"; then

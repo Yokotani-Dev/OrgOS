@@ -1882,3 +1882,62 @@ NO PUSH (D-2026-06-11-001 / ISS-005 保留中)。
 ### 付随判断
 - .ai/ARTIFACTS/T-OS-*/ (1.5GB / 57k files の再帰 runtime snapshot) は commit せず .gitignore に追加 (add-only, authority-layer の update_gitignore_add_only に準拠)。integrator 自体が internal path として commit から除外する設計 (T-OS-423..425) と整合
 - tests/activity/ の AKIA.../ghp_... は redaction テスト用 fake fixture (secret-management.md の mock 規定に準拠)。scanner 検出は false positive と判定し、52b17e5 はそのまま維持
+
+## OWNER-DECISION-ISS-005: ISS-005 配布モデル確定: 案A 公開直開発を正式採用 — push保留解除 (2026-06-13)
+
+### 判断
+Owner 回答 (2026-06-13 原文):「リポジトリはpublicなのはいいんだけど」→ D-2026-06-11-001 は **案 A: 公開直開発を正式採用** で確定。
+
+### 効果
+- git push 全面保留を解除（/org-release 等で push 可能）
+- 公開リポジトリ = 開発リポジトリ。キュレーション配布 (org-publish の private→public 同期) は将来タスクで整理
+- 衛生措置: sessions/ORDERS 等の git 履歴除去は「実害 secret なし」のため実施しない（Owner が問題視しない限り）。今後の機微情報は gitignore + secret scanner で防止
+
+### トリガー
+Owner 判断 (OWNER_INBOX D-2026-06-11-001 への口頭回答)
+
+## PLAN-UPDATE-WAVE3-MIGRATION-COMPLETE: Two-zone .ai/ migration (Stage 1-3) complete (2026-06-13)
+
+### 変更内容
+`.ai/` two-zone separation (human ledgers at root, machine runtime under `.ai/_machine/`) を Stage 1-3 全て完了。
+
+### Stage 1 (reconcile)
+- 既移動の 6 dir (approvals/backups/integrity/learnings/os/supervisor-review) の参照ゼロを検証。LEARNED+LEARNINGS は `_machine/learnings` に統合済みを確認。
+- 前回ランの test fixture drift を修復: test-week3-lease.sh, test-lease-events.sh, test-deploy-kernel-v2.sh → `_machine/leases`。
+
+### Stage 2
+- 既移動 dir (SCHEDULER/sessions/events/METRICS/leases/REVIEW) の参照書換完遂: `.ai/REVIEW`→`_machine/review` (11 files), path-join 形式の見落とし修正 (session_memory.py, session_start_context.py, eval-scanner.sh, report.py, intel-scanner.sh, integrator-commit.sh, request-integration.sh)。
+- kernel 定数 `.ai/plans`→`.ai/_machine/plans` (policy_core.py x4, generate-plan.py, integrator-commit.sh + 3 plan tests fixture)。PlanContract は未稼働 (dir 不在) のため定数変更のみで安全。
+- events hash chain 生存証明: EVT-20260613T040603Z-T-OS-495-313f6020 を `_machine/events` に追記。chain intact (37 events, 0 prev_hash mismatch)。
+
+### Stage 3 (HIGH, kernel 編集含む)
+- artifacts case-split heal: `.ai/ARTIFACTS`+`.ai/artifacts` (macOS 同一 inode) → `_machine/artifacts` (lowercase 統合)。tracked 5 files git mv + 47 gitignored T-OS dirs mv。collision なし (単一 inode)。
+- queue/INTELLIGENCE/EVOLUTION/CODEX を `_machine/` へ git mv。
+- KERNEL EDIT: policy_core.py is_kernel_file() の ORDERS hardcode を `.ai/CODEX/ORDERS/`→`.ai/_machine/codex/ORDERS/` に置換。check-task-done.py EVOLUTION default も更新。
+- CODEX 参照 89 件 (slash) + 2 件 (path-join) 書換。EVOLUTION 17 files, INTELLIGENCE 8 files, queue 8 files 書換。
+- .gitignore: `_machine` equivalents 追加 (旧 line 保持)。root TASKS.yaml.bak.* を git rm (`_machine/backups` に物理コピー保持)。
+
+### 検証
+- kernel suite SUITE_EXIT=0 (Stage 2 後 + Stage 3 後 + final)。activity suite SUITE_EXIT=0。
+- `ls .ai/` = human ledgers + AUDIT/DESIGN/OIP/RESOURCES/RUNBOOKS/TEMPLATES + `_machine` + README.md のみ。
+- old-path grep: scripts/.claude/hooks/.claude/evals/tests/.github で genuine ゼロ。残存は intentional legacy-compat fixture 2 件 (tests/activity/test-bridge.sh dual-path fallback test = 別ワークフロー所有; test-week2-integrator.sh:595 test_integrator_ignores_uppercase_legacy_paths)。
+- live hook sanity: new ORDERS/plans 認識 True、old 認識 False (clean cutover)。
+
+### 不変・据え置き
+- STATUS.md/RUN_LOG.md/RUNTIME.yaml (superseded 旧台帳) は root 据え置き = Wave 4 で generated 後継と同一トランザクション archive 予定 (SSOT §4.3)。
+- scripts/activity/ bridge は別ワークフロー所有 (SSOT §4.4) のため不変。dual-path tolerance 済み。
+
+## PLAN-UPDATE-026: リポジトリ全域フォルダ明瞭化 (.ai二層 / ルート整理 / scripts統合) (2026-06-13)
+
+Owner request: 一番上の階層で「人間が触る場所」と「触らない場所」を明確に分離する。
+
+移動内容:
+- .ai/ を二層化: .ai/ root = human ledgers (BRIEF/PROJECT/GOALS/JOURNEYS/RISKS/DASHBOARD/TASKS/DECISIONS/OWNER_INBOX/OWNER_COMMENTS + DESIGN/AUDIT/RUNBOOKS/RESOURCES/TEMPLATES/OIP), .ai/_machine/ = runtime (artifacts/codex/events/evolution/sessions など machine-managed)。
+- ルート整理: requirements.md → docs/archive へ退避、.collaborator と .DS_Store を削除しルートを lean 化。
+- scripts/ 統合: scripts/evolve → scripts/evolution へ統合、未使用の dashboard/integrity/intel を scripts/_archive へ退避 (REPO_LAYOUT_V1.md §3 の target 構成に一致)。
+- .vscode/settings.json で engine-room (_machine 等) を hide、README に construction map を追加。
+- Kernel constants (CODEX/leases/plans path) と全 live references を新パスへ書き換え。distributed scripts (bridge-kernel-events.sh, bootstrap.sh) は new→old の dual-path fallback を維持。
+
+参照: .ai/DESIGN/REPO_LAYOUT_V1.md, .ai/DESIGN/ORGOS_TOBE_V3.md
+検証: kernel suite SUITE_EXIT=0 / manifest closure 6 passed / live-code old-path grep 0件 (tests 内の legacy-compat fixture のみ意図的に残置)。
+Task: T-OS-495

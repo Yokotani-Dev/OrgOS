@@ -20,9 +20,15 @@
 .ai/AUDIT/
 .ai/APPROVALS/
 .ai/METRICS/daily-health/
+# Two-zone migration (_machine) equivalents — keep old lines above for legacy clones
+.ai/_machine/codex/LOGS/
+.ai/_machine/backups/
+.ai/_machine/approvals/
+.ai/_machine/metrics/daily-health/
 
 # Codex output secret hygiene (T-OS-375)
 .ai/CODEX/RESULTS/*.log
+.ai/_machine/codex/RESULTS/*.log
 .claude/state/git.lock
 .claude/state/expected_branch_*
 .worktrees/
@@ -41,5 +47,7 @@
 # Added during ISS-002 backlog integration 2026-06-12 (T-OS-491).
 .ai/ARTIFACTS/T-OS-*/
 .ai/artifacts/T-OS-*/
+.ai/_machine/artifacts/T-OS-*/
 # Events ledger runtime lock (hash-chained JSONL files themselves stay tracked)
 .ai/events/.events.lock
+.ai/_machine/events/.events.lock

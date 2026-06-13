@@ -10,8 +10,8 @@ Creates .worktrees/<TASK_ID>, runs Codex inside that worktree, and removes the
 worktree after Codex exits only when --cleanup-after-manifest is set and the
 artifact manifest passes validation. By default, worktrees are preserved.
 Codex handoff is captured via /tmp, then copied to
-.ai/artifacts/<TASK_ID>/<RUN_ID>/output-last-message.txt. Do not expect
-.ai/CODEX/RESULTS/<TASK_ID>.txt in the main repo; that path is legacy.
+.ai/_machine/artifacts/<TASK_ID>/<RUN_ID>/output-last-message.txt. Do not expect
+.ai/_machine/codex/RESULTS/<TASK_ID>.txt in the main repo; that path is legacy.
 USAGE
 }
 
@@ -256,7 +256,7 @@ fi
 
 worktree_dir="$repo_root/.worktrees"
 worktree_path="$worktree_dir/$task_id"
-order_path="$repo_root/.ai/CODEX/ORDERS/$task_id.md"
+order_path="$repo_root/.ai/_machine/codex/ORDERS/$task_id.md"
 codex_bin=${ORGOS_CODEX_BIN:-/opt/homebrew/bin/codex}
 pre_exec_validate="$repo_root/scripts/codex/pre-exec-validate.sh"
 post_exec_audit="$repo_root/scripts/codex/post-exec-audit.sh"
@@ -318,7 +318,7 @@ else
   rand="$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
 fi
 run_id="${run_ts}-${task_id}-${rand}"
-artifact_dir="$repo_root/.ai/artifacts/$task_id/$run_id"
+artifact_dir="$repo_root/.ai/_machine/artifacts/$task_id/$run_id"
 stdout_file="$artifact_dir/logs/stdout.log"
 stderr_file="$artifact_dir/logs/stderr.log"
 handoff_tmp_dir="${ORGOS_CODEX_HANDOFF_TMPDIR:-/tmp}"
@@ -389,7 +389,7 @@ stderr_tee_pid=$!
 set +e
 (
   cd "$worktree_path"
-  "${codex_cmd[@]}" - < "../../.ai/CODEX/ORDERS/$task_id.md"
+  "${codex_cmd[@]}" - < "../../.ai/_machine/codex/ORDERS/$task_id.md"
 ) > "$stdout_fifo" 2> "$stderr_fifo"
 codex_status=$?
 wait "$stdout_tee_pid"

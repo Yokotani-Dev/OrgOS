@@ -35,7 +35,7 @@ setup_event_fixture() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-collect-events.XXXXXX")
   repo="$tmp_dir/repo"
   worktree="$repo/.worktrees/$task_id"
-  artifact_dir="$repo/.ai/artifacts/$task_id/20260517T000000Z-$task_id-1234abcd"
+  artifact_dir="$repo/.ai/_machine/artifacts/$task_id/20260517T000000Z-$task_id-1234abcd"
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   last_msg_path="$tmp_dir/output-last-message.txt"

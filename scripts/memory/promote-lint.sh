@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
-source "$ROOT_DIR/scripts/security/common.sh"
+source "$ROOT_DIR/scripts/memory/common.sh"
 
 if ! require_python_yaml_or_skip; then
   exit 0

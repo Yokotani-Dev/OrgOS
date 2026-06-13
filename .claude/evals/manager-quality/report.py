@@ -436,8 +436,8 @@ def repeated_question_judge(case: dict[str, Any], context: RuntimeContext) -> Ca
 def iter_handoff_packet_sources(repo_root: Path) -> list[Path]:
     candidates = []
     for relative in (
-        Path(".ai/CODEX/RESULTS"),
-        Path(".ai/CODEX/LOGS"),
+        Path(".ai/_machine/codex/RESULTS"),
+        Path(".ai/_machine/codex/LOGS"),
     ):
         base = repo_root / relative
         if not base.exists():
@@ -1309,7 +1309,7 @@ def run_suite(
     cases, metrics = load_suite(repo_root)
     context = load_runtime_context(repo_root, profile_path=profile_path, capabilities_path=capabilities_path)
     case_results = [judge_case(case, context) for case in cases]
-    effective_jsonl_dir = jsonl_dir or (repo_root / ".ai" / "METRICS" / "manager-quality")
+    effective_jsonl_dir = jsonl_dir or (repo_root / ".ai" / "_machine" / "metrics" / "manager-quality")
     return case_results, metric_summary(case_results, metrics, repo_root, effective_jsonl_dir)
 
 

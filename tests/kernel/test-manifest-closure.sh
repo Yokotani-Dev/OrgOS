@@ -197,7 +197,7 @@ test_closure_spot_checks() {
     "scripts/capabilities/scan.sh|capability-preflight.md Iron Law"
     "scripts/capabilities/probe/cli-generic.sh|invoked by scan.sh"
     "scripts/memory/check-no-plain-secrets.sh|memory-lifecycle.md lint"
-    "scripts/security/common.sh|sourced by scripts/memory/*.sh"
+    "scripts/memory/common.sh|sourced by scripts/memory/*.sh"
     "scripts/org/update-task.py|kernel-write-path.md / org-tick.md / CLAUDE.md"
     "scripts/org/append-decision.py|kernel-write-path.md / org-tick.md / CLAUDE.md"
     "scripts/org/append-event.py|kernel-write-path.md / collect-artifacts.sh"

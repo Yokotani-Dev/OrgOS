@@ -45,7 +45,7 @@ setup_fixture() {
 
   git clone --quiet "$REPO_ROOT" "$repo"
 
-  mkdir -p "$repo/scripts/codex" "$repo/.ai/CODEX/ORDERS"
+  mkdir -p "$repo/scripts/codex" "$repo/.ai/_machine/codex/ORDERS"
   cp "$SCRIPT_UNDER_TEST" "$repo/scripts/codex/run-in-worktree.sh"
   chmod +x "$repo/scripts/codex/run-in-worktree.sh"
   mkdir -p "$repo/scripts/org"
@@ -89,7 +89,7 @@ exit 0
 EOF
   chmod +x "$codex_stub"
 
-  printf '# test order for %s\n' "$task_id" > "$repo/.ai/CODEX/ORDERS/$task_id.md"
+  printf '# test order for %s\n' "$task_id" > "$repo/.ai/_machine/codex/ORDERS/$task_id.md"
 
   printf '%s\n%s\n%s\n' "$tmp_dir" "$repo" "$codex_stub"
 }
@@ -136,7 +136,7 @@ test_cleanup_after_auto_manifest_removes() {
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   worktree_path="$repo/.worktrees/$task_id"
-  artifact_root="$repo/.ai/artifacts/$task_id"
+  artifact_root="$repo/.ai/_machine/artifacts/$task_id"
 
   run_wrapper "$repo" "$codex_stub" "$task_id" "$stdout_path" "$stderr_path" --cleanup-after-manifest
 

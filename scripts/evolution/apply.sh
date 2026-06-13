@@ -3,8 +3,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-PROPOSAL_DIR="${PROPOSAL_DIR:-$REPO_ROOT/.ai/EVOLUTION/proposals}"
-APPLIED_DIR="${APPLIED_DIR:-$REPO_ROOT/.ai/EVOLUTION/applied}"
+PROPOSAL_DIR="${PROPOSAL_DIR:-$REPO_ROOT/.ai/_machine/evolution/proposals}"
+APPLIED_DIR="${APPLIED_DIR:-$REPO_ROOT/.ai/_machine/evolution/applied}"
 CIRCUIT_BREAKER="${CIRCUIT_BREAKER:-$REPO_ROOT/scripts/evolution/circuit-breaker.sh}"
 
 usage() {
@@ -231,7 +231,7 @@ def circuit_state_path() -> Path:
     if configured:
         path = Path(configured)
         return path if path.is_absolute() else repo_root / path
-    return repo_root / ".ai/EVOLUTION/circuit-breaker.yaml"
+    return repo_root / ".ai/_machine/evolution/circuit-breaker.yaml"
 
 
 def load_circuit_state() -> dict[str, Any]:
@@ -263,7 +263,7 @@ def run_circuit_breaker(action: str, *args: str) -> None:
         fail(
             "circuit_breaker_open",
             "circuit breaker rejected automatic apply",
-            "Owner review must restore .ai/EVOLUTION/circuit-breaker.yaml before apply resumes.",
+            "Owner review must restore .ai/_machine/evolution/circuit-breaker.yaml before apply resumes.",
         )
     fail(
         "circuit_breaker_update_failed",
@@ -296,7 +296,7 @@ def enforce_not_halted() -> None:
         fail(
             "halted_after_reverts",
             f"apply engine stopped after {count} consecutive rollback(s)",
-            "Manager/Owner review must reset .ai/EVOLUTION/applied/rollback-state.yaml before applying again.",
+            "Manager/Owner review must reset .ai/_machine/evolution/applied/rollback-state.yaml before applying again.",
         )
 
 

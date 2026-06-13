@@ -3,7 +3,7 @@
 Inputs: action context (tool, command, path, cwd, actor, lease state, mode config).
 Outputs: Decision(allow|deny|warn, invariant_id, reason).
 
-Plan contract checks may inspect .ai/plans relative to cwd. Callers can
+Plan contract checks may inspect .ai/_machine/plans relative to cwd. Callers can
 provide plan_contracts in mode_config to keep tests pure.
 """
 
@@ -98,8 +98,8 @@ def is_kernel_file(path: str) -> bool:
         _matches_repo_path(repo_path, {"AGENTS.md", "CLAUDE.md"})
         or repo_path.startswith(".claude/")
         or "/.claude/" in repo_path
-        or repo_path.startswith(".ai/CODEX/ORDERS/")
-        or "/.ai/CODEX/ORDERS/" in repo_path
+        or repo_path.startswith(".ai/_machine/codex/ORDERS/")
+        or "/.ai/_machine/codex/ORDERS/" in repo_path
     )
 
 
@@ -257,7 +257,7 @@ def _append_plan_contract_violation(
     violations.append(
         (
             InvariantId.PlanContractRequired.value,
-            f"PlanContractRequired: .ai/plans/{task_id}.plan.yaml not found",
+            f"PlanContractRequired: .ai/_machine/plans/{task_id}.plan.yaml not found",
         )
     )
 
@@ -319,14 +319,14 @@ def _is_manager_bootstrap_context(actor_role: str) -> bool:
 
 def _is_plan_contract_path(path: str) -> bool:
     repo_path = normalize_policy_path(path)
-    return repo_path == ".ai/plans" or repo_path.startswith(".ai/plans/")
+    return repo_path == ".ai/_machine/plans" or repo_path.startswith(".ai/_machine/plans/")
 
 
 def _plan_contract_exists(task_id: str, cwd: str, mode_config: dict) -> bool:
     if not _is_safe_task_id(task_id):
         return False
 
-    expected_path = f".ai/plans/{task_id}.plan.yaml"
+    expected_path = f".ai/_machine/plans/{task_id}.plan.yaml"
     configured = _configured_plan_contract_exists(task_id, expected_path, mode_config)
     if configured is not None:
         return configured
@@ -342,7 +342,7 @@ def _plan_contract_subsystem_present(cwd: str, mode_config: dict) -> bool:
     if isinstance(mode_config, dict) and isinstance(mode_config.get("plan_contracts"), dict):
         return True
     try:
-        return (_resolve_policy_root(cwd) / ".ai" / "plans").is_dir()
+        return (_resolve_policy_root(cwd) / ".ai" / "_machine" / "plans").is_dir()
     except OSError:
         return False
 

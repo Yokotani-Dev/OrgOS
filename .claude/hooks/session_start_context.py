@@ -7,7 +7,7 @@ import subprocess
 
 ROOT = Path(os.environ.get("CLAUDE_PROJECT_DIR", Path.cwd()))
 CONTROL = ROOT / ".ai" / "CONTROL.yaml"
-SESSIONS_DIR = ROOT / ".ai" / "sessions"
+SESSIONS_DIR = ROOT / ".ai" / "_machine" / "sessions"
 RUN_LOG_DAYS = 7
 
 def read_flag(key: str, default: bool = False) -> bool:

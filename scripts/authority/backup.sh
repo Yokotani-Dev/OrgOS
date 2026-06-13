@@ -40,7 +40,7 @@ done
 target="$(repo_relpath "$target")"
 [[ -e "$REPO_ROOT/$target" ]] || die "target does not exist: $target"
 
-backup_dir="$REPO_ROOT/.ai/BACKUPS/$(date +%F)"
+backup_dir="$REPO_ROOT/.ai/_machine/backups/$(date +%F)"
 mkdir -p "$backup_dir"
 
 safe_name="$(basename "$target").bak"

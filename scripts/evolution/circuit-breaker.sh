@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-STATE_FILE="${ORGOS_CIRCUIT_BREAKER_STATE:-$REPO_ROOT/.ai/EVOLUTION/circuit-breaker.yaml}"
+STATE_FILE="${ORGOS_CIRCUIT_BREAKER_STATE:-$REPO_ROOT/.ai/_machine/evolution/circuit-breaker.yaml}"
 
 usage() {
   cat <<'EOF'
@@ -165,7 +165,7 @@ def load() -> dict[str, Any]:
             "failed",
             error_class="invalid_state",
             message=f"circuit breaker state is invalid YAML: {exc}",
-            recovery="Repair .ai/EVOLUTION/circuit-breaker.yaml or run restore after Owner review.",
+            recovery="Repair .ai/_machine/evolution/circuit-breaker.yaml or run restore after Owner review.",
         )
         raise SystemExit(65)
     if not isinstance(data, dict):
@@ -174,7 +174,7 @@ def load() -> dict[str, Any]:
             "failed",
             error_class="invalid_state",
             message="circuit breaker state is not an object",
-            recovery="Repair .ai/EVOLUTION/circuit-breaker.yaml or run restore after Owner review.",
+            recovery="Repair .ai/_machine/evolution/circuit-breaker.yaml or run restore after Owner review.",
         )
         raise SystemExit(65)
     return merge_defaults(data)

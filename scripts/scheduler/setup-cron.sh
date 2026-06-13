@@ -36,9 +36,9 @@ cat <<EOF
 # your cron implementation supports CRON_TZ. For Asia/Tokyo, 02:00 UTC is 11:00.
 #
 # Suggested local-time entry:
-0 11 * * * cd "$REPO_ROOT" && ORGOS_SCHEDULER_TRIGGER=cron /bin/bash scripts/scheduler/run-detection.sh >> "$REPO_ROOT/.ai/SCHEDULER/cron.stdout.log" 2>> "$REPO_ROOT/.ai/SCHEDULER/cron.stderr.log"
+0 11 * * * cd "$REPO_ROOT" && ORGOS_SCHEDULER_TRIGGER=cron /bin/bash scripts/scheduler/run-detection.sh >> "$REPO_ROOT/.ai/_machine/scheduler/cron.stdout.log" 2>> "$REPO_ROOT/.ai/_machine/scheduler/cron.stderr.log"
 #
 # Optional UTC-style entry for cron implementations that support CRON_TZ:
 CRON_TZ=UTC
-0 2 * * * cd "$REPO_ROOT" && ORGOS_SCHEDULER_TRIGGER=cron /bin/bash scripts/scheduler/run-detection.sh >> "$REPO_ROOT/.ai/SCHEDULER/cron.stdout.log" 2>> "$REPO_ROOT/.ai/SCHEDULER/cron.stderr.log"
+0 2 * * * cd "$REPO_ROOT" && ORGOS_SCHEDULER_TRIGGER=cron /bin/bash scripts/scheduler/run-detection.sh >> "$REPO_ROOT/.ai/_machine/scheduler/cron.stdout.log" 2>> "$REPO_ROOT/.ai/_machine/scheduler/cron.stderr.log"
 EOF

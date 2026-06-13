@@ -132,7 +132,7 @@ setup_wrapper_fixture() {
   mock_codex="$tmp_dir/mock-codex"
 
   git clone --quiet "$REPO_ROOT" "$repo"
-  mkdir -p "$repo/scripts/codex" "$repo/scripts/org" "$repo/.ai/CODEX/ORDERS"
+  mkdir -p "$repo/scripts/codex" "$repo/scripts/org" "$repo/.ai/_machine/codex/ORDERS"
   cp "$WRAPPER" "$repo/scripts/codex/run-in-worktree.sh"
   cp "$COLLECTOR" "$repo/scripts/org/collect-artifacts.sh"
   cp "$VERIFIER" "$repo/scripts/org/verify-artifact-manifest.py"
@@ -152,7 +152,7 @@ exit 0
 EOF
   chmod +x "$repo/scripts/codex/post-exec-audit.sh"
 
-  printf '# test order for %s\n' "$task_id" > "$repo/.ai/CODEX/ORDERS/$task_id.md"
+  printf '# test order for %s\n' "$task_id" > "$repo/.ai/_machine/codex/ORDERS/$task_id.md"
   printf '%s\n%s\n%s\n' "$tmp_dir" "$repo" "$mock_codex"
 }
 
@@ -172,8 +172,8 @@ while [ "$#" -gt 0 ]; do
   shift
 done
 cat >/dev/null
-mkdir -p .ai/REVIEW/T-KRT-004
-cat > .ai/REVIEW/T-KRT-004/codex-response.md <<'MARKDOWN'
+mkdir -p .ai/_machine/review/T-KRT-004
+cat > .ai/_machine/review/T-KRT-004/codex-response.md <<'MARKDOWN'
 # Mock Codex response
 This file must survive cleanup.
 MARKDOWN
@@ -236,7 +236,7 @@ test_krt_004_artifact_survives() {
   stdout_path="$tmp_dir/stdout.log"
   stderr_path="$tmp_dir/stderr.log"
   worktree_path="$repo/.worktrees/$task_id"
-  artifact_root="$repo/.ai/artifacts/$task_id"
+  artifact_root="$repo/.ai/_machine/artifacts/$task_id"
   write_mock_codex_artifact "$mock_codex"
 
   (
@@ -248,7 +248,7 @@ test_krt_004_artifact_survives() {
   assert_exists "$artifact_root" "KRT-004 artifact root should exist"
   run_dir=$(find "$artifact_root" -mindepth 1 -maxdepth 1 -type d | head -n 1)
   manifest_path="$run_dir/artifact_manifest.json"
-  response_path="$run_dir/files/generated/.ai/REVIEW/T-KRT-004/codex-response.md"
+  response_path="$run_dir/files/generated/.ai/_machine/review/T-KRT-004/codex-response.md"
   assert_exists "$manifest_path" "KRT-004 manifest should exist"
   "$VERIFIER" "$manifest_path"
   assert_exists "$response_path" "KRT-004 generated response should be copied"

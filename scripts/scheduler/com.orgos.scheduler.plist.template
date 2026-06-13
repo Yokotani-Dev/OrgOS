@@ -13,7 +13,7 @@
     4. Trigger a smoke run manually:
          launchctl start com.orgos.scheduler
     5. Inspect logs:
-         __ORGOS_REPO_ROOT__/.ai/SCHEDULER/runs/
+         __ORGOS_REPO_ROOT__/.ai/_machine/scheduler/runs/
 
   This template contains no secrets and does not install itself.
 -->
@@ -48,8 +48,8 @@
   </dict>
 
   <key>StandardOutPath</key>
-  <string>__ORGOS_REPO_ROOT__/.ai/SCHEDULER/launchd.stdout.log</string>
+  <string>__ORGOS_REPO_ROOT__/.ai/_machine/scheduler/launchd.stdout.log</string>
   <key>StandardErrorPath</key>
-  <string>__ORGOS_REPO_ROOT__/.ai/SCHEDULER/launchd.stderr.log</string>
+  <string>__ORGOS_REPO_ROOT__/.ai/_machine/scheduler/launchd.stderr.log</string>
 </dict>
 </plist>

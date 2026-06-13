@@ -115,7 +115,7 @@ if not worktree.is_dir():
     raise SystemExit(2)
 PY
 
-queue_dir="$REPO_ROOT/.ai/queue/integration"
+queue_dir="$REPO_ROOT/.ai/_machine/queue/integration"
 pending_dir="$queue_dir/pending"
 mkdir -p "$pending_dir"
 queue_path="$pending_dir/$task_id.json"
@@ -190,7 +190,7 @@ def parse_dt(value: object):
 
 
 def find_active_lease_for_task(task_id: str):
-    leases_dir = root / ".ai" / "leases"
+    leases_dir = root / ".ai" / "_machine" / "leases"
     if not leases_dir.is_dir():
         return None
     now = datetime.now(timezone.utc)

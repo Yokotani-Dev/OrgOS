@@ -5,16 +5,16 @@
 #        ./run-parallel.sh --all        # 実行可能な全タスクを実行
 #        ./run-parallel.sh --status     # 実行中タスクの状態を確認
 #
-# 各タスクは別々のworktreeで実行され、結果は.ai/CODEX/RESULTS/に出力される
+# 各タスクは別々のworktreeで実行され、結果は.ai/_machine/codex/RESULTS/に出力される
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 WORKTREES_DIR="$PROJECT_ROOT/.worktrees"
-ORDERS_DIR="$PROJECT_ROOT/.ai/CODEX/ORDERS"
-RESULTS_DIR="$PROJECT_ROOT/.ai/CODEX/RESULTS"
-LOGS_DIR="$PROJECT_ROOT/.ai/CODEX/LOGS"
+ORDERS_DIR="$PROJECT_ROOT/.ai/_machine/codex/ORDERS"
+RESULTS_DIR="$PROJECT_ROOT/.ai/_machine/codex/RESULTS"
+LOGS_DIR="$PROJECT_ROOT/.ai/_machine/codex/LOGS"
 CONTROL_FILE="$PROJECT_ROOT/.ai/CONTROL.yaml"
 
 # 色付き出力
@@ -83,7 +83,7 @@ run_codex() {
     setup_worktree "$task_id"
 
     # Work Order を worktree にコピー（worktree は untracked files を共有しないため）
-    local worktree_order_dir="$worktree_path/.ai/CODEX/ORDERS"
+    local worktree_order_dir="$worktree_path/.ai/_machine/codex/ORDERS"
     mkdir -p "$worktree_order_dir"
     cp "$order_file" "$worktree_order_dir/"
     log_info "Copied Work Order to worktree: $worktree_order_dir/$task_id.md"
@@ -130,7 +130,7 @@ run_codex() {
             ;;
     esac
 
-    local prompt="CODEX_WORKER_GUIDE.md を読み、.ai/CODEX/ORDERS/$task_id.md の指示に従って実行せよ"
+    local prompt="CODEX_WORKER_GUIDE.md を読み、.ai/_machine/codex/ORDERS/$task_id.md の指示に従って実行せよ"
 
     log_info "Starting Codex for $task_id..."
     log_info "Working directory: $worktree_path"
@@ -261,9 +261,9 @@ Examples:
 
 Notes:
   - Each task runs in its own worktree (.worktrees/<TASK_ID>/)
-  - Results are written to .ai/CODEX/RESULTS/<TASK_ID>.json
-  - Logs are written to .ai/CODEX/LOGS/<TASK_ID>.log
-  - Work Orders must exist in .ai/CODEX/ORDERS/<TASK_ID>.md
+  - Results are written to .ai/_machine/codex/RESULTS/<TASK_ID>.json
+  - Logs are written to .ai/_machine/codex/LOGS/<TASK_ID>.log
+  - Work Orders must exist in .ai/_machine/codex/ORDERS/<TASK_ID>.md
 EOF
 }
 

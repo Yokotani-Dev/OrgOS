@@ -59,7 +59,7 @@ REQUEST_ID="$request_id" MARK="$mark" NOTE="$note" REPO_ROOT="$REPO_ROOT" ruby -
   request_id = ENV.fetch("REQUEST_ID")
   mark = ENV.fetch("MARK")
   note = ENV.fetch("NOTE")
-  approval_file = File.join(repo_root, ".ai", "APPROVALS", "#{request_id}.yaml")
+  approval_file = File.join(repo_root, ".ai", "_machine", "approvals", "#{request_id}.yaml")
   comments_file = File.join(repo_root, ".ai", "OWNER_COMMENTS.md")
   audit_dir = File.join(repo_root, ".ai", "AUDIT")
   decisions_file = File.join(repo_root, ".ai", "DECISIONS.md")

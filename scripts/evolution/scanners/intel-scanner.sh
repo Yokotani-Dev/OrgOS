@@ -36,7 +36,7 @@ import yaml
 repo = Path(sys.argv[1])
 now = datetime.now(timezone.utc).replace(microsecond=0)
 detected_at = now.isoformat().replace("+00:00", "Z")
-root = repo / ".ai" / "INTELLIGENCE"
+root = repo / ".ai" / "_machine" / "intelligence"
 config = root / "config.yaml"
 raw = root / "raw"
 
@@ -56,7 +56,7 @@ if not raw_files:
         "severity": "P1",
         "confidence": 0.95,
         "novelty": "recurring",
-        "target_artifacts": [{"path": ".ai/INTELLIGENCE/config.yaml", "lines": [1] if config.exists() else []}],
+        "target_artifacts": [{"path": ".ai/_machine/intelligence/config.yaml", "lines": [1] if config.exists() else []}],
         "evidence": [{"kind": "empty_intelligence_raw", "snippet": f"raw has no collected files while watch_topics={len(watch_topics)}"}],
         "proposed_action": "add",
         "estimated_impact": "large",

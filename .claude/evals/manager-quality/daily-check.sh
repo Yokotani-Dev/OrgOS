@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
-JSONL_DIR="${JSONL_DIR:-$REPO_ROOT/.ai/METRICS/manager-quality}"
+JSONL_DIR="${JSONL_DIR:-$REPO_ROOT/.ai/_machine/metrics/manager-quality}"
 # ISS-011: judge against the committed eval fixture profile, not live memory.
 PROFILE_PATH="${MQ_PROFILE_PATH:-$SCRIPT_DIR/fixtures/USER_PROFILE.yaml}"
 

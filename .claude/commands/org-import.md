@@ -76,7 +76,7 @@ mkdir -p .ai .ai/RESOURCES .ai/RESOURCES/docs \
   .claude/commands .claude/agents .claude/rules .claude/skills \
   .claude/schemas .claude/evals .claude/hooks .claude/scripts \
   scripts/session scripts/platform scripts/capabilities/probe \
-  scripts/memory scripts/security scripts/org scripts/codex scripts/activity
+  scripts/memory scripts/org scripts/codex scripts/activity
 ```
 
 ### 5. ファイルコピー
@@ -135,7 +135,7 @@ EOF
 - `.claude/hooks/`（settings.json が登録する hook 一式）+ `.claude/settings.json`
 - `.claude/scripts/run-parallel.sh`
 - `scripts/session/` `scripts/platform/` `scripts/capabilities/` `scripts/memory/`
-  `scripts/security/` `scripts/org/` `scripts/codex/` `scripts/activity/`
+  `scripts/org/` `scripts/codex/` `scripts/activity/`
 - `.orgos-manifest.yaml` / `CLAUDE.md` / `AGENTS.md`
 
 **保持するファイル（preserve）:**

@@ -1,0 +1,67 @@
+record_id: AR-2026-06-13-001
+schema: orgos/application-record/v1
+proposal_ref: P-2026-06-13-001
+target_file: .ai/_machine/metrics/manager-quality/2026-06-12.jsonl
+before_checksum: b1f73661b50c26c9528d3ca071825492e6d3199f4bccf5d5fb7862e5603280e3
+after_checksum: b1f73661b50c26c9528d3ca071825492e6d3199f4bccf5d5fb7862e5603280e3
+before_exists: true
+backup_ref: .ai/_machine/scheduler/dry-run/20260613T053535Z/applied/AR-2026-06-13-001.before
+rollout_stage: shadow
+autonomy_level_at_apply: ask_before_execute
+applied_at: '2026-06-13T05:35:37Z'
+applied_by: system
+eval_results:
+  pre:
+    status: passed
+    stage: pre
+    target_file: .ai/_machine/metrics/manager-quality/2026-06-12.jsonl
+    checksum: b1f73661b50c26c9528d3ca071825492e6d3199f4bccf5d5fb7862e5603280e3
+    checked_at: '2026-06-13T05:35:37Z'
+  post:
+    status: passed
+    stage: post_shadow
+    target_file: .ai/_machine/metrics/manager-quality/2026-06-12.jsonl
+    checksum: b1f73661b50c26c9528d3ca071825492e6d3199f4bccf5d5fb7862e5603280e3
+    checked_at: '2026-06-13T05:35:37Z'
+rollback_ref: null
+iron_law_check:
+  status: passed
+  checked_at: '2026-06-13T05:35:37Z'
+  forbidden_targets:
+  - .ai/CONTROL.yaml
+  - .claude/agents/manager.md
+  - .claude/rules/acceptance-pre-write.md
+  - .claude/rules/authority-layer.md
+  - .claude/rules/domain-constraint-sync.md
+  - .claude/rules/handoff-protocol.md
+  - .claude/rules/memory-lifecycle.md
+  - .claude/rules/parallel-session-policy.md
+  - .claude/rules/pre-implementation-risk-profile.md
+  - .claude/rules/project-flow.md
+  - .claude/rules/quality-contract.md
+  - .claude/rules/rationalization-prevention.md
+  - .claude/rules/request-intake-loop.md
+  - .claude/rules/user-journey-sync.md
+  - .claude/skills/review-criteria.md
+  - .claude/skills/security.md
+  - AGENTS.md
+  - CLAUDE.md
+  - manager.md
+  violations: []
+canary_monitor_ref: null
+iteration_counter: &id001
+  current_cycle_apply_count: 3
+  max_apply_per_cycle: 3
+  today_apply_count: 3
+  max_apply_per_day: 10
+  consecutive_revert_count: 0
+  consecutive_revert_threshold: 3
+  breaker_state: open
+  tripped_at: '2026-06-13T05:35:37Z'
+  trip_reason: max_apply_per_cycle reached (3/3)
+apply_trace:
+- at: '2026-06-13T05:35:37Z'
+  event: record_created
+  stage: shadow
+  file_changed: false
+  iteration_counter: *id001

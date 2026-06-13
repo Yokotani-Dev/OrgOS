@@ -24,7 +24,7 @@ case "$platform" in
     run_codex codex "$@"
     ;;
   windows-wsl | windows-msys)
-    run_codex bash .ai/CODEX/codex-wsl.sh "$@"
+    run_codex bash .ai/_machine/codex/codex-wsl.sh "$@"
     ;;
   windows-native)
     printf '%s\n' "[WARN] WSL を推奨します。Windows native では read-only fallback になる可能性があります。" >&2

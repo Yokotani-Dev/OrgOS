@@ -96,17 +96,17 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 
 ### Implementer
 1. **実装コード**: タスクで指定された `allowed_paths` 内
-2. **結果レポート**: `.ai/CODEX/RESULTS/<TASK_ID>.json`
-3. **Review Packet**: `.ai/REVIEW/PACKETS/<TASK_ID>.md`
+2. **結果レポート**: `.ai/_machine/codex/RESULTS/<TASK_ID>.json`
+3. **Review Packet**: `.ai/_machine/review/PACKETS/<TASK_ID>.md`
 
 ### Reviewer
-1. **レビュー結果**: `.ai/CODEX/RESULTS/<TASK_ID>-review.json`
+1. **レビュー結果**: `.ai/_machine/codex/RESULTS/<TASK_ID>-review.json`
 
 ---
 
 ## 結果ファイルのフォーマット
 
-### `.ai/CODEX/RESULTS/<TASK_ID>.json` (Implementer)
+### `.ai/_machine/codex/RESULTS/<TASK_ID>.json` (Implementer)
 ```json
 {
   "task_id": "T-XXX",
@@ -121,7 +121,7 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 }
 ```
 
-### `.ai/CODEX/RESULTS/<TASK_ID>-review.json` (Reviewer)
+### `.ai/_machine/codex/RESULTS/<TASK_ID>-review.json` (Reviewer)
 
 **Severity の定義** (参照: `.claude/skills/review-criteria.md`):
 - `critical`: セキュリティ脆弱性、データ損失リスク → 即座に修正必須、マージ不可
@@ -150,7 +150,7 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 }
 ```
 
-### `.ai/REVIEW/PACKETS/<TASK_ID>.md` (Implementer が作成)
+### `.ai/_machine/review/PACKETS/<TASK_ID>.md` (Implementer が作成)
 ```markdown
 # Review Packet: <TASK_ID>
 
@@ -177,7 +177,7 @@ Manager から Work Order を受け取り、指定されたタスクを実行し
 
 ## Work Order の読み方
 
-Work Order は `.ai/CODEX/ORDERS/<TASK_ID>.md` に置かれる。
+Work Order は `.ai/_machine/codex/ORDERS/<TASK_ID>.md` に置かれる。
 以下の情報が含まれる：
 
 - タスクID、タイトル

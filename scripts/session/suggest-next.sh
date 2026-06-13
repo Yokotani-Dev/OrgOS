@@ -86,7 +86,7 @@ top_n = ENV.fetch("TOP_N").to_i
 top_n = 3 if top_n <= 0
 
 control = YAML.safe_load(File.read(".ai/CONTROL.yaml", encoding: "UTF-8"), permitted_classes: [Date, Time, Symbol], aliases: true)
-results_dir = ".ai/CODEX/RESULTS"
+results_dir = ".ai/_machine/codex/RESULTS"
 
 def task_priority(task)
   explicit = task["priority"].to_s.strip

@@ -12,7 +12,7 @@ from typing import Any
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent.parent
-DEFAULT_EVENTS_PATH = REPO_ROOT / ".ai" / "EVOLUTION" / "events.jsonl"
+DEFAULT_EVENTS_PATH = REPO_ROOT / ".ai" / "_machine" / "evolution" / "events.jsonl"
 REQUIRED_EVENTS = {"VerificationPassed", "CommitIntegrated"}
 
 
@@ -88,7 +88,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--events",
         default=os.environ.get("EVENTS_PATH", str(DEFAULT_EVENTS_PATH)),
-        help="path to events.jsonl (default: .ai/EVOLUTION/events.jsonl or EVENTS_PATH)",
+        help="path to events.jsonl (default: .ai/_machine/evolution/events.jsonl or EVENTS_PATH)",
     )
     return parser
 

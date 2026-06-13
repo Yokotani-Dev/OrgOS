@@ -5,7 +5,7 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 TASK_ID="T-OS-329"
-SCHEDULER_DIR="${ORGOS_SCHEDULER_DIR:-$REPO_ROOT/.ai/SCHEDULER}"
+SCHEDULER_DIR="${ORGOS_SCHEDULER_DIR:-$REPO_ROOT/.ai/_machine/scheduler}"
 RUNS_DIR="$SCHEDULER_DIR/runs"
 LOCK_DIR="$SCHEDULER_DIR/run.lock"
 STAGE="${ORGOS_SCHEDULER_STAGE:-shadow}"
@@ -24,8 +24,8 @@ Usage: bash scripts/scheduler/run-detection.sh [--dry-run] [--stage shadow|canar
 Runs the OrgOS always-on detection pipeline:
   detect.sh --json -> synthesize.sh -> apply.sh --stage <stage>
 
-Defaults are shadow stage and production .ai/EVOLUTION paths. --dry-run isolates
-events, proposals, and application records under .ai/SCHEDULER/dry-run.
+Defaults are shadow stage and production .ai/_machine/evolution paths. --dry-run isolates
+events, proposals, and application records under .ai/_machine/scheduler/dry-run.
 EOF
 }
 
@@ -148,7 +148,7 @@ recovery_for_class() {
 }
 
 scheduler_timeout_seconds() {
-  python3 - "$REPO_ROOT/.ai/EVOLUTION/circuit-breaker.yaml" "$DEFAULT_TIMEOUT_SECONDS" <<'PY'
+  python3 - "$REPO_ROOT/.ai/_machine/evolution/circuit-breaker.yaml" "$DEFAULT_TIMEOUT_SECONDS" <<'PY'
 from __future__ import annotations
 
 import sys
@@ -320,9 +320,9 @@ main() {
   acquire_lock
   log_event "info" "run_started" "Scheduler run started." "\"dry_run\":$DRY_RUN,\"log_path\":$(json_escape "${RUN_LOG#$REPO_ROOT/}"),\"step_timeout_seconds\":$STEP_TIMEOUT_SECONDS"
 
-  local events_path="$REPO_ROOT/.ai/EVOLUTION/events.jsonl"
-  local proposals_dir="$REPO_ROOT/.ai/EVOLUTION/proposals"
-  local applied_dir="$REPO_ROOT/.ai/EVOLUTION/applied"
+  local events_path="$REPO_ROOT/.ai/_machine/evolution/events.jsonl"
+  local proposals_dir="$REPO_ROOT/.ai/_machine/evolution/proposals"
+  local applied_dir="$REPO_ROOT/.ai/_machine/evolution/applied"
 
   if [[ "$DRY_RUN" -eq 1 ]]; then
     local dry_root="$SCHEDULER_DIR/dry-run/$TIMESTAMP"
@@ -330,7 +330,7 @@ main() {
     events_path="$dry_root/events.jsonl"
     proposals_dir="$dry_root/proposals"
     applied_dir="$dry_root/applied"
-    log_event "info" "dry_run_paths_ready" "Dry-run state is isolated under .ai/SCHEDULER/dry-run." "\"dry_run_root\":$(json_escape "${dry_root#$REPO_ROOT/}")"
+    log_event "info" "dry_run_paths_ready" "Dry-run state is isolated under .ai/_machine/scheduler/dry-run." "\"dry_run_root\":$(json_escape "${dry_root#$REPO_ROOT/}")"
   fi
 
   run_step "detect" env EVENTS_PATH="$events_path" bash scripts/evolution/detect.sh --json

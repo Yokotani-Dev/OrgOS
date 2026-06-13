@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-JSONL_DIR="$REPO_ROOT/.ai/METRICS/manager-quality"
+JSONL_DIR="$REPO_ROOT/.ai/_machine/metrics/manager-quality"
 JSON_OUTPUT=false
 
 while [[ $# -gt 0 ]]; do

@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-APPLIED_DIR="${APPLIED_DIR:-$REPO_ROOT/.ai/EVOLUTION/applied}"
+APPLIED_DIR="${APPLIED_DIR:-$REPO_ROOT/.ai/_machine/evolution/applied}"
 
 usage() {
   cat <<'EOF'

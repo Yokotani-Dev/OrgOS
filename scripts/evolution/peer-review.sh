@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
-PROPOSAL_DIR="${PROPOSAL_DIR:-$REPO_ROOT/.ai/EVOLUTION/proposals}"
+PROPOSAL_DIR="${PROPOSAL_DIR:-$REPO_ROOT/.ai/_machine/evolution/proposals}"
 ADD_DECISION="${ADD_DECISION:-$REPO_ROOT/scripts/inbox/add-decision.sh}"
 
 usage() {

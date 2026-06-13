@@ -31,7 +31,7 @@ assert_not_exists() {
 
 setup_fixture_repo() {
   local repo="$1"
-  mkdir -p "$repo/.ai/CODEX/ORDERS" "$repo/.ai/plans" "$repo/.claude/schemas"
+  mkdir -p "$repo/.ai/_machine/codex/ORDERS" "$repo/.ai/_machine/plans" "$repo/.claude/schemas"
   cat > "$repo/.claude/schemas/plan-contract.v1.json" <<'EOF_SCHEMA'
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -103,10 +103,10 @@ test_generates_plan_and_passes_schema() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-generate-plan.XXXXXX")
   repo="$tmp_dir/repo"
   setup_fixture_repo "$repo"
-  write_valid_order "$repo/.ai/CODEX/ORDERS/T-OS-999.md"
+  write_valid_order "$repo/.ai/_machine/codex/ORDERS/T-OS-999.md"
 
   "$GENERATOR" --repo-root "$repo" T-OS-999 >/dev/null
-  output_path="$repo/.ai/plans/T-OS-999.plan.yaml"
+  output_path="$repo/.ai/_machine/plans/T-OS-999.plan.yaml"
 
   assert_contains "$output_path" "schema_version: orgos.plan_contract.v1" "plan schema version"
   assert_contains "$output_path" "task_id: T-OS-999" "plan task id"
@@ -138,7 +138,7 @@ test_missing_acceptance_fails() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-generate-plan.XXXXXX")
   repo="$tmp_dir/repo"
   setup_fixture_repo "$repo"
-  write_order_without_acceptance "$repo/.ai/CODEX/ORDERS/T-OS-999.md"
+  write_order_without_acceptance "$repo/.ai/_machine/codex/ORDERS/T-OS-999.md"
 
   set +e
   "$GENERATOR" --repo-root "$repo" T-OS-999 >/dev/null 2>"$tmp_dir/stderr"
@@ -147,7 +147,7 @@ test_missing_acceptance_fails() {
 
   [ "$status" -ne 0 ] || fail "missing Acceptance section should fail"
   assert_contains "$tmp_dir/stderr" 'missing "## Acceptance" section' "missing acceptance error"
-  assert_not_exists "$repo/.ai/plans/T-OS-999.plan.yaml" "missing acceptance output"
+  assert_not_exists "$repo/.ai/_machine/plans/T-OS-999.plan.yaml" "missing acceptance output"
   rm -rf "$tmp_dir"
 }
 
@@ -156,7 +156,7 @@ test_missing_allowed_paths_fails() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-generate-plan.XXXXXX")
   repo="$tmp_dir/repo"
   setup_fixture_repo "$repo"
-  write_order_without_allowed_paths "$repo/.ai/CODEX/ORDERS/T-OS-999.md"
+  write_order_without_allowed_paths "$repo/.ai/_machine/codex/ORDERS/T-OS-999.md"
 
   set +e
   "$GENERATOR" --repo-root "$repo" T-OS-999 >/dev/null 2>"$tmp_dir/stderr"
@@ -165,7 +165,7 @@ test_missing_allowed_paths_fails() {
 
   [ "$status" -ne 0 ] || fail "missing Allowed Paths section should fail"
   assert_contains "$tmp_dir/stderr" 'missing "## Allowed Paths" section' "missing allowed paths error"
-  assert_not_exists "$repo/.ai/plans/T-OS-999.plan.yaml" "missing allowed paths output"
+  assert_not_exists "$repo/.ai/_machine/plans/T-OS-999.plan.yaml" "missing allowed paths output"
   rm -rf "$tmp_dir"
 }
 
@@ -174,10 +174,10 @@ test_atomic_write_preserves_existing_output_on_validation_failure() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-generate-plan.XXXXXX")
   repo="$tmp_dir/repo"
   setup_fixture_repo "$repo"
-  write_valid_order "$repo/.ai/CODEX/ORDERS/T-OS-999.md"
+  write_valid_order "$repo/.ai/_machine/codex/ORDERS/T-OS-999.md"
   "$GENERATOR" --repo-root "$repo" T-OS-999 >/dev/null
 
-  output_path="$repo/.ai/plans/T-OS-999.plan.yaml"
+  output_path="$repo/.ai/_machine/plans/T-OS-999.plan.yaml"
   before_hash=$(shasum -a 256 "$output_path" | awk '{print $1}')
   python3 - "$repo/.claude/schemas/plan-contract.v1.json" <<'PY'
 import json
@@ -199,7 +199,7 @@ PY
   after_hash=$(shasum -a 256 "$output_path" | awk '{print $1}')
   [ "$status" -ne 0 ] || fail "schema validation failure should fail"
   [ "$before_hash" = "$after_hash" ] || fail "existing output should remain unchanged"
-  [ -z "$(find "$repo/.ai/plans" -name '*.tmp' -print)" ] || fail "temporary files should be cleaned up"
+  [ -z "$(find "$repo/.ai/_machine/plans" -name '*.tmp' -print)" ] || fail "temporary files should be cleaned up"
   rm -rf "$tmp_dir"
 }
 
@@ -208,8 +208,8 @@ test_idempotent_generation() {
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-generate-plan.XXXXXX")
   repo="$tmp_dir/repo"
   setup_fixture_repo "$repo"
-  write_valid_order "$repo/.ai/CODEX/ORDERS/T-OS-999.md"
-  output_path="$repo/.ai/plans/T-OS-999.plan.yaml"
+  write_valid_order "$repo/.ai/_machine/codex/ORDERS/T-OS-999.md"
+  output_path="$repo/.ai/_machine/plans/T-OS-999.plan.yaml"
 
   "$GENERATOR" --repo-root "$repo" T-OS-999 >/dev/null
   before_hash=$(shasum -a 256 "$output_path" | awk '{print $1}')

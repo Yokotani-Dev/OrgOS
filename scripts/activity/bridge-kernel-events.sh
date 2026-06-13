@@ -1,6 +1,6 @@
 #!/bin/bash
 # scripts/activity/bridge-kernel-events.sh — import kernel events (orgos-event.v1)
-# from the current repo's .ai/events/events-*.jsonl into the Central Activity Ledger.
+# from the current repo's .ai/_machine/events/events-*.jsonl (legacy .ai/events fallback) into the Central Activity Ledger.
 #
 # - Converts: event_type -> "kernel", payload summary -> title,
 #   origin_event_id -> original event_id, source -> "kernel-bridge"
@@ -206,7 +206,11 @@ def main():
     repo_name = os.path.basename(repo_path.rstrip("/")) or repo_path
     remote = normalize_remote(git(["remote", "get-url", "origin"])) if toplevel else ""
 
-    events_dir = os.path.join(repo_path, ".ai", "events")
+    # Distributed-code dual-path: try the new _machine layout first, then the
+    # legacy path so older clones still bridge correctly.
+    events_dir = os.path.join(repo_path, ".ai", "_machine", "events")
+    if not os.path.isdir(events_dir):
+        events_dir = os.path.join(repo_path, ".ai", "events")
     if not os.path.isdir(events_dir):
         return  # nothing to bridge
 

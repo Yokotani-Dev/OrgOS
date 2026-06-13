@@ -14,7 +14,7 @@
 #       INTELLIGENCE 変更時のみ実行（run-all.sh の -f ガード済み・OrgOS-Dev 専用）
 #   - scripts/goals/update-active-graph.sh:
 #       未実装（coherence-mode.md の参照は設計記述のみ, ISS-028）
-#   - .ai/CODEX/codex-wsl.sh:
+#   - .ai/_machine/codex/codex-wsl.sh:
 #       実体は配布される .ai/TEMPLATES/codex-wsl.sh から導入先で生成する (T-OS-WIN-3)
 #   - .claude/rules/_archive/:
 #       archive 済み rule は配布しない（残存する死参照は ISS-025 / ISS-030 で修正）
@@ -208,11 +208,11 @@ publish:
   - "scripts/capabilities/probe/cli-stripe.sh"
   - "scripts/capabilities/probe/cli-aws.sh"
   - "scripts/capabilities/probe/cli-generic.sh"
-  # Memory lint（memory-lifecycle が要求。security/common.sh は lint が source する）
+  # Memory lint（memory-lifecycle が要求。memory/common.sh は lint が source する）
   - "scripts/memory/check-no-plain-secrets.sh"
   - "scripts/memory/normalize-lint.sh"
   - "scripts/memory/promote-lint.sh"
-  - "scripts/security/common.sh"
+  - "scripts/memory/common.sh"
   # Org tools（kernel-write-path / manager.md / org-tick / CLAUDE.md が要求する正規書込パス）
   - "scripts/org/update-task.py"
   - "scripts/org/append-event.py"
@@ -396,7 +396,7 @@ core:
   - "scripts/memory/check-no-plain-secrets.sh"
   - "scripts/memory/normalize-lint.sh"
   - "scripts/memory/promote-lint.sh"
-  - "scripts/security/common.sh"
+  - "scripts/memory/common.sh"
   - "scripts/org/update-task.py"
   - "scripts/org/append-event.py"
   - "scripts/org/append-decision.py"
@@ -474,7 +474,6 @@ create_dirs:
   - "scripts/platform"
   - "scripts/capabilities/probe"
   - "scripts/memory"
-  - "scripts/security"
   - "scripts/org"
   - "scripts/codex"
   - "scripts/activity"

@@ -2,7 +2,7 @@
 #
 # Purpose:
 # - canonical event shape for Phase 2 Self-Evolution Engine detection
-# - JSONL rows are stored in .ai/EVOLUTION/events.jsonl
+# - JSONL rows are stored in .ai/_machine/evolution/events.jsonl
 
 schema:
   version: "1.0"

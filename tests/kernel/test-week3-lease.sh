@@ -37,7 +37,7 @@ setup_repo_fixture() {
   local tmp_dir repo
   tmp_dir=$(mktemp -d "${TMPDIR:-/tmp}/orgos-week3-lease.XXXXXX")
   repo="$tmp_dir/repo"
-  mkdir -p "$repo/scripts/org" "$repo/.claude/hooks" "$repo/.claude/schemas" "$repo/.ai/leases"
+  mkdir -p "$repo/scripts/org" "$repo/.claude/hooks" "$repo/.claude/schemas" "$repo/.ai/_machine/leases"
   cp "$ACQUIRE" "$repo/scripts/org/acquire-lease.sh"
   cp "$RELEASE" "$repo/scripts/org/release-lease.sh"
   cp "$LIST" "$repo/scripts/org/list-leases.sh"
@@ -85,7 +85,7 @@ test_acquire_lease_basic() {
   repo=$(printf '%s\n' "$fixture" | sed -n '2p')
 
   lease_id=$("$repo/scripts/org/acquire-lease.sh" --task-id T-TEST-1 --actor-role codex --actor-id kernel --allowed-paths "src/auth/")
-  lease_path="$repo/.ai/leases/$lease_id.json"
+  lease_path="$repo/.ai/_machine/leases/$lease_id.json"
 
   assert_exists "$lease_path" "acquire should create lease file"
   python3 - "$lease_path" <<'PY'
@@ -128,7 +128,7 @@ test_release_lease() {
   released_path=$("$repo/scripts/org/release-lease.sh" "$lease_id")
 
   assert_exists "$released_path" "release should move lease into history"
-  [ ! -e "$repo/.ai/leases/$lease_id.json" ] || fail "release should remove active lease"
+  [ ! -e "$repo/.ai/_machine/leases/$lease_id.json" ] || fail "release should remove active lease"
   python3 - "$released_path" <<'PY'
 import json
 import sys
@@ -148,7 +148,7 @@ test_expired_lease_garbage_collected() {
   output_path="$tmp_dir/list.out"
 
   lease_id=$("$repo/scripts/org/acquire-lease.sh" --task-id T-TEST-4 --actor-role codex --actor-id kernel --allowed-paths "src/auth/" --ttl-seconds 1)
-  lease_path="$repo/.ai/leases/$lease_id.json"
+  lease_path="$repo/.ai/_machine/leases/$lease_id.json"
   sleep 2
   "$repo/scripts/org/list-leases.sh" --include-expired >"$output_path"
 

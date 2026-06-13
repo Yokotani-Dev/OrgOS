@@ -77,7 +77,7 @@ if [[ ! "$task_id" =~ ^T-[A-Z0-9]+-[A-Z0-9-]+$ ]]; then
   exit 2
 fi
 
-queue_root="$REPO_ROOT/.ai/queue/integration"
+queue_root="$REPO_ROOT/.ai/_machine/queue/integration"
 pending_dir="$queue_root/pending"
 processing_dir="$queue_root/processing"
 failed_dir="$queue_root/failed"
@@ -169,7 +169,7 @@ PY
 }
 
 validate_plan_contract() {
-  local plan_path="$REPO_ROOT/.ai/plans/$task_id.plan.yaml"
+  local plan_path="$REPO_ROOT/.ai/_machine/plans/$task_id.plan.yaml"
 
   if [ ! -f "$PLAN_SCHEMA" ] && [ ! -f "$plan_path" ]; then
     return 0
@@ -377,7 +377,7 @@ with queue_path.open("r", encoding="utf-8") as handle:
 dependencies = data.get("dependencies") or {}
 tasks = dependencies.get("tasks") or []
 queue_items = dependencies.get("queue_items") or []
-done_root = root / ".ai" / "queue" / "integration" / "done"
+done_root = root / ".ai" / "_machine" / "queue" / "integration" / "done"
 
 def task_done(task_id: str) -> bool:
     return any(done_root.glob(f"*/{task_id}.*.json"))

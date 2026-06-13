@@ -4,7 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="${REPO_ROOT:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
 KNOWN_PATH="${KNOWN_PATH:-$REPO_ROOT/.ai/CAPABILITIES.example.yaml}"
-OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/.ai/EVOLUTION/proposals}"
+OUTPUT_DIR="${OUTPUT_DIR:-$REPO_ROOT/.ai/_machine/evolution/proposals}"
 SOURCE_FIXTURE=""
 STDOUT=0
 DRY_RUN=0
@@ -20,7 +20,7 @@ No provider API calls are made.
 Options:
   --known <path>           Known capability YAML. Default: .ai/CAPABILITIES.example.yaml
   --source-fixture <path>  YAML/JSON source fixture to use instead of the built-in stub.
-  --output-dir <path>      Proposal output directory. Default: .ai/EVOLUTION/proposals
+  --output-dir <path>      Proposal output directory. Default: .ai/_machine/evolution/proposals
   --stdout                Print generated proposals to stdout.
   --dry-run               Do not write proposal files.
   -h, --help              Show this help.

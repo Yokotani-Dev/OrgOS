@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
-LEASE_DIR="$REPO_ROOT/.ai/leases"
+LEASE_DIR="$REPO_ROOT/.ai/_machine/leases"
 
 task_filter=""
 actor_filter=""

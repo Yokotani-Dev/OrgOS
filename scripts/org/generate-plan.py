@@ -143,13 +143,13 @@ def write_plan_atomic(plan: dict[str, Any], output_path: Path, schema_path: Path
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Generate .ai/plans/<TASK_ID>.plan.yaml from a Codex Work Order.",
+        description="Generate .ai/_machine/plans/<TASK_ID>.plan.yaml from a Codex Work Order.",
     )
     parser.add_argument("task_id", help="Task id such as T-OS-455")
     parser.add_argument(
         "--repo-root",
         default=".",
-        help="Repository root containing .ai/CODEX/ORDERS and .claude/schemas",
+        help="Repository root containing .ai/_machine/codex/ORDERS and .claude/schemas",
     )
     return parser.parse_args(argv)
 
@@ -158,8 +158,8 @@ def main(argv: list[str]) -> int:
     args = parse_args(argv)
     repo_root = Path(args.repo_root).resolve()
     task_id = args.task_id
-    order_path = repo_root / ".ai" / "CODEX" / "ORDERS" / f"{task_id}.md"
-    output_path = repo_root / ".ai" / "plans" / f"{task_id}.plan.yaml"
+    order_path = repo_root / ".ai" / "_machine" / "codex" / "ORDERS" / f"{task_id}.md"
+    output_path = repo_root / ".ai" / "_machine" / "plans" / f"{task_id}.plan.yaml"
     schema_path = repo_root / ".claude" / "schemas" / "plan-contract.v1.json"
 
     try:

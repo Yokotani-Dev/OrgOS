@@ -79,7 +79,7 @@ _Source: セッション会話_
 
 ### Step 4: 記録
 
-1. `.ai/sessions/{今日}.md` の Key Learnings に追記
+1. `.ai/_machine/sessions/{今日}.md` の Key Learnings に追記
 2. `.ai/DECISIONS.md` に記録（重要なパターンの場合）
 
 ---
@@ -106,7 +106,7 @@ _Source: セッション会話_
 | タイミング | ユーザーが明示的に実行 | セッション終了時 |
 | 精度 | 高（ユーザーが確認） | 中（自動抽出） |
 | 対象 | 重要なパターン | 全般的な学び |
-| 保存先 | .claude/skills/learned/ | .ai/sessions/ |
+| 保存先 | .claude/skills/learned/ | .ai/_machine/sessions/ |
 
 **推奨**: 重要なパターンは `/org-learn` で明示的に保存。
 日常的な学びは Stop フックに任せる。
