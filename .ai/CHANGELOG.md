@@ -4,6 +4,21 @@
 
 ---
 
+## v2.0.1 (2026-06-13) — Post-release fixes
+
+v2.0.0 後に残っていた品質課題を解消。利用者影響なし（内部品質・自己計測の改善）。
+
+### 🔧 修正
+- **integrator フロー欠陥 4 件 (T-OS-492)**: main 統合モード(`--allow-main`、`allow_main_mutation=true` 時のみ・偽装フラグ拒否) / `collect-artifacts.sh` の再帰スナップショット爆発(1.5GB/57k files)を抑制 / diff 5000 行 cap を設定可能化 / plan-contract 検証 diff をタスク宣言パスにスコープ
+- **manager-quality eval 17/20 → 20/20 (T-OS-493)**: `CAPABILITIES.yaml` の common_operations 補完(MQ-007) + handoff packet fixture 完備(MQ-019/020)。`decision_trace_completeness` 9% → **100%**
+- **RC-4 SQLite shadow 実体化 (T-OS-494)**: `.ai/orgos.sqlite` + generated views(TASKS/DASHBOARD/GLOSSARY.generated)を生成。SessionStart の checksum 警告を解消
+- **互換層残リスク 2 件 (T-OS-498)**: 同月 events 衝突を `_from_legacy` ではなくマージし glob 可視性を維持 / `session_start_context.py` に legacy sessions フォールバック追加
+
+### ✅ 検証
+- 全 kernel test green (SUITE_EXIT=0) / `evals/run-all.sh` pass=8 fail=0 warn=1(既知の duplicate-content)
+
+---
+
 ## v2.0.0 (2026-06-13) — Observability + Structural Clarity
 
 ### 🎯 Headline

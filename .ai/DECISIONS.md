@@ -2093,3 +2093,7 @@ IntegratorOnlyCommit を time-boxed downgrade (warn)→コミット→enforce復
 
 ## Authority
 allow_os_mutation 配下の OS進化。Owner が push/publish タイミングを制御するため NO PUSH。
+
+## PLAN-UPDATE-031: OrgOS v2.0.1 公開 — post-release 4修正をpublic配布 (Owner承認 2026-06-13) (2026-06-13)
+
+v2.0.0後の残タスク(T-OS-492/493/494/498)修正をv2.0.1(patch)として公開。origin=public=Yokotani-Dev/OrgOS(案A)。プリフライト全通過(互換層/機密/closure)。Owner: 全修正後にpublish指示。

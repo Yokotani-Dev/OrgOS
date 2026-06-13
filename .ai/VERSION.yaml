@@ -1,10 +1,13 @@
 # OrgOS WebConsole Version
 # 人間向けの変更履歴は CHANGELOG.md を参照
 
-current: "2.0.0"
+current: "2.0.1"
 released_at: "2026-06-13"
 
 history:
+  - version: "2.0.1"
+    date: "2026-06-13"
+    description: "v2.0.1 — Post-release fixes. integrator フロー欠陥4件修正(T-OS-492: main統合モード --allow-main / collect-artifacts 再帰1.5GB抑制 / diff cap 設定化 / plan-contract diff をタスクパスにスコープ)。manager-quality eval 17/20→20/20(T-OS-493: CAPABILITIES common_operations 補完 + handoff fixture 完備、decision_trace_completeness 100%)。RC-4 SQLite shadow + generated views 実体化(T-OS-494: .ai/orgos.sqlite + TASKS/DASHBOARD/GLOSSARY.generated、SessionStart checksum 警告解消)。互換層残リスク2件修正(T-OS-498: 同月events衝突をマージしglob可視性維持 / session_start_context に legacy fallback)。全kernel test green、evals pass=8。"
   - version: "2.0.0"
     date: "2026-06-13"
     description: "v2.0 — Observability + Structural Clarity. Central Activity Ledger (cross-repo ~/.orgos/activity: log-event/journal/bridge CLIs + stdio MCP server orgos-journal + orgos-dashboard /journal page) で全リポジトリの活動を1ジャーナルに集約。構造監査(31確定課題/5根本原因)に基づく修正: kernel正規書込パス文書化(kernel-write-path.md + append-decision.py)で3週間のコミット凍結(ISS-002)を解消、eval信号回復(schema enum統一 + org-evolve baseline比較), memory汚染除去(fixture facts retired + report.py --profile-path分離), manifest依存閉包テスト, SessionStart checksum hook配線。**BREAKING**: .ai/ 二層化 — 人間用台帳を.ai/直下に、機械実行時データ(events/leases/queue/sessions/codex/evolution/artifacts等19dir)を.ai/_machine/へ。scripts/ 統合(21→13 + _archive)。ルート整理(requirements.md→docs/archive)。後方互換層(T-OS-497): 冪等migrate-layout.sh(SessionStart+org-import配線) + dual-pathリゾルバ + org-publishプリフライトgateにより既存リポジトリは状態分裂なく自動移行。全kernel test green。"
