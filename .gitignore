@@ -48,6 +48,8 @@
 .ai/ARTIFACTS/T-OS-*/
 .ai/artifacts/T-OS-*/
 .ai/_machine/artifacts/T-OS-*/
-# Events ledger runtime lock (hash-chained JSONL files themselves stay tracked)
+# Events ledger runtime lock (hash-chained monthly JSONL files themselves stay tracked)
 .ai/events/.events.lock
 .ai/_machine/events/.events.lock
+# Transient flat lease-event ledger (acquire/release-lease.sh, orgos.event.v1) — runtime, not tracked
+.ai/EVENTS.jsonl
