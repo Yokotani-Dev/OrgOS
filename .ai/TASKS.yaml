@@ -2327,14 +2327,16 @@ tasks:
       Actions起動。'
   - id: T-OS-485
     title: '[Owner依頼] OS内フォルダ構成の整理 — 人間が開く場所と機械用を明確分離'
-    status: queued
+    status: done
     priority: P1
     owner_role: manager
     autonomy_level: ask_before_execute
     risk_level: high
     reversibility: reversible
     notes: 'Owner依頼(2026-06-10):「人間が開くフォルダとそうじゃないものを明確に分けてほしい」。kernel/hooks/manifest
-      のパス参照に波及する構造変更のため、監査結果(T-OS-480)を踏まえて移行マップを設計→Owner承認→段階実装。deps: T-OS-480, T-OS-484'
+      のパス参照に波及する構造変更のため、監査結果(T-OS-480)を踏まえて移行マップを設計→Owner承認→段階実装。deps: T-OS-480, T-OS-484
+
+      superseded by T-OS-495 (2026-06-13): フォルダ全域明瞭化(.ai二層+ルート+scripts統合)として完遂済み。本タスクは重複のためクローズ。'
   - id: T-OS-486
     title: '[Owner依頼] orgos-dashboard に Journal 画面追加（案A・承認済）'
     status: done
