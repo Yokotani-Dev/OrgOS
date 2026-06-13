@@ -9,9 +9,36 @@ CONTROL_FILE="$PROJECT_ROOT/.ai/CONTROL.yaml"
 HANDOFF_FILE="$PROJECT_ROOT/.ai/HANDOFF.md"
 DEFAULT_CHECKSUM_VERIFIER="$PROJECT_ROOT/scripts/org/check-generated-checksums.py"
 CHECKSUM_VERIFIER="${ORGOS_GENERATED_CHECKSUM_VERIFIER:-$DEFAULT_CHECKSUM_VERIFIER}"
+SHADOW_DB="$PROJECT_ROOT/.ai/orgos.sqlite"
+REBUILD_SHADOW="$PROJECT_ROOT/scripts/org/rebuild-shadow.py"
+
+# RC-4 / T-OS-494: the SQLite shadow + generated views are rebuildable
+# projections (gitignored). Rebuild-or-refresh them before verifying so a
+# fresh clone (or stale shadow) reconciles to TASKS.yaml automatically instead
+# of warning "orgos.sqlite not found". Best-effort and non-blocking: a rebuild
+# failure must never block session start.
+rebuild_shadow_views() {
+  [ -f "$REBUILD_SHADOW" ] && command -v python3 >/dev/null 2>&1 || return 0
+  set +e
+  rebuild_output=$(cd "$PROJECT_ROOT" && python3 "$REBUILD_SHADOW" 2>&1)
+  rebuild_status=$?
+  set -e
+  if [ "$rebuild_status" -ne 0 ]; then
+    echo ""
+    echo "⚠️ Owner note: SQLite shadow rebuild skipped (rebuild-shadow.py exit $rebuild_status)"
+    printf '%s\n' "$rebuild_output" | sed 's/^/  /'
+    echo "Session continues (warn only)."
+  fi
+  return 0
+}
 
 run_generated_checksum_check() {
   local output status verifier_label verifier_mode
+
+  # Reconcile the rebuildable shadow + views to TASKS.yaml first so the
+  # checksum baseline below matches the freshly generated views.
+  rebuild_shadow_views
+
   verifier_label="$CHECKSUM_VERIFIER"
 
   if [ -x "$CHECKSUM_VERIFIER" ]; then

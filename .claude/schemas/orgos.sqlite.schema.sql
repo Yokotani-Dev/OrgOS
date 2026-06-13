@@ -42,10 +42,25 @@ CREATE TABLE IF NOT EXISTS tasks (
   project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
   title TEXT NOT NULL,
   description TEXT NOT NULL DEFAULT '',
-  status TEXT NOT NULL DEFAULT 'todo'
-    CHECK (status IN ('todo', 'ready', 'in_progress', 'review', 'blocked', 'done', 'cancelled', 'superseded')),
+  -- Status vocabulary aligned with the live ledger SSOT
+  -- (.claude/evals/check-schema.sh VALID_STATUSES) so the SQLite shadow
+  -- projects TASKS.yaml faithfully and generate-dashboard.py can filter
+  -- queued/running/in_progress. todo/ready/in_progress retained for
+  -- kernel-native lifecycle compatibility.
+  status TEXT NOT NULL DEFAULT 'queued'
+    CHECK (status IN (
+      'todo', 'ready', 'queued', 'running', 'in_progress', 'review',
+      'pending_review', 'blocked', 'done', 'cancelled', 'superseded', 'archived'
+    )),
+  -- Role accepts both kernel-native roles and the live ledger owner_role
+  -- vocabulary (codex-implementer / implementer-agent / org-*) so the loader
+  -- does not have to rewrite owner_role into the projection.
   role TEXT NOT NULL DEFAULT 'implementer'
-    CHECK (role IN ('manager', 'planner', 'architect', 'implementer', 'reviewer', 'integrator', 'owner')),
+    CHECK (role IN (
+      'manager', 'planner', 'architect', 'implementer', 'reviewer',
+      'integrator', 'owner', 'codex-implementer', 'implementer-agent',
+      'org-architect', 'org-planner', 'org-reviewer', 'system'
+    )),
   priority TEXT NOT NULL DEFAULT 'P2'
     CHECK (priority IN ('P0', 'P1', 'P2', 'P3')),
   assigned_worker_id TEXT REFERENCES workers(id) ON DELETE SET NULL,
@@ -154,13 +169,17 @@ CREATE TABLE IF NOT EXISTS events (
   occurred_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now'))
 );
 
+-- Baseline checksums for generated view files (.ai/*.generated.*).
+-- Columns match scripts/org/check-generated-checksums.py and
+-- tests/kernel/test-checksum-verify.sh: the verifier does
+-- `SELECT path, sha256 FROM view_checksums` and treats `path` as the
+-- repo-relative generated-view path. `path` is the SSOT key, not `view_name`.
 CREATE TABLE IF NOT EXISTS view_checksums (
-  view_name TEXT PRIMARY KEY,
-  checksum TEXT NOT NULL,
-  source_table TEXT NOT NULL,
-  row_count INTEGER NOT NULL DEFAULT 0
-    CHECK (row_count >= 0),
-  calculated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
+  path TEXT PRIMARY KEY,
+  sha256 TEXT NOT NULL,
+  source_event_seq INTEGER NOT NULL DEFAULT 0
+    CHECK (source_event_seq >= 0),
+  generated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   metadata_json TEXT NOT NULL DEFAULT '{}'
     CHECK (json_valid(metadata_json))
 );

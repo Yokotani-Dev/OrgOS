@@ -87,9 +87,22 @@ def task_columns(connection: sqlite3.Connection) -> list[str]:
     return columns
 
 
+def event_columns(connection: sqlite3.Connection) -> list[str]:
+    rows = connection.execute("PRAGMA table_info(events)").fetchall()
+    return [str(row["name"]) for row in rows]
+
+
 def source_event_seq(connection: sqlite3.Connection, columns: list[str]) -> int:
     if table_exists(connection, "events"):
-        row = connection.execute("SELECT COALESCE(MAX(seq), 0) AS seq FROM events").fetchone()
+        event_cols = event_columns(connection)
+        # Prefer an explicit monotonic sequence column when present (kernel
+        # fixture schema uses `seq`). The live kernel schema
+        # (.claude/schemas/orgos.sqlite.schema.sql) has no `seq` column, so
+        # fall back to a count of events as the projection's source seq.
+        if "seq" in event_cols:
+            row = connection.execute("SELECT COALESCE(MAX(seq), 0) AS seq FROM events").fetchone()
+            return int(row["seq"] or 0)
+        row = connection.execute("SELECT COUNT(*) AS seq FROM events").fetchone()
         return int(row["seq"] or 0)
 
     if "source_event_seq" in columns:
