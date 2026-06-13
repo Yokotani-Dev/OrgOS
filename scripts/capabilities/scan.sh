@@ -247,7 +247,27 @@ COMMON_OPS: dict[str, list[dict[str, Any]]] = {
             "risk_level": "low",
             "supports_dry_run": True,
             "owner_approval_required_for": [],
-        }
+        },
+        {
+            "name": "env_ls",
+            "description": "List Vercel environment variables for an environment via CLI, instead of asking the Owner to read the dashboard.",
+            "command_template": "vercel env ls ${environment}",
+            "required_inputs": ["environment"],
+            "input_resolution_order": list(DEFAULT_INPUT_RESOLUTION_ORDER),
+            "risk_level": "low",
+            "supports_dry_run": True,
+            "owner_approval_required_for": [],
+        },
+        {
+            "name": "env_pull",
+            "description": "Pull Vercel environment variables into a local file via CLI, instead of asking the Owner to copy them from the dashboard.",
+            "command_template": "vercel env pull ${output_file} --environment ${environment}",
+            "required_inputs": ["environment"],
+            "input_resolution_order": list(DEFAULT_INPUT_RESOLUTION_ORDER),
+            "risk_level": "low",
+            "supports_dry_run": True,
+            "owner_approval_required_for": [],
+        },
     ],
     "cli_stripe": [
         {

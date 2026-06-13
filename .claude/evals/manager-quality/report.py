@@ -434,6 +434,13 @@ def repeated_question_judge(case: dict[str, Any], context: RuntimeContext) -> Ca
 
 
 def iter_handoff_packet_sources(repo_root: Path) -> list[Path]:
+    # Canonical handoff packets are committed result deliverables (.md / .txt).
+    # `.log` files under codex RESULTS/LOGS are gitignored local debug transcripts
+    # (see .ai/_machine/codex/.gitignore: "Debug logs are local-only; result
+    # handoff .md/.txt files must pass secret scan"). Those transcripts embed the
+    # handoff-packet *schema text*, fixture examples and diff fragments, none of
+    # which are real worker deliverables; auditing them mis-counts the metric.
+    # Restrict the audit to the canonical .md / .txt handoff result files only.
     candidates = []
     for relative in (
         Path(".ai/_machine/codex/RESULTS"),
@@ -444,7 +451,6 @@ def iter_handoff_packet_sources(repo_root: Path) -> list[Path]:
             continue
         candidates.extend(sorted(base.glob("*.md")))
         candidates.extend(sorted(base.glob("*.txt")))
-        candidates.extend(sorted(base.glob("*.log")))
     return candidates
 
 
