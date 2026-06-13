@@ -14,7 +14,15 @@ Usage: request-integration.sh \
   [--diff-patch PATH] \
   [--handoff PATH] \
   [--priority 50] \
-  [--verifier-status passed|skipped]
+  [--verifier-status passed|skipped] \
+  [--max-diff-lines N] \
+  [--allow-main]
+
+Notes:
+  --max-diff-lines defaults to 20000 (override: env ORGOS_MAX_DIFF_LINES).
+  --allow-main permits a main-targeted integration (branch == main) only when
+    .ai/CONTROL.yaml sets allow_main_mutation: true. ProtectedBranchNoTouch
+    semantics are preserved for every other protected branch (develop, etc.).
 EOF
 }
 
@@ -33,6 +41,8 @@ diff_patch=""
 handoff=""
 priority="50"
 verifier_status="passed"
+max_diff_lines="${ORGOS_MAX_DIFF_LINES:-20000}"
+allow_main="0"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -47,6 +57,8 @@ while [ "$#" -gt 0 ]; do
     --handoff) handoff=${2:-}; shift 2 ;;
     --priority) priority=${2:-}; shift 2 ;;
     --verifier-status) verifier_status=${2:-}; shift 2 ;;
+    --max-diff-lines) max_diff_lines=${2:-}; shift 2 ;;
+    --allow-main) allow_main="1"; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown argument: $1" >&2; usage; exit 2 ;;
   esac
@@ -62,6 +74,46 @@ require() {
   fi
 }
 
+# Returns 0 (true) when .ai/CONTROL.yaml grants allow_main_mutation: true.
+control_allows_main_mutation() {
+  local repo_root="$1"
+  python3 - "$repo_root" <<'PY'
+import sys
+from pathlib import Path
+
+control = Path(sys.argv[1]) / ".ai" / "CONTROL.yaml"
+allowed = False
+try:
+    text = control.read_text(encoding="utf-8")
+except OSError:
+    raise SystemExit(1)
+
+value = None
+try:
+    import yaml  # type: ignore
+
+    data = yaml.safe_load(text) or {}
+    if isinstance(data, dict):
+        value = data.get("allow_main_mutation")
+except Exception:
+    value = None
+
+if value is None:
+    # Fallback: top-level "allow_main_mutation: <bool>" line scan (no yaml dependency).
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if stripped.replace(" ", "").lower().startswith("allow_main_mutation:"):
+            raw = stripped.split(":", 1)[1].strip().strip('"').strip("'").lower()
+            value = raw in {"true", "yes", "1", "on"}
+            break
+
+allowed = value is True
+raise SystemExit(0 if allowed else 1)
+PY
+}
+
 require "$task_id" "--task-id"
 require "$worktree_path" "--worktree-path"
 require "$branch" "--branch"
@@ -74,12 +126,27 @@ if [[ ! "$task_id" =~ ^T-[A-Z0-9]+-[A-Z0-9-]+$ ]]; then
   exit 2
 fi
 
-if [[ "$branch" == "main" || "$branch" == "develop" ]]; then
+# Main integration mode: when --allow-main is passed AND CONTROL.yaml grants
+# allow_main_mutation, a main-targeted integration (branch == main) is sanctioned
+# without the time-boxed IntegratorOnlyCommit downgrade (precedent OS-MUTATION-001..005).
+# ProtectedBranchNoTouch semantics are preserved for every OTHER protected branch.
+main_integration="0"
+if [[ "$branch" == "main" ]]; then
+  if [ "$allow_main" != "1" ]; then
+    echo "protected branch is not a task branch: $branch (pass --allow-main for a sanctioned main integration)" >&2
+    exit 2
+  fi
+  if ! control_allows_main_mutation "$REPO_ROOT"; then
+    echo "main integration denied: CONTROL.yaml allow_main_mutation must be true" >&2
+    exit 2
+  fi
+  main_integration="1"
+elif [[ "$branch" == "develop" ]]; then
   echo "protected branch is not a task branch: $branch" >&2
   exit 2
 fi
 
-if [[ ! "$branch" =~ ^task/${task_id}-.+ ]]; then
+if [ "$main_integration" != "1" ] && [[ ! "$branch" =~ ^task/${task_id}-.+ ]]; then
   echo "branch must match task/<task_id>-...: $branch" >&2
   exit 2
 fi
@@ -91,6 +158,11 @@ fi
 
 if ! [[ "$priority" =~ ^[0-9]+$ ]] || [ "$priority" -gt 100 ]; then
   echo "priority must be an integer from 0 to 100" >&2
+  exit 2
+fi
+
+if ! [[ "$max_diff_lines" =~ ^[0-9]+$ ]] || [ "$max_diff_lines" -lt 1 ]; then
+  echo "max diff lines must be a positive integer (got: $max_diff_lines); set --max-diff-lines or ORGOS_MAX_DIFF_LINES" >&2
   exit 2
 fi
 
@@ -137,7 +209,8 @@ item_id="IQ-$timestamp-$task_id-$random_hex"
 
 python3 - "$REPO_ROOT" "$task_id" "$item_id" "$created_at" "$worktree_path" "$branch" \
   "$base_branch" "$artifact_manifest" "$commit_message" "$diff_patch" "$handoff" \
-  "$allowed_paths_arg_set" "$allowed_paths_arg" "$priority" "$verifier_status" >"$tmp_path" <<'PY'
+  "$allowed_paths_arg_set" "$allowed_paths_arg" "$priority" "$verifier_status" \
+  "$max_diff_lines" "$main_integration" >"$tmp_path" <<'PY'
 import json
 import os
 import subprocess
@@ -161,7 +234,9 @@ from pathlib import Path
     allowed_paths_arg,
     priority,
     verifier_status,
-) = sys.argv[1:16]
+    max_diff_lines,
+    main_integration,
+) = sys.argv[1:18]
 
 root = Path(repo_root)
 worktree = Path(worktree_path)
@@ -256,7 +331,7 @@ item = {
     "scope": {
         "allowed_paths": allowed_paths,
         "prohibited_paths": [],
-        "diff_budget": {"max_files": max(10, len(allowed_paths) * 5), "max_lines": 5000},
+        "diff_budget": {"max_files": max(10, len(allowed_paths) * 5), "max_lines": int(max_diff_lines)},
     },
     "artifacts": {
         "artifact_manifest": repo_relative(manifest),
@@ -277,6 +352,7 @@ item = {
         "author_name": "OrgOS Integrator",
         "author_email": "orgos-integrator@local",
         "trailers": {"OrgOS-Task": task_id},
+        "main_integration": main_integration == "1",
     },
     "attempts": {"count": 0, "max": 3, "last_attempt_at": None, "last_error": None},
     "retention": {"keep_until": keep_until},

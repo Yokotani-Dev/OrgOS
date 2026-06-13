@@ -13,6 +13,43 @@ REPO_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 VERIFIER="$REPO_ROOT/scripts/org/verify-artifact-manifest.py"
 PLAN_SCHEMA="$REPO_ROOT/.claude/schemas/plan-contract.v1.json"
 
+# Returns 0 (true) when .ai/CONTROL.yaml grants allow_main_mutation: true.
+control_allows_main_mutation() {
+  local repo_root="$1"
+  python3 - "$repo_root" <<'PY'
+import sys
+from pathlib import Path
+
+control = Path(sys.argv[1]) / ".ai" / "CONTROL.yaml"
+try:
+    text = control.read_text(encoding="utf-8")
+except OSError:
+    raise SystemExit(1)
+
+value = None
+try:
+    import yaml  # type: ignore
+
+    data = yaml.safe_load(text) or {}
+    if isinstance(data, dict):
+        value = data.get("allow_main_mutation")
+except Exception:
+    value = None
+
+if value is None:
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if stripped.replace(" ", "").lower().startswith("allow_main_mutation:"):
+            raw = stripped.split(":", 1)[1].strip().strip('"').strip("'").lower()
+            value = raw in {"true", "yes", "1", "on"}
+            break
+
+raise SystemExit(0 if value is True else 1)
+PY
+}
+
 task_id=""
 queue_item=""
 
@@ -168,6 +205,10 @@ PY
   exit 1
 }
 
+# Validate the plan contract against the SELECTED change set (the scope-intersected
+# files this integrator will actually commit), not the whole worktree. A shared dirty
+# tree may carry unrelated changes outside this task's paths; partitioned integration
+# must not be blocked by them. The selected paths are passed as positional args.
 validate_plan_contract() {
   local plan_path="$REPO_ROOT/.ai/_machine/plans/$task_id.plan.yaml"
 
@@ -175,10 +216,9 @@ validate_plan_contract() {
     return 0
   fi
 
-  python3 - "$worktree_path" "$task_id" "$plan_path" "$PLAN_SCHEMA" <<'PY'
+  python3 - "$task_id" "$plan_path" "$PLAN_SCHEMA" "$@" <<'PY'
 import fnmatch
 import json
-import subprocess
 import sys
 from pathlib import Path
 
@@ -189,10 +229,10 @@ except Exception as exc:
     print(f"plan contract validator dependency missing: {exc}")
     raise SystemExit(1)
 
-worktree = Path(sys.argv[1])
-task_id = sys.argv[2]
-plan_path = Path(sys.argv[3])
-schema_path = Path(sys.argv[4])
+task_id = sys.argv[1]
+plan_path = Path(sys.argv[2])
+schema_path = Path(sys.argv[3])
+selected = [path for path in sys.argv[4:] if path]
 
 if not plan_path.is_file():
     print(f"plan contract missing: {plan_path}")
@@ -242,11 +282,9 @@ def matches(path: str, pattern: str) -> bool:
         return True
     return fnmatch.fnmatch(path, pattern)
 
-output = subprocess.check_output(
-    ["git", "-C", str(worktree), "diff", "--name-only", "HEAD"],
-    text=True,
-)
-changed = sorted(path for path in output.splitlines() if path)
+# Only the staged/selected change set is validated against the plan — the whole
+# worktree is intentionally NOT diffed so unrelated dirty files cannot block this task.
+changed = sorted(set(selected))
 outside = [path for path in changed if not any(matches(path, pattern) for pattern in allowed)]
 if outside:
     print("changed file outside plan allowed_paths: " + ", ".join(outside))
@@ -311,6 +349,7 @@ print(str(commit.get("author_name", "OrgOS Integrator")))
 print(str(commit.get("author_email", "orgos-integrator@local")))
 print(str((scope.get("diff_budget") or {}).get("max_files", 0)))
 print(str((scope.get("diff_budget") or {}).get("max_lines", 0)))
+print("true" if commit.get("main_integration") is True else "false")
 PY
 
 item_status=$(sed -n '1p' "$item_values_path")
@@ -332,6 +371,7 @@ author_name=$(sed -n '11p' "$item_values_path")
 author_email=$(sed -n '12p' "$item_values_path")
 max_files=$(sed -n '13p' "$item_values_path")
 max_lines=$(sed -n '14p' "$item_values_path")
+main_integration=$(sed -n '15p' "$item_values_path")
 rm -f "$item_values_path"
 
 [ -d "$worktree_path" ] || fail_processing "worktree path missing: $worktree_path"
@@ -342,11 +382,24 @@ if ! "$VERIFIER" "$artifact_manifest" >/dev/null 2>&1; then
   fail_processing "artifact manifest failed verification: $artifact_manifest"
 fi
 
-if [[ "$branch" == "main" || "$branch" == "develop" || "$base_branch" == "develop" ]]; then
+# develop is never a valid integration target (worktree branch or base), regardless
+# of mode. ProtectedBranchNoTouch is preserved for every protected branch but main.
+if [[ "$branch" == "develop" || "$base_branch" == "develop" ]]; then
   fail_processing "protected branch is not allowed for integration worktree: $branch"
 fi
 
-if [[ ! "$branch" =~ ^task/${task_id}-.+ ]]; then
+# Sanctioned main integration: branch == main is allowed ONLY when the queue item
+# was created with --allow-main AND CONTROL.yaml still grants allow_main_mutation.
+if [[ "$branch" == "main" ]]; then
+  if [ "$main_integration" != "true" ]; then
+    fail_processing "protected branch is not allowed for integration worktree: $branch"
+  fi
+  if ! control_allows_main_mutation "$REPO_ROOT"; then
+    fail_processing "main integration denied: CONTROL.yaml allow_main_mutation must be true"
+  fi
+fi
+
+if [ "$main_integration" != "true" ] && [[ ! "$branch" =~ ^task/${task_id}-.+ ]]; then
   fail_processing "branch must match task/$task_id-...: $branch"
 fi
 
@@ -531,7 +584,9 @@ if [ "$max_lines" -gt 0 ] && [ "$diff_lines" -gt "$max_lines" ]; then
   fail_processing "diff budget exceeded: $diff_lines lines > $max_lines"
 fi
 
-if ! plan_error=$(validate_plan_contract 2>&1); then
+# Pass only the selected change set so the plan contract is validated against what
+# will actually be committed, not the entire (possibly shared/dirty) worktree.
+if ! plan_error=$(validate_plan_contract "${changed_files[@]}" 2>&1); then
   fail_processing "${plan_error:-plan contract validation failed}"
 fi
 

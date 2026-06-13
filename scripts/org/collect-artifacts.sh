@@ -124,6 +124,25 @@ MAX_TOTAL_BYTES = 200 * 1024 * 1024
 EXCLUDED_PARTS = {".git", "node_modules", ".cache", ".next", "dist", "build", "coverage"}
 GENERATED_EXTS = {".md", ".markdown", ".json", ".yaml", ".yml", ".txt"}
 
+# Path prefixes (worktree-relative, POSIX, normalized to lowercase) that must NEVER be
+# snapshotted. The artifact store itself is the primary recursion source: each run would
+# otherwise capture every prior run dir into files/untracked|generated/, producing
+# snapshots-of-snapshots (observed: 57k files / 1.5GB). These exclusions are independent
+# of .gitignore so collection stays bounded even in clones missing the ignore rules.
+EXCLUDED_PREFIXES = (
+    ".ai/_machine/artifacts/",   # kernel v2 artifact store (this script's own output)
+    ".ai/artifacts/",            # legacy lowercase artifact store
+    ".ai/artifacts",             # legacy lowercase (no trailing component)
+    ".ai/_machine/queue/",       # integration queue runtime state
+    ".ai/_machine/leases/",      # lease runtime state
+    ".ai/_machine/events/",      # hash-chained event ledger runtime
+    ".ai/_machine/metrics/",     # metrics runtime
+    ".ai/_machine/codex/logs/",  # codex run logs
+    ".ai/_machine/codex/results/",
+    ".ai/events/",               # legacy event ledger runtime
+)
+# Uppercase legacy variant handled case-insensitively below (.ai/ARTIFACTS/...).
+
 worktree_path = Path(WORKTREE_PATH).resolve()
 artifact_dir = Path(ARTIFACT_DIR)
 if not artifact_dir.is_absolute():
@@ -275,7 +294,16 @@ def write_command_artifact(args: list[str], dst_rel: str, artifact_id: str, kind
 
 def excluded(rel: str) -> bool:
     parts = Path(rel).parts
-    return any(part in EXCLUDED_PARTS for part in parts)
+    if any(part in EXCLUDED_PARTS for part in parts):
+        return True
+    posix = Path(rel).as_posix()
+    lowered = posix.lower()
+    if any(lowered.startswith(prefix) for prefix in EXCLUDED_PREFIXES):
+        return True
+    # Uppercase/any-case legacy artifact store: .ai/ARTIFACTS/...
+    if lowered.startswith(".ai/artifacts/"):
+        return True
+    return False
 
 
 def copy_untracked() -> None:

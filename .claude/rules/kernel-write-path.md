@@ -96,6 +96,24 @@ bash scripts/org/release-lease.sh "$LEASE_ID" --reason done
 
 lease が必要になるのは: (a) 非保護ファイルへの Edit/Write（`LeaseBeforeWrite`、現在 warn）、(b) integrator の allowed_paths 差分検査（lease 外の変更は integration 失敗）。実行例の全文は `docs/kernel-v2/dogfood-checklist.md` を参照。
 
+### request-integration.sh のオプション（T-OS-492）
+
+| オプション | 既定 | 用途 |
+|---|---|---|
+| `--max-diff-lines N`（env `ORGOS_MAX_DIFF_LINES`） | `20000` | diff 行数 cap。大規模統合で 5000 行に阻まれた問題を解消。guard は削除せず設定可能化（上限超過は依然 reject）。 |
+| `--allow-main` | off | **main 直統合モード**。worktree branch が `main` のとき、`CONTROL.yaml` の `allow_main_mutation: true` を条件に、時限的 `IntegratorOnlyCommit` 降格（OS-MUTATION-001..005）なしで main へ commit できる。`integrator-commit.sh` 側でも `allow_main_mutation` を再検証する。`develop` など他の保護ブランチは `ProtectedBranchNoTouch` のまま no-touch。 |
+
+main 統合の手順は通常フローと同じで、`--branch main --base-branch main --allow-main` を付ける:
+
+```bash
+bash scripts/org/request-integration.sh --task-id T-OS-XXX \
+  --worktree-path "$(pwd)" --branch main --base-branch main --allow-main \
+  --artifact-manifest "..." --commit-message "feat: ..." --allowed-paths "scripts/,docs/"
+bash scripts/org/integrator-commit.sh --task-id T-OS-XXX
+```
+
+plan-contract（`.ai/_machine/plans/<task>.plan.yaml`）の差分検査は、共有作業ツリーでも分割統合できるよう、worktree 全体ではなく **そのタスクが宣言した（commit 対象の）パスのみ** を対象にする。
+
 ## 禁止される直接編集とその代替
 
 | ❌ 禁止される操作 | ✅ 正規の代替 |

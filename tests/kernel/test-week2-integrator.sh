@@ -216,7 +216,7 @@ import sys
 with open(sys.argv[1], "r", encoding="utf-8") as handle:
     data = json.load(handle)
 assert data["scope"]["allowed_paths"] == ["README.md", "src/"]
-assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 5000}
+assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 20000}
 PY
   rm -rf "$tmp_dir"
 }
@@ -263,7 +263,7 @@ import sys
 with open(sys.argv[1], "r", encoding="utf-8") as handle:
     data = json.load(handle)
 assert data["scope"]["allowed_paths"] == ["docs/kernel-v2/"]
-assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 5000}
+assert data["scope"]["diff_budget"] == {"max_files": 10, "max_lines": 20000}
 PY
   rm -rf "$tmp_dir"
 }
