@@ -176,6 +176,64 @@ else
   done
 fi
 
+# Reflections (T-OS-505): surface recent reflections so each session acts on
+# past corrections/learnings. Crash-safe: a missing ledger or any parse error
+# must never abort bootstrap (the trailing `|| true` and the inner try/except
+# both guarantee exit behavior is unchanged).
+reflections_md=""
+if [[ -f "${REPO_ROOT}/.ai/REFLECTIONS.jsonl" ]]; then
+  reflections_md="$(python3 - "${REPO_ROOT}/.ai/REFLECTIONS.jsonl" <<'PY' 2>/dev/null || true
+import json
+import sys
+
+path = sys.argv[1]
+rows = []
+try:
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                obj = json.loads(line)
+            except (ValueError, TypeError):
+                continue
+            if not isinstance(obj, dict):
+                continue
+            status = str(obj.get("status", "") or "")
+            category = str(obj.get("category", "") or "")
+            # integrated reflections (any category), plus still-open
+            # behavioral/philosophical ones that must keep shaping behavior.
+            if status == "integrated" or (
+                status == "open" and category in ("behavioral", "philosophical")
+            ):
+                rows.append(obj)
+except OSError:
+    rows = []
+
+# Most-recent first. ts is ISO-8601 so lexical sort works; fall back to file
+# order (append-only) when ts is absent.
+rows.sort(key=lambda r: str(r.get("ts", "") or ""), reverse=True)
+
+lines = []
+for obj in rows[:5]:
+    text = " ".join(str(obj.get("text", "") or "").split())
+    if len(text) > 140:
+        text = text[:139] + "…"
+    status = str(obj.get("status", "") or "?")
+    category = str(obj.get("category", "") or "?")
+    rid = str(obj.get("id", "") or "?")
+    lines.append("- [{0}/{1}] {2} ({3})".format(category, status, text, rid))
+
+sys.stdout.write("\n".join(lines))
+PY
+)"
+fi
+
+if [[ -n "${reflections_md}" ]]; then
+  printf '\n## Reflections (踏まえるべき反省)\n%s\n' "${reflections_md}"
+fi
+
 cat <<'EOF'
 
 ## Manager Use

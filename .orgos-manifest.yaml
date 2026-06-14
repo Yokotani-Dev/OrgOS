@@ -59,6 +59,8 @@ publish:
   # コア設定
   - ".ai/VERSION.yaml"
   - ".ai/CHANGELOG.md"
+  # Reflection Loop の説明ドキュメント（org-reflect が参照する恒久ホーム解説）
+  - ".ai/REFLECTIONS.md"
   - ".orgos-manifest.yaml"
   - "CLAUDE.md"
   - "AGENTS.md"
@@ -95,6 +97,7 @@ publish:
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
   - ".claude/commands/org-journal.md"
+  - ".claude/commands/org-reflect.md"
   - ".claude/commands/org-tidy.md"
   # エージェント（18ファイル: manager / CODEX_WORKER_GUIDE / specialist 4 を含む）
   - ".claude/agents/manager.md"
@@ -244,6 +247,9 @@ publish:
   - "scripts/codex/run-in-worktree.sh"
   - "scripts/codex/pre-exec-validate.sh"
   - "scripts/codex/post-exec-audit.sh"
+  # Reflection Loop（org-reflect が要求する正規書込パス。台帳実体 .ai/REFLECTIONS.jsonl
+  # は per-repo data のため配布しない）
+  - "scripts/org/append-reflection.py"
   # Activity Ledger（中央アクティビティログ: scripts/activity は自己完結）
   - "scripts/activity/log-event.sh"
   - "scripts/activity/journal.sh"
@@ -271,6 +277,7 @@ publish:
 core:
   - ".ai/VERSION.yaml"
   - ".ai/CHANGELOG.md"
+  - ".ai/REFLECTIONS.md"
   - ".ai/RESOURCES/README.md"
   # テンプレート一式（導入先の .ai/TEMPLATES/ を最新化。.ai/ への展開は templates: で制御）
   - ".ai/TEMPLATES/BRIEF.md"
@@ -298,6 +305,7 @@ core:
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
   - ".claude/commands/org-journal.md"
+  - ".claude/commands/org-reflect.md"
   # エージェント一式（CLAUDE.md が参照する manager.md を含む: ISS-006）
   - ".claude/agents/manager.md"
   - ".claude/agents/CODEX_WORKER_GUIDE.md"
@@ -426,6 +434,7 @@ core:
   - "scripts/org/archive-tasks.py"
   - "scripts/org/import-tasks-yaml.py"
   - "scripts/org/check-generated-checksums.py"
+  - "scripts/org/append-reflection.py"
   # Layout compat layer（T-OS-497: 既存リポジトリの旧→新レイアウト安全移行）
   - "scripts/org/migrate-layout.sh"
   - "scripts/org/resolve-machine-dir.sh"

@@ -2634,7 +2634,7 @@ tasks:
       green復帰)。'
   - id: T-OS-505
     title: '[Owner依頼] 振り返り・知見統合の仕組み — 反省/修正/思想をOrgOSに還元するループ'
-    status: queued
+    status: done
     priority: P1
     owner_role: manager
     autonomy_level: execute_with_report
@@ -2642,4 +2642,20 @@ tasks:
     reversibility: reversible
     notes: 'Owner依頼(2026-06-14):「検討して」。指示/修正からの反省を残し統合。設計先行(design doc)→Owner確認。候補:
       /org-reflect で反省を捕捉→USER_PROFILE feedback / rule・skill更新 / OIP のどこへ還元するか分岐 +
-      REFLECTIONS台帳。既存 memory-lifecycle/OIP/evolution と接続。'
+      REFLECTIONS台帳。既存 memory-lifecycle/OIP/evolution と接続。
+
+      2026-06-14 着手: append-reflection.py ツール + tests/kernel/test-reflection-loop.sh
+      を作成 (OBSERVABILITY_LEARNING_V2.md 課題#4 MVP)
+
+      2026-06-14: tests/kernel/test-reflection-loop.sh 作成 (5 tests, mktemp fake repo
+      + --repo-root, 実 .ai/REFLECTIONS.jsonl は cksum guard で不可侵), run-kernel-tests.sh
+      に登録, chmod +x, shellcheck clean, bash 3.2 OK. 全 pass。注: append-reflection.py
+      は既存実装を使用。コミットは未実施 (Owner 指示待ち)。
+
+      DONE (2026-06-14): Reflection Loop MVP shipped. /org-reflect command + REFLECTIONS
+      ledger (.ai/REFLECTIONS.jsonl + .md mirror) + append-reflection.py (capture/classify/promote).
+      Categories: behavioral/systemic/philosophical/one_off. Promotion policy: behavioral→USER_PROFILE
+      memory may auto-apply; philosophical/rule-level require Owner confirmation (authority-layer).
+      bootstrap.sh surfaces recent integrated reflections (## Reflections section);
+      reflections mirror to activity journal as thoughts. Tests: test-reflection-loop.sh
+      5/5 pass; kernel suite SUITE_EXIT=0.'
