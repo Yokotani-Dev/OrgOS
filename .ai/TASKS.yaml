@@ -2554,3 +2554,16 @@ tasks:
       + serve.sh)。SSOT=scripts/activity/viewer/(+viewer.sh/install-viewer.sh)。stdlib
       only・127.0.0.1限定・read-only。API実データ64件確認、HTML 200。manifest publish登録(closure
       6/6)。起動: python3 ~/.orgos/activity/viewer/server.py'
+  - id: T-OS-500
+    title: '[Owner依頼] リポジトリ構成整理プロンプト — 各importリポジトリで使い回す再利用プロンプト'
+    status: done
+    priority: P1
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14): 各importリポジトリのフォルダ乱雑化を整理させる貼り付けプロンプト。OrgOSフレームワーク固定物保護
+      + migrate-layout先行 + build非破壊 + git mv履歴保持 + 提案→確認→実行。outputs/に保存し/org-tidyコマンド化も提案。
+
+      完了(2026-06-14): /org-tidy コマンド化(.claude/commands/org-tidy.md)。貼り付けプロンプト(outputs/2026-06-14/org-tidy-prompt.md)と同内容を正式コマンド化。manifest
+      publish登録(closure 6/6)。再import済みリポジトリは /org-tidy で実行可能。'

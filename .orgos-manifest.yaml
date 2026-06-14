@@ -95,6 +95,7 @@ publish:
   - ".claude/commands/org-goals.md"
   - ".claude/commands/org-learn.md"
   - ".claude/commands/org-journal.md"
+  - ".claude/commands/org-tidy.md"
   # エージェント（18ファイル: manager / CODEX_WORKER_GUIDE / specialist 4 を含む）
   - ".claude/agents/manager.md"
   - ".claude/agents/CODEX_WORKER_GUIDE.md"

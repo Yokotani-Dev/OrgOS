@@ -2101,3 +2101,7 @@ v2.0.0後の残タスク(T-OS-492/493/494/498)修正をv2.0.1(patch)として公
 ## PLAN-UPDATE-032: Activity Ledger ローカルビューア (T-OS-499) (2026-06-14)
 
 Owner依頼: 実行ログをローカル閲覧するUIを ~/.orgos/activity/ 同梱。依存ゼロ(python3 stdlib)・1コマンド起動・local-only・read-only。SSOT=scripts/activity/viewer/、install-viewer.shで~/.orgosへ展開。一旦ローカル前提(push保留可)。
+
+## PLAN-UPDATE-033: リポジトリ構成整理を /org-tidy コマンド化 (T-OS-500) (2026-06-14)
+
+Owner依頼: 各importリポジトリのフォルダ整理を再利用化。OrgOS固定物保護+migrate-layout先行+build非破壊+git mv+提案確認実行の5フェーズ。manifest publish登録で全クローンに配布。
