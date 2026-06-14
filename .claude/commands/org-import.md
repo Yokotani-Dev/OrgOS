@@ -177,6 +177,19 @@ if [ -f "scripts/org/migrate-layout.sh" ]; then
 fi
 ```
 
+### 5.4. 新規プロジェクトの状態リセット（クローン汚染の除去）
+
+OrgOS をクローン/import すると、配布元の開発専用の実行時状態が `.ai/_machine/` に混入することがある
+（codex 注文書・events・sessions・evolution 等）。`scripts/org/reset-project-state.sh` はこれを
+`~/.orgos/import-backups/<repo>-<ts>/` へ退避し、OS が必要とする空のディレクトリ骨格を再作成する。
+冪等で、`is_orgos_dev: true`（OrgOS 本体）では実行されない。詳細は T-OS-502 を参照。
+
+```bash
+if [ -f "scripts/org/reset-project-state.sh" ]; then
+  bash scripts/org/reset-project-state.sh
+fi
+```
+
 ### 5.5. platform の記録
 
 `.ai/CONTROL.yaml` が存在する状態になったら platform を確定して記録する。

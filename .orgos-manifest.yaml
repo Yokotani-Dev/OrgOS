@@ -237,6 +237,7 @@ publish:
   # resolve-machine-dir.{sh,py} = new-then-legacy パス解決の安全網
   - "scripts/org/migrate-layout.sh"
   - "scripts/org/set-project-name.py"
+  - "scripts/org/reset-project-state.sh"
   - "scripts/org/resolve-machine-dir.sh"
   - "scripts/org/resolve_machine_dir.py"
   # Codex worktree wrapper（parallel-session-policy が要求）

@@ -2580,3 +2580,52 @@ tasks:
 
       完了(2026-06-14): set-project-name.py新設(コメント保持/冪等/is_orgos_devスキップ/--force/--dry-run、7テスト通過)。org-start
       Step 3-2に配線。manifest publish登録(closure 6/6)。クローン先フォルダ名→project_name自動設定。'
+  - id: T-OS-502
+    title: '[Owner依頼] クローン汚染解消 — _machine 追跡481ファイルをuntrack+骨格化、新プロジェクトreset、outputs整理'
+    status: done
+    priority: P0
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: high
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14): クローン時にOrgOS開発専用_machine状態(481追跡ファイル)が新プロジェクトに混入。gitignoreで_machine
+      runtimeをuntrack+空骨格(.gitkeep)のみ追跡。reset-project-state.shを/org-import・/org-start新規に配線(is_orgos_devはskip)。outputs/不要物削除。kernel
+      green必須。
+
+      完了(2026-06-14): _machine runtime 466ファイルをuntrack、空骨格(README+17 .gitkeep)のみ追跡→クローンに開発状態が混入しない。reset-project-state.sh新設(退避+骨格再生成、is_orgos_dev
+      skip、5テスト通過)を/org-import・/org-start配線。ディスク1.5GB junk(再帰artifact)クリア→40MB。outputs整理(perm-smoke削除)。kernel
+      green/closure 6/6。'
+  - id: T-OS-503
+    title: '[Fix] OrgOS Scheduler CI赤 — shadow apply の stale-lock (error_class=lock,
+      exit 73)'
+    status: queued
+    priority: P2
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 2026-06-14 06:48 schedule run失敗。.github/workflows/orgos-scheduler.yml の
+      run-detection.sh apply段でlock。CI環境は毎回clean cloneなのにlock衝突→lock取得/解放ロジックかshadow-applyのCI
+      gating要修正。
+  - id: T-OS-504
+    title: '[Owner依頼] ログ品質改善 — ジャーナルが session end だらけで「何をしたか」不明'
+    status: queued
+    priority: P1
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: medium
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14,スクショ): session start/end のノイズが支配的。対策: (1)Stop hookでセッション要約(commit数/触ったtask/主要decision)を記録
+      (2)bridgeがcommit subjectとtask titleでイベントを富化 (3)viewerでセッション境界イベントを折り畳み/抑制し commit/task_done/decision
+      を前面化。'
+  - id: T-OS-505
+    title: '[Owner依頼] 振り返り・知見統合の仕組み — 反省/修正/思想をOrgOSに還元するループ'
+    status: queued
+    priority: P1
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14):「検討して」。指示/修正からの反省を残し統合。設計先行(design doc)→Owner確認。候補:
+      /org-reflect で反省を捕捉→USER_PROFILE feedback / rule・skill更新 / OIP のどこへ還元するか分岐 +
+      REFLECTIONS台帳。既存 memory-lifecycle/OIP/evolution と接続。'

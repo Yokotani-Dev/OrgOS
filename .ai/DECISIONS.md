@@ -2109,3 +2109,7 @@ Owner依頼: 各importリポジトリのフォルダ整理を再利用化。OrgO
 ## PLAN-UPDATE-034: /org-start で project_name をフォルダ名に自動設定 (T-OS-501) (2026-06-14)
 
 Owner依頼: クローン先フォルダ名をproject_nameに自動反映(<SET_ME>手入力解消)。set-project-name.py(sanctioned org-tool、CONTROL.yamlコメント保持の行単位置換)+org-start Step3-2配線。is_orgos_dev本体はskip、意図命名は保護。
+
+## PLAN-UPDATE-035: クローン汚染解消: _machine untrack + 骨格化 + reset-project-state (T-OS-502) (2026-06-14)
+
+Owner依頼: クローン時にOrgOS開発専用_machine状態(481追跡)が新プロジェクトに混入。gitignoreで_machine runtimeをuntrack、空骨格(.gitkeep)+READMEのみ追跡。reset-project-state.sh(退避+骨格、is_orgos_dev保護)を/org-import・/org-start配線。再帰artifact 1.5GB junkクリア。outputs整理。

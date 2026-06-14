@@ -417,6 +417,17 @@ python3 scripts/org/set-project-name.py
 この project_name は DASHBOARD 表示名、`/org-dashboard` 登録名、`~/.orgos/projects.yaml` の表示名に引き継がれる。
 クローン直後に Owner が手入力する手間をなくすのが目的。別名にしたい場合は Step 4 以降で変更できる。
 
+#### Step 3-3: 開発専用状態のリセット（クローン汚染の除去）
+
+クローン元（OrgOS 本体）の開発専用の実行時状態が `.ai/_machine/` に混入している場合、退避して
+空骨格を再作成する。冪等で、`is_orgos_dev: true` では実行されない（OrgOS 本体は対象外）。
+
+```bash
+if [ -f "scripts/org/reset-project-state.sh" ]; then
+  bash scripts/org/reset-project-state.sh
+fi
+```
+
 ### Step 4: 対話形式でBRIEF.mdを作成（ヒアリング）
 
 `.ai/BRIEF.md` を確認し、対話形式でプロジェクト概要を収集する。

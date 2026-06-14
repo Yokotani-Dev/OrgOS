@@ -65,3 +65,9 @@
 .ai/DASHBOARD.generated.md
 .ai/GLOSSARY.generated.md
 .ai/DECISIONS.generated.md
+
+# === _machine は機械の実行時状態 — クローンに配布しない。空骨格(.gitkeep)とREADMEのみ追跡 (T-OS-502) ===
+.ai/_machine/**
+!.ai/_machine/README.md
+!.ai/_machine/*/
+!.ai/_machine/*/.gitkeep
