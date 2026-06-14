@@ -2567,3 +2567,16 @@ tasks:
 
       完了(2026-06-14): /org-tidy コマンド化(.claude/commands/org-tidy.md)。貼り付けプロンプト(outputs/2026-06-14/org-tidy-prompt.md)と同内容を正式コマンド化。manifest
       publish登録(closure 6/6)。再import済みリポジトリは /org-tidy で実行可能。'
+  - id: T-OS-501
+    title: '[Owner依頼] /org-start で project_name をクローン先フォルダ名に自動設定'
+    status: done
+    priority: P1
+    owner_role: manager
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14): /org-start 実行時に project_name(<SET_ME>)をリポジトリフォルダ名(git
+      toplevel basename)に自動設定。is_orgos_devはskip。CONTROL.yamlコメント保持のため行単位置換。set-project-name.py新設+org-start配線+manifest。
+
+      完了(2026-06-14): set-project-name.py新設(コメント保持/冪等/is_orgos_devスキップ/--force/--dry-run、7テスト通過)。org-start
+      Step 3-2に配線。manifest publish登録(closure 6/6)。クローン先フォルダ名→project_name自動設定。'

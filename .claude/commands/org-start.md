@@ -404,6 +404,19 @@ echo "platform: $PLATFORM"
 Windows 系 (`windows-*`) を検出した場合、`scripts/platform/detect.sh` は WSL 推奨セットアップを stderr に表示し、
 `.ai/OWNER_INBOX.md` にも案内を追記する。
 
+#### Step 3-2: project_name の自動設定（クローン先フォルダ名）
+
+`.ai/CONTROL.yaml` 作成後、`project_name` をクローン先フォルダ名（git toplevel の basename）に自動設定する。
+`<SET_ME>` や空のときだけ設定し、既に意図的な名前があれば保持する（`--force` で上書き可）。
+`is_orgos_dev: true` の OrgOS 本体リポジトリは対象外（自動スキップ）。
+
+```bash
+python3 scripts/org/set-project-name.py
+```
+
+この project_name は DASHBOARD 表示名、`/org-dashboard` 登録名、`~/.orgos/projects.yaml` の表示名に引き継がれる。
+クローン直後に Owner が手入力する手間をなくすのが目的。別名にしたい場合は Step 4 以降で変更できる。
+
 ### Step 4: 対話形式でBRIEF.mdを作成（ヒアリング）
 
 `.ai/BRIEF.md` を確認し、対話形式でプロジェクト概要を収集する。

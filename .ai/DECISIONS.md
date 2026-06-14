@@ -2105,3 +2105,7 @@ Owner依頼: 実行ログをローカル閲覧するUIを ~/.orgos/activity/ 同
 ## PLAN-UPDATE-033: リポジトリ構成整理を /org-tidy コマンド化 (T-OS-500) (2026-06-14)
 
 Owner依頼: 各importリポジトリのフォルダ整理を再利用化。OrgOS固定物保護+migrate-layout先行+build非破壊+git mv+提案確認実行の5フェーズ。manifest publish登録で全クローンに配布。
+
+## PLAN-UPDATE-034: /org-start で project_name をフォルダ名に自動設定 (T-OS-501) (2026-06-14)
+
+Owner依頼: クローン先フォルダ名をproject_nameに自動反映(<SET_ME>手入力解消)。set-project-name.py(sanctioned org-tool、CONTROL.yamlコメント保持の行単位置換)+org-start Step3-2配線。is_orgos_dev本体はskip、意図命名は保護。
