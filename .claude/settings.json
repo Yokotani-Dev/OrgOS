@@ -86,7 +86,7 @@
           },
           {
             "type": "command",
-            "command": "bash scripts/activity/log-event.sh --type session_end --title 'session end' --source hook --stdin-hook 2>/dev/null || true"
+            "command": "bash scripts/activity/summarize-session.sh --stdin-hook 2>/dev/null || true"
           }
         ]
       }

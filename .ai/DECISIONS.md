@@ -2113,3 +2113,19 @@ Owner依頼: クローン先フォルダ名をproject_nameに自動反映(<SET_M
 ## PLAN-UPDATE-035: クローン汚染解消: _machine untrack + 骨格化 + reset-project-state (T-OS-502) (2026-06-14)
 
 Owner依頼: クローン時にOrgOS開発専用_machine状態(481追跡)が新プロジェクトに混入。gitignoreで_machine runtimeをuntrack、空骨格(.gitkeep)+READMEのみ追跡。reset-project-state.sh(退避+骨格、is_orgos_dev保護)を/org-import・/org-start配線。再帰artifact 1.5GB junkクリア。outputs整理。
+
+## PLAN-UPDATE-T-OS-504: Observability v2 課題#3 — journal/viewer session-noise DE-NOISE (2026-06-14)
+
+T-OS-504(ログ品質改善)の3項目の最終項目=viewer/journal DE-NOISE を実装し、T-OS-504 を done に。
+
+変更:
+- scripts/activity/journal.sh: md digest で bare session 境界(session_start/「session end」相当・detail空・task_id空)を per-repo「セッション N 回」1行に折りたたみ、rich session_end(detail/task_id あり、または非bare title)のみ個別表示。action_sort_key で commit/task_done/task_created/decision/release を最優先、rich session次点、その他末尾に並べ替え。json/tsv は raw events を維持(変更なし)。
+- scripts/activity/viewer/server.py: EVENT_WEIGHT / _is_rich_session_end / _event_weight 追加。/api/events 応答の各 event に _weight・_rich_session を注入(raw dict はコピーして非破壊)。build_summary に per-repo boundary_counts 追加。stdlib のみ・127.0.0.1・read-only 維持。
+- scripts/activity/viewer/index.html: renderActions が境界ノイズを per-repo 折りたたみ chip(既定折りたたみ・クリック展開)化、weight 昇順ソートで高シグナルを前面化、kernel/boundary を二次スタイル(opacity)。インライン JS/CSS のみ・オフライン。
+- scripts/activity/install-viewer.sh 再実行で ~/.orgos/activity/viewer/ に同一コピー反映。
+
+検証: activity suite 8/8 PASS(新規 test-journal-denoise / test-session-summary 含む)。server.py を :7801 で起動し /api/events?days=2 が 200・80件返却、boundary-noise 55件→5 chip に集約、_weight ヒストグラム {0:13,1:1,2:11,5:55} を確認後 kill。kernel suite: KRT-004(artifact cleanup、本作業と無関係)が既存failで残る(clean tree でも同一failを確認)。git push なし。
+
+## PLAN-UPDATE-036: ログ品質改善(T-OS-504) + collect-artifacts回帰修正(KRT-004) (2026-06-14)
+
+session要約/bridge富化/viewerノイズ抑制でジャーナルが「session end羅列」から実作業表示へ。併せてT-OS-502 gitignore起因のcollect-artifacts回帰(KRT-004: review/work productが--exclude-standardで脱落)を、.ai/_machine配下のみgitignore無視で収集する2パス方式で修正。kernel green/closure 6/6/activity 8/8。

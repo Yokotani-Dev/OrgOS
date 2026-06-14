@@ -29,6 +29,53 @@ import sys
 STORE = os.environ.get("ORGOS_ACTIVITY_STORE") or os.path.expanduser("~/.orgos/activity")
 THOUGHT_TYPES = ("decision", "note", "thought")
 
+# Session boundary events. By default these dominate the ledger and bury the
+# events that actually say "what was done", so we collapse the bare ones into a
+# per-repo "セッション N 回" summary and only surface the *rich* session_end
+# events (the ones summarize-session.sh emits, carrying commit/task info).
+SESSION_BOUNDARY_TYPES = ("session_start", "session_end")
+
+# Events that should appear first in "⚙️ 実行したこと" (most signal).
+PRIORITY_ACTION_TYPES = ("commit", "task_done", "task_created", "decision",
+                         "release")
+
+# Bare session_end titles carry no useful "what happened" payload.
+_BARE_SESSION_TITLES = ("session end", "session_end", "session start",
+                        "session_start", "")
+
+
+def is_rich_session_end(ev):
+    """A session_end is 'rich' (worth showing individually) when it carries a
+    summary: a non-bare title, a non-empty detail, or an attached task_id.
+    Bare boundary events (title 'session end', empty detail) are collapsed."""
+    if str(ev.get("event_type", "")) != "session_end":
+        return False
+    title = oneline(ev.get("title", "")).lower()
+    detail = oneline(ev.get("detail", ""))
+    task_id = oneline(ev.get("task_id", ""))
+    if detail:
+        return True
+    if task_id:
+        return True
+    if title and title not in _BARE_SESSION_TITLES:
+        return True
+    return False
+
+
+def action_sort_key(triple):
+    """Sort actions so priority types (commit/task_done/...) come first, then
+    rich session summaries, then everything else, each by time ascending.
+    triple is (dt, local, repo_name, ev)."""
+    ev = triple[3]
+    et = str(ev.get("event_type", ""))
+    if et in PRIORITY_ACTION_TYPES:
+        rank = 0
+    elif is_rich_session_end(ev):
+        rank = 1
+    else:
+        rank = 2
+    return (rank, triple[0], str(ev.get("event_id", "")))
+
 
 def oneline(s):
     """Collapse newlines/tabs/whitespace runs so untrusted event fields
@@ -190,18 +237,37 @@ def main():
     print()
 
     print("## ⚙️ 実行したこと")
-    actions = [e for e in events if str(e[3].get("event_type", "")) not in THOUGHT_TYPES]
-    if not actions:
+    # Actions = non-thoughts. Split off bare session-boundary noise: it is
+    # collapsed into a per-repo count line, while rich session_end summaries
+    # and all other action events are listed normally.
+    actions = []
+    boundary_counts = {}  # repo_name -> count of bare boundary events
+    for e in events:
+        et = str(e[3].get("event_type", ""))
+        if et in THOUGHT_TYPES:
+            continue
+        if et in SESSION_BOUNDARY_TYPES and not is_rich_session_end(e[3]):
+            boundary_counts[e[2]] = boundary_counts.get(e[2], 0) + 1
+            continue
+        actions.append(e)
+
+    if not actions and not boundary_counts:
         print()
         print("(イベントなし)")
         return
+
     for repo_name in repos:
-        group = [e for e in actions if e[2] == repo_name]
-        if not group:
+        group = sorted([e for e in actions if e[2] == repo_name],
+                       key=action_sort_key)
+        bcount = boundary_counts.get(repo_name, 0)
+        if not group and not bcount:
             continue
         print()
         print("### %s" % (oneline(repo_name) or "(no repo)"))
         print()
+        # Collapsed session-boundary summary first (compact, secondary signal).
+        if bcount:
+            print("- _セッション %d 回_（境界イベントは折りたたみ）" % bcount)
         for dt, local, rn, ev in group:
             task_id = oneline(ev.get("task_id", ""))
             suffix = " (%s)" % task_id if task_id else ""

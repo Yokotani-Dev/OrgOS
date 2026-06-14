@@ -12,6 +12,9 @@ test-journal.sh
 test-bridge.sh
 test-concurrent-append.sh
 test-mcp-server.sh
+test-session-summary.sh
+test-bridge-enrichment.sh
+test-journal-denoise.sh
 "
 
 suite_exit=0

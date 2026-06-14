@@ -2609,7 +2609,7 @@ tasks:
       gating要修正。
   - id: T-OS-504
     title: '[Owner依頼] ログ品質改善 — ジャーナルが session end だらけで「何をしたか」不明'
-    status: queued
+    status: done
     priority: P1
     owner_role: implementer-agent
     autonomy_level: execute_with_report
@@ -2617,7 +2617,21 @@ tasks:
     reversibility: reversible
     notes: 'Owner依頼(2026-06-14,スクショ): session start/end のノイズが支配的。対策: (1)Stop hookでセッション要約(commit数/触ったtask/主要decision)を記録
       (2)bridgeがcommit subjectとtask titleでイベントを富化 (3)viewerでセッション境界イベントを折り畳み/抑制し commit/task_done/decision
-      を前面化。'
+      を前面化。
+
+      完了(2026-06-14): Observability v2 課題#3 全3項目実装済を確認。(1)summarize-session.sh + Stop
+      hook (.claude/settings.json:89) (2)bridge-kernel-events.sh の commit_subject/load_task_titles
+      富化 (3)viewer/journal DE-NOISE=本作業。journal.sh: bare session境界を per-repo「セッション
+      N 回」に折りたたみ、rich session_end(detail/task_id/非bare title)のみ個別表示、commit/task_done/task_created/decision/release
+      を優先表示(action_sort_key)。json/tsv は raw 維持。viewer SSOT: server.py に EVENT_WEIGHT/_is_rich_session_end
+      追加、/api/events に _weight・_rich_session 注入 + summary.boundary_counts。index.html:
+      renderActions が境界ノイズを折りたたみchip(展開可)化、weight順ソート、二次スタイル。install-viewer.sh 再実行で
+      ~/.orgos へ反映。activity 8/8 PASS(test-journal-denoise/test-session-summary 含む)。smoke:
+      server.py :7801 /api/events?days=2 OK(boundary 55件→5 chip)。
+
+      完了(2026-06-14): Stop hookでsession要約(commit数+subject+task_id)、bridge富化(commit
+      subject/task title)、journal/viewerで境界イベント折りたたみ→実作業前面化。activity 8/8。副次: T-OS-502のgitignoreがcollect-artifactsの未追跡収集を阻害しKRT-004破綻→.ai/_machine配下のみignore無視で収集する2パス方式に修正(kernel
+      green復帰)。'
   - id: T-OS-505
     title: '[Owner依頼] 振り返り・知見統合の仕組み — 反省/修正/思想をOrgOSに還元するループ'
     status: queued

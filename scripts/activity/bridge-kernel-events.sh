@@ -167,6 +167,66 @@ def summarize_payload(payload, limit=200):
     return text
 
 
+_SHA_RE = re.compile(r"^[0-9a-fA-F]{7,40}$")
+
+
+def commit_subject(repo_path, sha):
+    """Resolve a commit subject (first line) for a sha. Best-effort: returns
+    "" when the sha is missing, malformed, or not resolvable in this repo."""
+    sha = str(sha or "").strip()
+    if not sha or not _SHA_RE.match(sha):
+        return ""
+    return git(["log", "-1", "--format=%s", sha], cwd=repo_path)
+
+
+# Cache of task_id -> title parsed from .ai/TASKS.yaml (parsed once per run).
+_TASKS_TITLES = None
+
+
+def load_task_titles(repo_path):
+    """Best-effort grep-free parse of .ai/TASKS.yaml: map task_id -> title.
+
+    Looks for "- id: <task_id>" entries and the nearest following "title:"
+    within the same list item. Tolerant of quoting. Returns {} on any error
+    so the bridge stays exit-0 and never depends on a YAML library."""
+    global _TASKS_TITLES
+    if _TASKS_TITLES is not None:
+        return _TASKS_TITLES
+    titles = {}
+    path = os.path.join(repo_path, ".ai", "TASKS.yaml")
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+    except Exception:
+        _TASKS_TITLES = titles
+        return titles
+    id_re = re.compile(r"^\s*-?\s*id:\s*(.+?)\s*$")
+    title_re = re.compile(r"^\s*title:\s*(.+?)\s*$")
+    pending_id = None
+    for raw in lines:
+        m_id = id_re.match(raw)
+        if m_id:
+            pending_id = _unquote_yaml(m_id.group(1))
+            continue
+        if pending_id is not None:
+            m_title = title_re.match(raw)
+            if m_title:
+                titles[pending_id] = _unquote_yaml(m_title.group(1))
+                pending_id = None
+    _TASKS_TITLES = titles
+    return titles
+
+
+def _unquote_yaml(value):
+    value = str(value or "").strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        inner = value[1:-1]
+        if value[0] == "'":
+            inner = inner.replace("''", "'")
+        return inner
+    return value
+
+
 def load_existing_origin_ids(repo_path):
     """Collect origin_event_ids already bridged for this repo from the
     central shards. Only used on the rare cursor-reset path, so that
@@ -275,10 +335,23 @@ def main():
             ts_dt = parse_ts(str(kev.get("ts") or "")) or utc_now()
             ts = ts_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
             actor = kev.get("actor") if isinstance(kev.get("actor"), dict) else {}
-            title = kev_type or "kernel event"
+            payload = kev.get("payload") if isinstance(kev.get("payload"), dict) else {}
+
+            # Richer titles: resolve commit subjects and task titles best-effort.
+            base = kev_type or "kernel event"
+            title = base
             if task_id:
-                title = "%s %s" % (title, task_id)
-            detail = summarize_payload(kev.get("payload"))
+                title = "%s %s" % (base, task_id)
+            if kev_type in ("CommitIntegrated", "Commit", "CommitCreated"):
+                sha = payload.get("commit") or payload.get("sha") or payload.get("commit_sha")
+                subj = commit_subject(repo_path, sha)
+                if subj:
+                    title = "%s: %s" % (title, subj)
+            elif kev_type.startswith("Task") and task_id:
+                tt = load_task_titles(repo_path).get(task_id)
+                if tt:
+                    title = "%s: %s" % (title, tt)
+            detail = summarize_payload(payload)
 
             event = {
                 "schema_version": "orgos-activity.v1",

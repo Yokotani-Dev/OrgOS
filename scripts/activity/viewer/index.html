@@ -61,6 +61,15 @@
   .e-default{ background:#f1f5f9; color:#64748b;}
   .evtxt small { color:var(--sub); display:block; font-size:11px; margin-top:1px; }
   .tasklink { color:var(--accent); font-weight:600; font-size:12px; }
+  /* collapsed session-boundary summary: secondary, expandable */
+  .sesschip { display:inline-flex; align-items:center; gap:6px; margin:4px 0 4px 18px;
+    font-size:11.5px; color:var(--sub); background:var(--bg); border:1px solid var(--line);
+    border-radius:99px; padding:3px 11px; cursor:pointer; user-select:none; }
+  .sesschip:hover { color:var(--ink); border-color:var(--sub); }
+  .sesschip .caret { font-size:9px; opacity:.7; }
+  .sessdetail { margin:2px 0 6px 18px; }
+  .sessdetail .evt { opacity:.62; }
+  .evt.secondary { opacity:.62; }
   .empty { color:var(--sub); font-size:13px; padding:24px 4px; text-align:center; }
   footer { text-align:center; color:var(--sub); font-size:12px; padding:30px; }
   @media (max-width: 820px) {
@@ -127,6 +136,19 @@ var state = {
 };
 
 var THOUGHT_TYPES = { decision:1, note:1, thought:1 };
+var BOUNDARY_TYPES = { session_start:1, session_end:1 };
+var BARE_SESSION_TITLES = {
+  "session end":1, "session_end":1, "session start":1, "session_start":1, "":1
+};
+
+// Event-type sort/style weight (lower = more prominent). Mirrors server.py.
+var EVENT_WEIGHT = {
+  commit:0, task_done:0, task_created:0, release:0,
+  decision:1, note:1, thought:1,
+  kernel:2, tick:2,
+  session_start:5, session_end:5
+};
+var DEFAULT_EVENT_WEIGHT = 3;
 
 var TYPE_LABELS = {
   task_done:"完了", task_created:"作成", commit:"commit", note:"メモ",
@@ -138,6 +160,28 @@ var TYPE_CLASS = {
   decision:"e-note", thought:"e-note", session_start:"e-sess", session_end:"e-sess",
   release:"e-release", kernel:"e-kernel", tick:"e-default"
 };
+
+// A session_end is "rich" (shown individually) when it carries a summary:
+// non-bare title, non-empty detail, or an attached task_id. Bare boundary
+// events are collapsed into a "セッション N 回" chip.
+function isRichSessionEnd(e){
+  if (e.event_type !== "session_end") return false;
+  if (typeof e._rich_session === "boolean") return e._rich_session; // server hint
+  if (e.detail && String(e.detail).trim()) return true;
+  if (e.task_id && String(e.task_id).trim()) return true;
+  var t = String(e.title == null ? "" : e.title).trim().toLowerCase();
+  if (t && !BARE_SESSION_TITLES[t]) return true;
+  return false;
+}
+function isBoundaryNoise(e){
+  return !!BOUNDARY_TYPES[e.event_type] && !isRichSessionEnd(e);
+}
+function eventWeight(e){
+  if (typeof e._weight === "number") return e._weight;  // server-provided
+  if (isRichSessionEnd(e)) return 1;
+  var w = EVENT_WEIGHT[e.event_type];
+  return (w == null) ? DEFAULT_EVENT_WEIGHT : w;
+}
 
 function pad(n){ return n < 10 ? "0"+n : ""+n; }
 function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
@@ -229,52 +273,110 @@ function renderThoughts(events){
   box.innerHTML = html;
 }
 
+function evtRowHtml(e, secondary){
+  var et = e.event_type || "";
+  var lbl = TYPE_LABELS[et] || et || "イベント";
+  var cls = TYPE_CLASS[et] || "e-default";
+  var task = e.task_id ? ' <span class="tasklink">'+esc(e.task_id)+'</span>' : '';
+  var detail = e.detail ? '<small>'+esc(e.detail)+'</small>' : '';
+  return '<div class="evt'+(secondary?" secondary":"")+'">'+
+    '<div class="time">'+localTime(e.ts)+'</div>'+
+    '<span class="etype '+cls+'">'+esc(lbl)+'</span>'+
+    '<span class="evtxt">'+esc(e.title || "(無題)")+task+detail+'</span>'+
+  '</div>';
+}
+
 function renderActions(events){
-  var actions = events.filter(function(e){ return !THOUGHT_TYPES[e.event_type]; });
+  // Actions = non-thoughts. Split bare session-boundary noise from the rest:
+  // boundary noise is collapsed into a per-repo "セッション N 回" chip, while
+  // high-signal events (commit/task_done/decision/...) and rich session
+  // summaries are listed prominently.
+  var actions = events.filter(function(e){
+    return !THOUGHT_TYPES[e.event_type] && !isBoundaryNoise(e);
+  });
+  var boundary = events.filter(function(e){
+    return !THOUGHT_TYPES[e.event_type] && isBoundaryNoise(e);
+  });
   document.getElementById("actionCount").textContent = "("+actions.length+")";
   var box = document.getElementById("actions");
-  if (actions.length === 0){ box.innerHTML = '<div class="empty">イベントなし</div>'; return; }
-
-  // group by repo, preserving first-seen order
-  var order = [];
-  var groups = {};
-  for (var i=0;i<actions.length;i++){
-    var rn = repoOf(actions[i]);
-    if (!groups[rn]){ groups[rn] = []; order.push(rn); }
-    groups[rn].push(actions[i]);
+  if (actions.length === 0 && boundary.length === 0){
+    box.innerHTML = '<div class="empty">イベントなし</div>'; return;
   }
+
+  // group by repo, preserving first-seen order across both lists
+  var order = [];
+  var groups = {};      // repo -> visible actions
+  var bgroups = {};     // repo -> collapsed boundary events
+  function bucket(arr, store){
+    for (var i=0;i<arr.length;i++){
+      var rn = repoOf(arr[i]);
+      if (!groups[rn] && !bgroups[rn]) order.push(rn);
+      if (!store[rn]) store[rn] = [];
+      store[rn].push(arr[i]);
+    }
+  }
+  bucket(actions, groups);
+  bucket(boundary, bgroups);
 
   var html = "";
   for (var g=0; g<order.length; g++){
     var name = order[g];
-    var list = groups[name];
+    var list = (groups[name] || []).slice();
+    var blist = bgroups[name] || [];
     var c = colorFor(name);
-    // time span + session count for the meta line
-    var first = list[0].ts, last = list[list.length-1].ts;
+
+    // stable sort by weight (prominent first), then by time ascending
+    list.sort(function(a,b){
+      var wa = eventWeight(a), wb = eventWeight(b);
+      if (wa !== wb) return wa - wb;
+      return String(a.ts).localeCompare(String(b.ts));
+    });
+
+    // meta: time span across ALL events for this repo + session count
+    var all = list.concat(blist);
+    all.sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); });
     var sess = {};
-    for (var k=0;k<list.length;k++){ if (list[k].session_id) sess[list[k].session_id]=1; }
+    for (var k=0;k<all.length;k++){ if (all[k].session_id) sess[all[k].session_id]=1; }
     var sessCount = Object.keys(sess).length;
-    var meta = localTime(first)+" – "+localTime(last) + (sessCount>0 ? " ・ "+sessCount+"セッション" : "");
+    var span = all.length ? (localTime(all[0].ts)+" – "+localTime(all[all.length-1].ts)) : "";
+    var meta = span + (sessCount>0 ? " ・ "+sessCount+"セッション" : "");
 
     html += '<div class="repoblock">'+
       '<h3><span class="dot" style="background:'+c+'"></span>'+esc(name)+
-      ' <span class="meta">'+meta+'</span></h3>';
+      ' <span class="meta">'+esc(meta)+'</span></h3>';
+
+    // high-signal actions first
     for (var j=0;j<list.length;j++){
-      var e = list[j];
-      var et = e.event_type || "";
-      var lbl = TYPE_LABELS[et] || et || "イベント";
-      var cls = TYPE_CLASS[et] || "e-default";
-      var task = e.task_id ? ' <span class="tasklink">'+esc(e.task_id)+'</span>' : '';
-      var detail = e.detail ? '<small>'+esc(e.detail)+'</small>' : '';
-      html += '<div class="evt">'+
-        '<div class="time">'+localTime(e.ts)+'</div>'+
-        '<span class="etype '+cls+'">'+esc(lbl)+'</span>'+
-        '<span class="evtxt">'+esc(e.title || "(無題)")+task+detail+'</span>'+
+      html += evtRowHtml(list[j], eventWeight(list[j]) >= 2);
+    }
+
+    // collapsed session-boundary chip (expandable), rendered after actions
+    if (blist.length){
+      var did = "sess-"+g;
+      blist.sort(function(a,b){ return String(a.ts).localeCompare(String(b.ts)); });
+      html += '<div class="sesschip" data-target="'+did+'">'+
+        '<span class="caret">&#9654;</span>セッション '+blist.length+' 回'+
       '</div>';
+      var inner = "";
+      for (var b2=0;b2<blist.length;b2++){ inner += evtRowHtml(blist[b2], true); }
+      html += '<div class="sessdetail" id="'+did+'" style="display:none;">'+inner+'</div>';
     }
     html += '</div>';
   }
   box.innerHTML = html;
+
+  // wire up expand/collapse for session chips (toggle the sibling detail block)
+  var chips = box.querySelectorAll(".sesschip");
+  for (var ci=0; ci<chips.length; ci++){
+    chips[ci].addEventListener("click", function(){
+      var tgt = document.getElementById(this.getAttribute("data-target"));
+      if (!tgt) return;
+      var open = tgt.style.display !== "none";
+      tgt.style.display = open ? "none" : "block";
+      var caret = this.querySelector(".caret");
+      if (caret) caret.innerHTML = open ? "&#9654;" : "&#9660;";
+    });
+  }
 }
 
 function setError(){

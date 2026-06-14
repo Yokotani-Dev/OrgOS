@@ -307,6 +307,7 @@ def excluded(rel: str) -> bool:
 
 
 def copy_untracked() -> None:
+    # Pass 1: standard untracked (respects .gitignore) — general project work product.
     result = run_git(["ls-files", "--others", "--exclude-standard", "-z"])
     if result.returncode != 0:
         verification_errors.append(
@@ -315,10 +316,36 @@ def copy_untracked() -> None:
         )
         return
 
+    rels: list[str] = []
+    seen: set[str] = set()
     for rel_bytes in result.stdout.split(b"\0"):
         if not rel_bytes:
             continue
-        rel = rel_bytes.decode("utf-8", errors="surrogateescape")
+        r = rel_bytes.decode("utf-8", errors="surrogateescape")
+        if r in seen:
+            continue
+        seen.add(r)
+        rels.append(r)
+
+    # Pass 2: include .ai/_machine/ work products even when gitignored. Since T-OS-502
+    # made .ai/_machine/** gitignored runtime, --exclude-standard would drop review/
+    # codex outputs that DurableArtifactBeforeCleanup (KRT-004) requires. Scope strictly
+    # to .ai/_machine/ so other gitignored files (USER_PROFILE, orgos.sqlite) are NOT
+    # pulled in; recursion stays bounded by EXCLUDED_PREFIXES (artifact store, etc.).
+    ignored = run_git(["ls-files", "--others", "-z"])
+    if ignored.returncode == 0:
+        for rel_bytes in ignored.stdout.split(b"\0"):
+            if not rel_bytes:
+                continue
+            r = rel_bytes.decode("utf-8", errors="surrogateescape")
+            if r in seen:
+                continue
+            if not Path(r).as_posix().startswith(".ai/_machine/"):
+                continue
+            seen.add(r)
+            rels.append(r)
+
+    for rel in rels:
         if excluded(rel):
             continue
 

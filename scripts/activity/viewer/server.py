@@ -35,6 +35,60 @@ SHARD_RE = re.compile(r"events-(\d{6})\.jsonl$")
 # Events that represent "考えたこと" (thoughts). Everything else is an action.
 THOUGHT_TYPES = {"decision", "note", "thought"}
 
+# Session boundary events. These dominate the raw ledger and bury the events
+# that say "what was done", so the client collapses the bare ones into a
+# per-repo "セッション N 回" chip and only surfaces *rich* session_end events
+# (the ones summarize-session.sh emits, carrying commit/task info).
+SESSION_BOUNDARY_TYPES = {"session_start", "session_end"}
+
+# High-signal action types that must stay prominent in "⚙️ 実行したこと".
+PRIORITY_ACTION_TYPES = {"commit", "task_done", "task_created", "decision",
+                         "release"}
+
+# Bare session_end titles carry no useful payload (case-insensitive match).
+_BARE_SESSION_TITLES = {"session end", "session_end", "session start",
+                        "session_start", ""}
+
+# Event-type display/sort weight. Lower = more prominent (sorts first / styled
+# primary); higher = secondary (boundary noise). Used by both server (for the
+# injected `_weight`) and client.
+EVENT_WEIGHT = {
+    "commit": 0, "task_done": 0, "task_created": 0, "release": 0,
+    "decision": 1, "note": 1, "thought": 1,
+    "kernel": 2, "tick": 2,
+    "session_start": 5, "session_end": 5,
+}
+DEFAULT_EVENT_WEIGHT = 3
+RICH_SESSION_END_WEIGHT = 1  # rich session summaries are signal, not noise
+
+
+def _is_rich_session_end(ev) -> bool:
+    """A session_end is 'rich' (worth showing individually) when it carries a
+    summary: a non-bare title, a non-empty detail, or an attached task_id.
+    Bare boundary events (title 'session end', empty detail) are collapsed."""
+    if ev.get("event_type") != "session_end":
+        return False
+    detail = ev.get("detail")
+    if isinstance(detail, str) and detail.strip():
+        return True
+    task_id = ev.get("task_id")
+    if isinstance(task_id, str) and task_id.strip():
+        return True
+    title = ev.get("title")
+    if isinstance(title, str):
+        t = " ".join(title.split()).lower()
+        if t and t not in _BARE_SESSION_TITLES:
+            return True
+    return False
+
+
+def _event_weight(ev) -> int:
+    """Return the sort/style weight for an event (lower = more prominent)."""
+    et = ev.get("event_type") or ""
+    if _is_rich_session_end(ev):
+        return RICH_SESSION_END_WEIGHT
+    return EVENT_WEIGHT.get(et, DEFAULT_EVENT_WEIGHT)
+
 
 def store_dir() -> Path:
     """Resolve the activity store directory."""
@@ -165,16 +219,24 @@ def estimate_active_hours(events):
 def build_summary(events):
     repos = set()
     sessions = set()
+    # Per-repo count of *bare* session-boundary events (collapsed by the client
+    # into a "セッション N 回" chip). Rich session_end events are excluded.
+    boundary_counts = {}
     for ev in events:
-        repos.add(_repo_name(ev))
+        name = _repo_name(ev)
+        repos.add(name)
         sid = ev.get("session_id")
         if isinstance(sid, str) and sid:
             sessions.add(sid)
+        et = ev.get("event_type")
+        if et in SESSION_BOUNDARY_TYPES and not _is_rich_session_end(ev):
+            boundary_counts[name] = boundary_counts.get(name, 0) + 1
     return {
         "repos": len(repos),
         "events": len(events),
         "sessions": len(sessions),
         "active_hours": estimate_active_hours(events),
+        "boundary_counts": boundary_counts,
     }
 
 
@@ -383,7 +445,17 @@ class Handler(BaseHTTPRequestHandler):
 
         events = filter_events(all_events, repo=repo, etype=etype, q=q)
         summary = build_summary(events)
-        self._send_json({"summary": summary, "events": events})
+        # Annotate each event with a sort/style weight and rich-session flag so
+        # the client can keep commit/task_done/decision prominent and treat
+        # session boundaries as secondary. Shallow-copy to avoid mutating raw
+        # dicts (json/tsv consumers elsewhere see unannotated events).
+        annotated = []
+        for ev in events:
+            e = dict(ev)
+            e["_weight"] = _event_weight(ev)
+            e["_rich_session"] = _is_rich_session_end(ev)
+            annotated.append(e)
+        self._send_json({"summary": summary, "events": annotated})
 
     # Read-only viewer: explicitly reject mutating methods.
     def do_POST(self):

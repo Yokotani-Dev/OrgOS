@@ -252,6 +252,7 @@ publish:
   - "scripts/activity/viewer.sh"
   - "scripts/activity/install-viewer.sh"
   - "scripts/activity/bridge-kernel-events.sh"
+  - "scripts/activity/summarize-session.sh"
   - "scripts/activity/mcp-journal-server.py"
   - "scripts/activity/install-mcp.sh"
   # 設定
