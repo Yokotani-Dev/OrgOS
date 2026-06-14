@@ -2539,3 +2539,18 @@ tasks:
 
       Fix verified GREEN: events-month merge visibility (_from_legacy) + session-context
       legacy fallback. layout-migration 7 tests pass incl merge-collision-keeps-both.'
+  - id: T-OS-499
+    title: '[Owner依頼] Activity Ledger ローカルビューア — ~/.orgos/activity/ 同梱・依存ゼロUI'
+    status: done
+    priority: P1
+    owner_role: implementer-agent
+    autonomy_level: execute_with_report
+    risk_level: low
+    reversibility: reversible
+    notes: 'Owner依頼(2026-06-14): 実行ログをローカルで閲覧できるUIを ~/.orgos/activity/ の中に入れる。python3
+      stdlibのみ・1コマンド起動・127.0.0.1限定。SSOT=scripts/activity/viewer/(配布)、install-viewer.shで~/.orgosへ展開。UI見た目はoutputs/2026-06-10/journal-ui-mock.html準拠。
+
+      完了(2026-06-14): ~/.orgos/activity/viewer/ にローカルビューア設置(server.py + index.html
+      + serve.sh)。SSOT=scripts/activity/viewer/(+viewer.sh/install-viewer.sh)。stdlib
+      only・127.0.0.1限定・read-only。API実データ64件確認、HTML 200。manifest publish登録(closure
+      6/6)。起動: python3 ~/.orgos/activity/viewer/server.py'

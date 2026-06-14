@@ -244,6 +244,10 @@ publish:
   # Activity Ledger（中央アクティビティログ: scripts/activity は自己完結）
   - "scripts/activity/log-event.sh"
   - "scripts/activity/journal.sh"
+  - "scripts/activity/viewer/server.py"
+  - "scripts/activity/viewer/index.html"
+  - "scripts/activity/viewer.sh"
+  - "scripts/activity/install-viewer.sh"
   - "scripts/activity/bridge-kernel-events.sh"
   - "scripts/activity/mcp-journal-server.py"
   - "scripts/activity/install-mcp.sh"

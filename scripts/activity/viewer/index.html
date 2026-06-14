@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OrgOS Journal</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #ffffff; --ink: #1a202c; --sub: #64748b;
+    --accent: #4f46e5; --line: #e2e8f0;
+    --think: #f59e0b; --act: #10b981;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif; background: var(--bg); color: var(--ink); }
+  header { background: var(--card); border-bottom:1px solid var(--line); padding:14px 28px; display:flex; align-items:center; gap:24px; position:sticky; top:0; z-index:10; flex-wrap:wrap;}
+  header h1 { font-size:18px; font-weight:700; white-space:nowrap; }
+  header h1 span { color:var(--accent); }
+  .datenav { display:flex; align-items:center; gap:10px; background:var(--bg); border-radius:10px; padding:6px 12px; }
+  .datenav button { border:none; background:none; font-size:16px; cursor:pointer; color:var(--sub); padding:0 4px; }
+  .datenav button:hover { color:var(--ink); }
+  .datenav .date { font-weight:700; font-size:15px; min-width:170px; text-align:center; }
+  .viewtoggle { display:flex; background:var(--bg); border-radius:10px; overflow:hidden; }
+  .viewtoggle div { padding:6px 16px; font-size:13px; cursor:pointer; color:var(--sub); }
+  .viewtoggle .on { background:var(--accent); color:#fff; border-radius:10px; font-weight:600; }
+  .search-wrap { margin-left:auto; }
+  .search { background:var(--bg); border:none; border-radius:10px; padding:8px 14px; font-size:13px; color:var(--ink); width:260px; outline:none; }
+  .search::placeholder { color:var(--sub); }
+  main { max-width:1100px; margin:24px auto; padding:0 24px; }
+  .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:22px; }
+  .scard { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px 20px; }
+  .scard .num { font-size:26px; font-weight:800; }
+  .scard .lbl { font-size:12px; color:var(--sub); margin-top:2px; }
+  .chips { display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; }
+  .chip { font-size:12px; padding:5px 13px; border-radius:99px; border:1px solid var(--line); background:var(--card); cursor:pointer; color:var(--sub); font-weight:600;}
+  .chip.on { color:#fff; border:none; }
+  .chip.c-all.on{ background:var(--ink);}
+  .cols { display:grid; grid-template-columns: 5fr 7fr; gap:20px; align-items:start; }
+  .panel { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px 22px; min-height:120px; }
+  .panel h2 { font-size:14px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .panel h2 .cnt { color:var(--sub); font-weight:400; }
+  .titem { display:flex; gap:12px; padding:11px 0; border-bottom:1px dashed var(--line); }
+  .titem:last-child { border-bottom:none; }
+  .time { font-size:12px; color:var(--sub); font-variant-numeric:tabular-nums; padding-top:2px; min-width:38px;}
+  .badge { font-size:10px; font-weight:700; color:#fff; border-radius:6px; padding:2px 8px; height:fit-content; margin-top:1px; white-space:nowrap;}
+  .txt { font-size:13.5px; line-height:1.55; word-break:break-word; }
+  .txt small { color:var(--sub); display:block; font-size:11.5px; margin-top:2px;}
+  .repoblock { margin-bottom:18px; }
+  .repoblock:last-child { margin-bottom:0; }
+  .repoblock h3 { font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:6px;}
+  .dot { width:9px; height:9px; border-radius:99px; display:inline-block;}
+  .repoblock .meta { font-size:11px; color:var(--sub); font-weight:400; margin-left:4px;}
+  .evt { display:flex; gap:10px; padding:7px 0 7px 18px; font-size:13px; align-items:baseline; flex-wrap:wrap;}
+  .etype { font-size:10.5px; font-weight:700; border-radius:5px; padding:1px 7px; white-space:nowrap;}
+  .e-done{ background:#d1fae5; color:#065f46;}
+  .e-created{ background:#fef3c7; color:#92400e;}
+  .e-commit{ background:#e0e7ff; color:#3730a3;}
+  .e-note{ background:#fef3c7; color:#92400e;}
+  .e-sess{ background:#f1f5f9; color:#64748b;}
+  .e-release{ background:#fce7f3; color:#9d174d;}
+  .e-kernel{ background:#ede9fe; color:#5b21b6;}
+  .e-default{ background:#f1f5f9; color:#64748b;}
+  .evtxt small { color:var(--sub); display:block; font-size:11px; margin-top:1px; }
+  .tasklink { color:var(--accent); font-weight:600; font-size:12px; }
+  .empty { color:var(--sub); font-size:13px; padding:24px 4px; text-align:center; }
+  footer { text-align:center; color:var(--sub); font-size:12px; padding:30px; }
+  @media (max-width: 820px) {
+    .summary { grid-template-columns:repeat(2,1fr); }
+    .cols { grid-template-columns:1fr; }
+    .search { width:180px; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>&#128760; OrgOS <span>Journal</span></h1>
+  <div class="datenav">
+    <button id="prev" title="前へ">&#9664;</button>
+    <span class="date" id="dateLabel">--</span>
+    <button id="next" title="次へ">&#9654;</button>
+    <button id="today" title="今日" style="font-size:12px;">今日</button>
+  </div>
+  <div class="viewtoggle">
+    <div id="vd" class="on">日</div>
+    <div id="vw">週</div>
+  </div>
+  <div class="search-wrap">
+    <input class="search" id="search" type="search" placeholder="&#128269; 横断検索（例: Webhook で決めたこと）">
+  </div>
+</header>
+<main>
+  <div class="summary" id="summary"></div>
+  <div class="chips" id="chips"></div>
+  <div class="cols">
+    <div class="panel">
+      <h2>&#128173; 考えたこと <span class="cnt" id="thoughtCount">(0)</span></h2>
+      <div id="thoughts"></div>
+    </div>
+    <div class="panel">
+      <h2>&#9881;&#65039; 実行したこと <span class="cnt" id="actionCount">(0)</span></h2>
+      <div id="actions"></div>
+    </div>
+  </div>
+</main>
+<footer>OrgOS Journal — すべてのリポジトリの活動が自動でここに集まります（データ: ~/.orgos/activity/）</footer>
+
+<script>
+"use strict";
+
+// ---- per-repo color assignment (stable by name) ----
+var REPO_PALETTE = ["#6366f1","#0ea5e9","#f43f5e","#10b981","#f59e0b","#8b5cf6","#14b8a6","#ec4899","#3b82f6","#ef4444"];
+var repoColors = {};
+function colorFor(name) {
+  if (repoColors[name]) return repoColors[name];
+  var h = 0;
+  for (var i = 0; i < name.length; i++) { h = (h * 31 + name.charCodeAt(i)) >>> 0; }
+  var c = REPO_PALETTE[h % REPO_PALETTE.length];
+  repoColors[name] = c;
+  return c;
+}
+
+// ---- state ----
+var state = {
+  view: "day",          // "day" | "week"
+  anchor: new Date(),   // local date currently shown (end of week range)
+  repo: null,           // selected repo filter (null = all)
+  q: ""
+};
+
+var THOUGHT_TYPES = { decision:1, note:1, thought:1 };
+
+var TYPE_LABELS = {
+  task_done:"完了", task_created:"作成", commit:"commit", note:"メモ",
+  decision:"判断", thought:"考察", session_start:"開始", session_end:"セッション",
+  release:"リリース", kernel:"kernel", tick:"tick"
+};
+var TYPE_CLASS = {
+  task_done:"e-done", task_created:"e-created", commit:"e-commit", note:"e-note",
+  decision:"e-note", thought:"e-note", session_start:"e-sess", session_end:"e-sess",
+  release:"e-release", kernel:"e-kernel", tick:"e-default"
+};
+
+function pad(n){ return n < 10 ? "0"+n : ""+n; }
+function ymd(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];
+}); }
+
+var WD = ["日","月","火","水","木","金","土"];
+function localTime(ts){
+  var d = new Date(ts);
+  if (isNaN(d.getTime())) return "--:--";
+  return pad(d.getHours())+":"+pad(d.getMinutes());
+}
+function repoOf(ev){ return (ev.repo && ev.repo.name) ? ev.repo.name : "unknown"; }
+
+function updateDateLabel(){
+  var a = state.anchor;
+  if (state.view === "day") {
+    document.getElementById("dateLabel").textContent =
+      a.getFullYear()+"年"+(a.getMonth()+1)+"月"+a.getDate()+"日 ("+WD[a.getDay()]+")";
+  } else {
+    var start = new Date(a); start.setDate(a.getDate()-6);
+    var sameY = start.getFullYear() === a.getFullYear();
+    document.getElementById("dateLabel").textContent =
+      (start.getMonth()+1)+"/"+start.getDate()+" – "+(a.getMonth()+1)+"/"+a.getDate()+
+      (sameY ? "" : " ("+a.getFullYear()+")");
+  }
+}
+
+function apiUrl(){
+  var p = [];
+  if (state.view === "day") { p.push("date="+encodeURIComponent(ymd(state.anchor))); }
+  else { p.push("days=7"); }
+  if (state.repo) p.push("repo="+encodeURIComponent(state.repo));
+  if (state.q) p.push("q="+encodeURIComponent(state.q));
+  return "/api/events?" + p.join("&");
+}
+
+function renderSummary(s){
+  var ah = (s.active_hours == null) ? "—" : (s.active_hours + "h");
+  var html = "";
+  html += card(s.repos, "作業したリポジトリ");
+  html += card(s.events, "イベント");
+  html += card(s.sessions, "セッション");
+  html += card(ah, "推定作業時間");
+  document.getElementById("summary").innerHTML = html;
+  function card(n, l){ return '<div class="scard"><div class="num">'+esc(n)+'</div><div class="lbl">'+esc(l)+'</div></div>'; }
+}
+
+function renderChips(repos){
+  var el = document.getElementById("chips");
+  var html = '<div class="chip c-all'+(state.repo===null?" on":"")+'" data-repo="">すべて</div>';
+  for (var i=0;i<repos.length;i++){
+    var r = repos[i];
+    var on = (state.repo === r.name);
+    var c = colorFor(r.name);
+    var style = on ? ('style="background:'+c+';color:#fff;border:none;"') : ('style="color:'+c+';border-color:'+c+';"');
+    html += '<div class="chip'+(on?" on":"")+'" data-repo="'+esc(r.name)+'" '+style+'>'+esc(r.name)+' <span style="opacity:.7;font-weight:500;">'+r.event_count+'</span></div>';
+  }
+  el.innerHTML = html;
+  var chips = el.querySelectorAll(".chip");
+  for (var j=0;j<chips.length;j++){
+    chips[j].addEventListener("click", function(){
+      var rn = this.getAttribute("data-repo");
+      state.repo = rn ? rn : null;
+      load();
+    });
+  }
+}
+
+function renderThoughts(events){
+  var thoughts = events.filter(function(e){ return THOUGHT_TYPES[e.event_type]; });
+  document.getElementById("thoughtCount").textContent = "("+thoughts.length+")";
+  var box = document.getElementById("thoughts");
+  if (thoughts.length === 0){ box.innerHTML = '<div class="empty">イベントなし</div>'; return; }
+  var html = "";
+  for (var i=0;i<thoughts.length;i++){
+    var e = thoughts[i];
+    var rn = repoOf(e);
+    var c = colorFor(rn);
+    var detail = e.detail ? '<small>'+esc(e.detail)+'</small>' : '';
+    var task = e.task_id ? ' <span class="tasklink">'+esc(e.task_id)+'</span>' : '';
+    html += '<div class="titem">'+
+      '<div class="time">'+localTime(e.ts)+'</div>'+
+      '<div class="badge" style="background:'+c+'">'+esc(rn)+'</div>'+
+      '<div class="txt">'+esc(e.title || "(無題)")+task+detail+'</div>'+
+    '</div>';
+  }
+  box.innerHTML = html;
+}
+
+function renderActions(events){
+  var actions = events.filter(function(e){ return !THOUGHT_TYPES[e.event_type]; });
+  document.getElementById("actionCount").textContent = "("+actions.length+")";
+  var box = document.getElementById("actions");
+  if (actions.length === 0){ box.innerHTML = '<div class="empty">イベントなし</div>'; return; }
+
+  // group by repo, preserving first-seen order
+  var order = [];
+  var groups = {};
+  for (var i=0;i<actions.length;i++){
+    var rn = repoOf(actions[i]);
+    if (!groups[rn]){ groups[rn] = []; order.push(rn); }
+    groups[rn].push(actions[i]);
+  }
+
+  var html = "";
+  for (var g=0; g<order.length; g++){
+    var name = order[g];
+    var list = groups[name];
+    var c = colorFor(name);
+    // time span + session count for the meta line
+    var first = list[0].ts, last = list[list.length-1].ts;
+    var sess = {};
+    for (var k=0;k<list.length;k++){ if (list[k].session_id) sess[list[k].session_id]=1; }
+    var sessCount = Object.keys(sess).length;
+    var meta = localTime(first)+" – "+localTime(last) + (sessCount>0 ? " ・ "+sessCount+"セッション" : "");
+
+    html += '<div class="repoblock">'+
+      '<h3><span class="dot" style="background:'+c+'"></span>'+esc(name)+
+      ' <span class="meta">'+meta+'</span></h3>';
+    for (var j=0;j<list.length;j++){
+      var e = list[j];
+      var et = e.event_type || "";
+      var lbl = TYPE_LABELS[et] || et || "イベント";
+      var cls = TYPE_CLASS[et] || "e-default";
+      var task = e.task_id ? ' <span class="tasklink">'+esc(e.task_id)+'</span>' : '';
+      var detail = e.detail ? '<small>'+esc(e.detail)+'</small>' : '';
+      html += '<div class="evt">'+
+        '<div class="time">'+localTime(e.ts)+'</div>'+
+        '<span class="etype '+cls+'">'+esc(lbl)+'</span>'+
+        '<span class="evtxt">'+esc(e.title || "(無題)")+task+detail+'</span>'+
+      '</div>';
+    }
+    html += '</div>';
+  }
+  box.innerHTML = html;
+}
+
+function setError(){
+  document.getElementById("summary").innerHTML = '';
+  document.getElementById("thoughts").innerHTML = '<div class="empty">読み込みに失敗しました</div>';
+  document.getElementById("actions").innerHTML = '<div class="empty">読み込みに失敗しました</div>';
+}
+
+function load(){
+  updateDateLabel();
+  fetch(apiUrl(), {cache:"no-store"})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (!data || data.error){ setError(); return; }
+      renderSummary(data.summary || {});
+      renderThoughts(data.events || []);
+      renderActions(data.events || []);
+    })
+    .catch(function(){ setError(); });
+}
+
+function loadRepos(){
+  fetch("/api/repos", {cache:"no-store"})
+    .then(function(r){ return r.json(); })
+    .then(function(d){ renderChips((d && d.repos) ? d.repos : []); })
+    .catch(function(){ renderChips([]); });
+}
+
+// ---- wiring ----
+document.getElementById("prev").addEventListener("click", function(){
+  var step = state.view === "week" ? 7 : 1;
+  state.anchor.setDate(state.anchor.getDate()-step); load();
+});
+document.getElementById("next").addEventListener("click", function(){
+  var step = state.view === "week" ? 7 : 1;
+  state.anchor.setDate(state.anchor.getDate()+step); load();
+});
+document.getElementById("today").addEventListener("click", function(){
+  state.anchor = new Date(); load();
+});
+document.getElementById("vd").addEventListener("click", function(){
+  state.view = "day";
+  this.classList.add("on"); document.getElementById("vw").classList.remove("on");
+  load();
+});
+document.getElementById("vw").addEventListener("click", function(){
+  state.view = "week";
+  this.classList.add("on"); document.getElementById("vd").classList.remove("on");
+  load();
+});
+
+var searchTimer = null;
+document.getElementById("search").addEventListener("input", function(){
+  var v = this.value;
+  if (searchTimer) clearTimeout(searchTimer);
+  searchTimer = setTimeout(function(){ state.q = v.trim(); load(); }, 300);
+});
+
+// initial + auto refresh every 30s
+loadRepos();
+load();
+setInterval(function(){ loadRepos(); load(); }, 30000);
+</script>
+</body>
+</html>
