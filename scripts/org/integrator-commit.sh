@@ -294,6 +294,7 @@ PY
 
 item_values_path=$(mktemp "${TMPDIR:-/tmp}/orgos-integrator-item.XXXXXX")
 python3 - "$REPO_ROOT" "$processing_path" >"$item_values_path" <<'PY'
+import base64
 import json
 import sys
 from pathlib import Path
@@ -344,7 +345,9 @@ print(str(worktree.get("expected_head", "")))
 print(resolve(artifacts.get("artifact_manifest", "")))
 print("true" if verification.get("required") is True else "false")
 print(str(verification.get("status", "")))
-print(str(commit.get("message", "")))
+# base64-encode the commit message so multi-line messages do not shift the
+# line-indexed fields that follow (e.g. main_integration at the final line).
+print(base64.b64encode(str(commit.get("message", "")).encode("utf-8")).decode("ascii"))
 print(str(commit.get("author_name", "OrgOS Integrator")))
 print(str(commit.get("author_email", "orgos-integrator@local")))
 print(str((scope.get("diff_budget") or {}).get("max_files", 0)))
@@ -366,7 +369,7 @@ expected_head=$(sed -n '6p' "$item_values_path")
 artifact_manifest=$(sed -n '7p' "$item_values_path")
 verification_required=$(sed -n '8p' "$item_values_path")
 verification_status=$(sed -n '9p' "$item_values_path")
-commit_message=$(sed -n '10p' "$item_values_path")
+commit_message=$(sed -n '10p' "$item_values_path" | python3 -c 'import base64,sys; sys.stdout.write(base64.b64decode(sys.stdin.read().strip()).decode("utf-8"))')
 author_name=$(sed -n '11p' "$item_values_path")
 author_email=$(sed -n '12p' "$item_values_path")
 max_files=$(sed -n '13p' "$item_values_path")

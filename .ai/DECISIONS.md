@@ -2226,3 +2226,17 @@ Owner 依頼 (2026-06-29)
 
 ### トリガー
 Owner 依頼 (2026-06-29)
+
+## PLAN-UPDATE-509: integrator-commit.sh 複数行メッセージ対応(base64 受け渡し) (2026-06-29)
+
+### 変更内容
+- scripts/org/integrator-commit.sh: item_values の commit.message を base64 encode(python emit)/decode(bash)
+
+### 理由
+- 複数行コミットメッセージで後続フィールド(main_integration 等)の sed 行番号がずれ、--allow-main の main 統合が不当拒否され、メッセージも先頭行に切詰されていた(T-OS-508 統合時に再現)。
+
+### 影響
+- Co-Authored-By trailer 等の複数行メッセージが使用可能に。リリース向けの正常な commit が可能。
+
+### トリガー
+Owner 依頼(リリース前のバグ修正, 2026-06-29)

@@ -2694,3 +2694,16 @@ tasks:
 
       2026-06-29 完了: scripts/resources/triage-scan.sh 実装(shellcheck PASS, apply/proposal/json
       動作確認)。/org-tick に 6B 配線。bash 3.2 互換修正済み。'
+  - id: T-OS-509
+    title: 'integrator-commit.sh: 複数行コミットメッセージで main_integration 誤検出 + メッセージ切詰'
+    status: done
+    priority: P2
+    notes: '根因: scripts/org/integrator-commit.sh が python emit 値を sed 行番号で読む(commit.message=line10,
+      main_integration=line15)。commit.message に改行があると後続フィールドの行番号がずれ、(1)main_integration
+      を誤読し --allow-main の main 統合が不当に拒否、(2)commit_message が先頭行に切詰。今回 T-OS-508 統合時に再現(単一行で回避)。修正案:
+      item_values を行ベースでなく区切り文字/JSON で受け渡す。これにより複数行メッセージ(Co-Authored-By trailer 含む)が使えるようになる。
+
+      2026-06-29 完了: integrator-commit.sh の item_values で commit.message を base64
+      化(line10), bash 側で python decode。15行構造を維持し main_integration(line15) のずれを解消。shellcheck
+      新規 issue なし、単体テスト PASS(改行+trailer round-trip)。本修正自体を複数行メッセージで commit して E2E
+      検証。'
