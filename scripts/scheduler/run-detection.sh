@@ -110,14 +110,16 @@ classify_failure() {
     output="$(tr '[:upper:]' '[:lower:]' < "$output_file")"
   fi
 
-  if [[ "$exit_code" -eq 73 ]] || grep -qiE 'lock|already running|resource busy' <<<"$output"; then
-    printf 'lock'
+  # circuit_breaker / iron_law を lock より先に判定する。lock パターンは実際のロック
+  # 文言のみに限定し、"blocked"(=b+lock) への誤マッチを避ける（旧: bare 'lock'）。
+  if grep -qiE 'circuit_breaker|circuit breaker' <<<"$output"; then
+    printf 'circuit_breaker'
   elif [[ "$exit_code" -eq 3 ]] || grep -qiE 'iron_law|iron law|protected|proposal_rejected|owner_only|approval_required' <<<"$output"; then
     printf 'iron_law'
+  elif [[ "$exit_code" -eq 73 ]] || grep -qiE 'another .* run is still active|scheduler lock|stale lock|file lock|flock|lock_active|lock_failed|already running|resource busy' <<<"$output"; then
+    printf 'lock'
   elif [[ "$exit_code" -eq 124 ]] || grep -qiE 'timed? out|timeout after|timeout' <<<"$output"; then
     printf 'timeout'
-  elif grep -qiE 'circuit_breaker|circuit breaker' <<<"$output"; then
-    printf 'circuit_breaker'
   elif [[ "$exit_code" -eq 69 || "$exit_code" -eq 75 ]] || grep -qiE 'network|timed? out|timeout|temporary failure|could not resolve|connection refused|curl|http [45][0-9][0-9]' <<<"$output"; then
     printf 'network'
   else

@@ -500,7 +500,6 @@ def write_canary_marker(record_id: str, proposal_id: str, target: str) -> str:
 
 
 def main() -> None:
-    run_circuit_breaker("check")
     enforce_not_halted()
     path = proposal_path()
     proposal = load_yaml(path)
@@ -510,6 +509,12 @@ def main() -> None:
     autonomy = str(proposal["autonomy_recommendation"])
     stage = stage_for_autonomy(autonomy)
     target, absolute_target = target_path(proposal)
+
+    # Circuit breaker gates stages that actually mutate files. Shadow records the
+    # candidate + trace WITHOUT changing anything, so an open breaker must NOT block it
+    # (otherwise a stale rate-limit trip permanently reds the observation-only CI run).
+    if stage != "shadow":
+        run_circuit_breaker("check")
 
     log("info", "preflight_started", proposal_ref=proposal_id, rollout_stage=stage, target_file=target)
     iron_result = iron_law_check(proposal, target, absolute_target)
@@ -560,7 +565,10 @@ def main() -> None:
     if stage == "canary":
         marker_ref = write_canary_marker(record_id, proposal_id, target)
 
-    run_circuit_breaker("increment-apply")
+    # Shadow records the candidate without changing files, so it must NOT consume the
+    # apply budget nor be blocked by an open breaker. Only real applies increment.
+    if stage != "shadow":
+        run_circuit_breaker("increment-apply")
     iteration_counter = iteration_counter_snapshot()
 
     record = {

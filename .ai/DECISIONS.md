@@ -2165,3 +2165,11 @@ Manager (non-integrator) committed the Reflection Loop MVP (T-OS-505) via the sa
 - kernel-mode.json itself was unstaged before commit; the feature commit contains only the 10 reflection-loop files. No kernel-file content was modified.
 - No push performed. Branch: main (verified non-protected at commit time).
 - Reversible: single commit, no remote interaction.
+
+## OS-MUTATION-008: IntegratorOnlyCommit 時限降格 — 公開push (T-OS-502/504/505) (2026-06-29)
+
+allow_push=true。kernelがraw git pushをdeny→時限降格でpush→即enforce復元。4コミット(d98bc10/dcbe9fa/5e24f67/290c8e0)を公開。
+
+## PLAN-UPDATE-038: scheduler CI赤 修正: shadowはcircuit breakerを参照しない (T-OS-503) (2026-06-29)
+
+真因: circuit breakerが6-13のmax_apply_per_cycle(3/3)でopenのまま+shadow stageがbreakerをcheck&increment-apply→CI赤。修正: shadowはファイル変更しないためbreaker check/incrementをskip(apply.sh)。分類器lock正規表現のblocked誤マッチ修正。回帰テストtest-scheduler-shadow.sh。

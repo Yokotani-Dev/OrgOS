@@ -2598,15 +2598,20 @@ tasks:
   - id: T-OS-503
     title: '[Fix] OrgOS Scheduler CI赤 — shadow apply の stale-lock (error_class=lock,
       exit 73)'
-    status: queued
+    status: done
     priority: P2
     owner_role: implementer-agent
     autonomy_level: execute_with_report
     risk_level: low
     reversibility: reversible
-    notes: 2026-06-14 06:48 schedule run失敗。.github/workflows/orgos-scheduler.yml の
-      run-detection.sh apply段でlock。CI環境は毎回clean cloneなのにlock衝突→lock取得/解放ロジックかshadow-applyのCI
+    notes: '2026-06-14 06:48 schedule run失敗。.github/workflows/orgos-scheduler.yml
+      の run-detection.sh apply段でlock。CI環境は毎回clean cloneなのにlock衝突→lock取得/解放ロジックかshadow-applyのCI
       gating要修正。
+
+      完了(2026-06-29): 真因=circuit breaker(6-13 rate trip)open + shadowがbreakerをcheck/increment-applyして失敗→CI赤。修正:
+      apply.shでshadow stageはbreaker check/increment-applyをskip(ファイル変更なしのため)。run-detection分類器のlock正規表現がblockedに誤マッチするのを修正(circuit_breaker/iron_lawを先行判定+lock文言限定)。breaker
+      restore。circuit-breaker.yamlはgitignore(CIはclean起動)。test-scheduler-shadow.sh追加(breaker
+      open時もshadow緑、4/4)。'
   - id: T-OS-504
     title: '[Owner依頼] ログ品質改善 — ジャーナルが session end だらけで「何をしたか」不明'
     status: done
