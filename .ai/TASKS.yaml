@@ -2707,3 +2707,14 @@ tasks:
       化(line10), bash 側で python decode。15行構造を維持し main_integration(line15) のずれを解消。shellcheck
       新規 issue なし、単体テスト PASS(改行+trailer round-trip)。本修正自体を複数行メッセージで commit して E2E
       検証。'
+  - id: T-OS-510
+    title: 資料作成スラッシュコマンド /material 新設（表現規約を強制 Read）
+    status: done
+    priority: P2
+    notes: 'Owner要望: 資料作成時、コンテキスト状態によらず必ず presentation-material-standards.md を読み込ませたい。.claude/commands/material.md
+      を新設し、着手前に規約を全文 Read する Iron Law を埋め込む。
+
+      2026-06-29 完了: .claude/commands/material.md 新設。着手前に presentation-material-standards.md
+      を全文 Read する Iron Law を埋込。入力取り込み(resource-intake-triage)・配置(output-management)・タスク登録も手順化。
+
+      2026-06-29 リネーム: /material → /org-material (Owner指示, org-* 規約に合わせる)。コマンドは .claude/commands/org-material.md。'

@@ -2240,3 +2240,18 @@ Owner 依頼 (2026-06-29)
 
 ### トリガー
 Owner 依頼(リリース前のバグ修正, 2026-06-29)
+
+## PLAN-UPDATE-510: 資料作成コマンド /material 新設 (2026-06-29)
+
+### 変更内容
+- 新設: .claude/commands/material.md
+
+### 理由
+- Owner要望: 資料作成時、コンテキスト状態によらず必ず表現規約を読み込ませたい。
+- コマンド冒頭の Iron Law で presentation-material-standards.md の全文 Read を強制し、毎回確実に規約を適用する。
+
+### 影響
+- /material で資料作成フローが標準化。表現規約の適用漏れを防止。
+
+### トリガー
+Owner 依頼 (2026-06-29)
