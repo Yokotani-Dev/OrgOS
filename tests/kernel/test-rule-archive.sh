@@ -22,6 +22,8 @@ PRE_ARCHIVE_RULE_COUNT=32
 # unexpected rule proliferation still fails this test.
 POST_ARCHIVE_ADDED_RULES=(
   "kernel-write-path.md"
+  "presentation-material-standards.md"
+  "resource-intake-triage.md"
 )
 
 expected_current_rule_count() {

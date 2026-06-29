@@ -4,6 +4,30 @@
 
 ---
 
+## v2.1.0 (2026-06-29) — Reflection Loop + 資料作成 + リポジトリ整流化
+
+新コマンドと運用機能を追加。破壊的変更なし（後方互換）。
+
+### ✨ 追加
+- **`/org-reflect` — Reflection Loop (T-OS-505)**: Owner の修正・自分の誤り・思想を「反省」として記録し、適切な恒久ホームへ還元する。`REFLECTIONS` 台帳 + `append-reflection.py` + promotion。
+- **`/org-material` — 資料作成 (T-OS-510)**: 社内/クライアント向け資料(pptx/見せる md)を表現規約に必ず従って作成。着手前に `presentation-material-standards.md` を強制 Read（コンテキスト状態に依存しない）。表現規約ルール自体も新設(T-OS-506)。
+- **`/org-tidy` — リポジトリ構成整理 (T-OS-500)**: import 先リポジトリのフォルダ構成を、OrgOS 固定物を保護しつつ人間用/機械用に分離（ビルド非破壊）。
+- **Activity Ledger ローカルビューア (T-OS-499)**: 標準ライブラリのみのローカル閲覧 UI。
+- **Resource Intake Triage (T-OS-507/508)**: 参照ファイルをどこに置いても `.ai/RESOURCES/` へ取り込むルール + `triage-scan.sh` + `/org-tick` step 6B 配線。
+
+### 🔧 修正・改善
+- **integrator 複数行コミットメッセージ対応 (T-OS-509)**: `item_values` の commit.message を base64 受け渡しにし、複数行メッセージで `main_integration` 等が誤読される不具合を解消（Co-Authored-By trailer 等が使用可能に）。
+- **scheduler shadow が circuit breaker を無視 (T-OS-503)**: green CI 化。
+- **activity ログの意味化 + `collect-artifacts` リグレッション修正 (T-OS-504)**。
+- **kernel-v2 運用ログを機械ゾーンへ退避 (T-OS-507)**: `docs/kernel-v2/` → `.ai/_machine/kernel-v2/`。`docs/` は Owner 直接参照資料に役割を限定。
+- **dev runtime の配布停止 (T-OS-502)**: `.ai/_machine` を untrack、skeleton 維持、`reset-project-state` 追加。
+- **`/org-start` がフォルダ名から project_name を自動設定 (T-OS-501)**。
+
+### ✅ 検証
+- 全 kernel test green（SUITE_EXIT=0、rule-archive allowlist 更新）/ manifest closure 6 passed。
+
+---
+
 ## v2.0.1 (2026-06-13) — Post-release fixes
 
 v2.0.0 後に残っていた品質課題を解消。利用者影響なし（内部品質・自己計測の改善）。

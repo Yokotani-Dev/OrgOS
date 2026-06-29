@@ -43,11 +43,13 @@ rules:
   - patterns
   - performance
   - plan-sync
+  - presentation-material-standards
   - proactive-mode
   - project-flow
   - quality-contract
   - rationalization-prevention
   - request-intake-loop
+  - resource-intake-triage
   - secret-management
   - session-bootstrap
   - session-management
@@ -99,6 +101,7 @@ publish:
   - ".claude/commands/org-journal.md"
   - ".claude/commands/org-reflect.md"
   - ".claude/commands/org-tidy.md"
+  - ".claude/commands/org-material.md"
   # エージェント（18ファイル: manager / CODEX_WORKER_GUIDE / specialist 4 を含む）
   - ".claude/agents/manager.md"
   - ".claude/agents/CODEX_WORKER_GUIDE.md"
@@ -157,11 +160,13 @@ publish:
   - ".claude/rules/patterns.md"
   - ".claude/rules/performance.md"
   - ".claude/rules/plan-sync.md"
+  - ".claude/rules/presentation-material-standards.md"
   - ".claude/rules/proactive-mode.md"
   - ".claude/rules/project-flow.md"
   - ".claude/rules/quality-contract.md"
   - ".claude/rules/rationalization-prevention.md"
   - ".claude/rules/request-intake-loop.md"
+  - ".claude/rules/resource-intake-triage.md"
   - ".claude/rules/secret-management.md"
   - ".claude/rules/session-bootstrap.md"
   - ".claude/rules/session-management.md"
@@ -362,11 +367,13 @@ core:
   - ".claude/rules/patterns.md"
   - ".claude/rules/performance.md"
   - ".claude/rules/plan-sync.md"
+  - ".claude/rules/presentation-material-standards.md"
   - ".claude/rules/proactive-mode.md"
   - ".claude/rules/project-flow.md"
   - ".claude/rules/quality-contract.md"
   - ".claude/rules/rationalization-prevention.md"
   - ".claude/rules/request-intake-loop.md"
+  - ".claude/rules/resource-intake-triage.md"
   - ".claude/rules/secret-management.md"
   - ".claude/rules/session-bootstrap.md"
   - ".claude/rules/session-management.md"

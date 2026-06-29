@@ -2718,3 +2718,9 @@ tasks:
       を全文 Read する Iron Law を埋込。入力取り込み(resource-intake-triage)・配置(output-management)・タスク登録も手順化。
 
       2026-06-29 リネーム: /material → /org-material (Owner指示, org-* 規約に合わせる)。コマンドは .claude/commands/org-material.md。'
+  - id: T-OS-511
+    title: Release v2.1.0
+    status: in_progress
+    priority: P1
+    notes: v2.0.1→2.1.0 (minor)。新コマンド org-reflect/org-material/org-tidy 等。manifest
+      に新ルール2件+org-material登録、rule-archive test allowlist 更新。全kernel test green。
