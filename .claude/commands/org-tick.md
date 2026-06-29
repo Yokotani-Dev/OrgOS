@@ -363,6 +363,21 @@ def check_journey_gate(stage, next_stage):
 
 ---
 
+### 6B. Resource Intake Triage（参考ファイル取り込み）
+
+> Owner がどこに置いた参照・参考ファイルでも放置せず `.ai/RESOURCES/` へ取り込む。
+> ルール: [.claude/rules/resource-intake-triage.md](../rules/resource-intake-triage.md)
+
+```bash
+bash scripts/resources/triage-scan.sh        # 取り込み候補を走査（移動しない）
+```
+
+- 候補ありかつ分類が明確 → `bash scripts/resources/triage-scan.sh --apply` で取り込み（git mv + 台帳登録 + リネーム）し、`append-event.py` で記録、簡潔に報告
+- 分類が曖昧なファイル → Owner に「開けるファイル + 短文」で確認（放置しない）
+- 候補なし → 何もしない
+
+---
+
 ### 7. 状況診断とエージェント自動選択
 
 状況を分析し、必要なエージェントを自動的に選択・実行する。

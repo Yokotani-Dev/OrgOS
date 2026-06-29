@@ -23,7 +23,7 @@
 | `README.md` | リポジトリ入口 | 人間 / GitHub | **固定** | 残す |
 | `ORGOS_QUICKSTART.md` | 導入ガイド | 人間。manifest publish (L65) + README L110 + org-publish.md L144 が参照 | 可動（要 3 ファイル編集） | **残す**（入口文書はルートが慣習。移動は編集 3 件に対し明瞭化ゼロ） |
 | `requirements.md` | **v0.3 時代の歴史的仕様書**（冒頭に「[歴史的文書]…実装と乖離」と自己申告。38KB、最終コミット 2026-01-30） | ほぼ誰も読まない。参照 4 行のみ（manager.md ×1 / org-admin.md ×2 / ORGOS_QUICKSTART.md ×1） | 可動 | **`docs/archive/` へ移動** |
-| `docs/` | `kernel-v2/dogfood.md` + `dogfood-checklist.md` の 2 ファイルのみ | 人間。kernel-write-path.md ルールが 2 箇所参照。tests の `docs/kernel-v2/` はフィクスチャ文字列（実体不要） | 可動だが移動不要 | **残す = 人間用ドキュメントの正規置場に昇格**（archive を吸収） |
+| `docs/` | `archive/requirements.md` のみ（旧 `kernel-v2/` は退避済み） | 人間（Owner が直接開く資料に限定） | 可動 | **残す**。ただし「Owner が直接参照する人間向け資料」専用に役割を限定。kernel 運用ログのような機械/開発者向け記録は置かない（→ T-OS-507 で `kernel-v2/` を `.ai/_machine/kernel-v2/` へ退避。Owner 指示: docs はユーザーが直接参照するもの限定） |
 | `outputs/` | 成果物置場（README + 日付別 3 ディレクトリ） | 人間 + agents。`.claude/rules/output-management.md` が配置先として規定（参照 4 ファイル） | **ルール固定** | 残す |
 | `scripts/` | 21 サブディレクトリ / 129 ファイル — **混乱の主因** | kernel hooks / harness / CI / tests | 内部再編 | **§3 で 21→13+`_archive` に統合** |
 | `tests/` | `kernel/`（37 ファイル, run-kernel-tests.sh）+ `activity/`（6） | 回帰ゲート（kernel write path の受入条件） | 残す | 残す |

@@ -94,7 +94,7 @@ bash scripts/org/integrator-commit.sh --task-id T-OS-XXX
 bash scripts/org/release-lease.sh "$LEASE_ID" --reason done
 ```
 
-lease が必要になるのは: (a) 非保護ファイルへの Edit/Write（`LeaseBeforeWrite`、現在 warn）、(b) integrator の allowed_paths 差分検査（lease 外の変更は integration 失敗）。実行例の全文は `docs/kernel-v2/dogfood-checklist.md` を参照。
+lease が必要になるのは: (a) 非保護ファイルへの Edit/Write（`LeaseBeforeWrite`、現在 warn）、(b) integrator の allowed_paths 差分検査（lease 外の変更は integration 失敗）。実行例の全文は `.ai/_machine/kernel-v2/dogfood-checklist.md` を参照。
 
 ### request-integration.sh のオプション（T-OS-492）
 
@@ -131,4 +131,4 @@ plan-contract（`.ai/_machine/plans/<task>.plan.yaml`）の差分検査は、共
 
 - 検出実体: `.claude/hooks/policy_core.py` / モード: `.claude/state/kernel-mode.json`
 - bootstrap 期の逸脱記録（enforce 後は禁止）: `.ai/BOOTSTRAP-OVERRIDES.md`
-- 実運用ログ: `docs/kernel-v2/dogfood.md`
+- 実運用ログ: `.ai/_machine/kernel-v2/dogfood.md`

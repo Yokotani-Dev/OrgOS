@@ -2173,3 +2173,56 @@ allow_push=true。kernelがraw git pushをdeny→時限降格でpush→即enforc
 ## PLAN-UPDATE-038: scheduler CI赤 修正: shadowはcircuit breakerを参照しない (T-OS-503) (2026-06-29)
 
 真因: circuit breakerが6-13のmax_apply_per_cycle(3/3)でopenのまま+shadow stageがbreakerをcheck&increment-apply→CI赤。修正: shadowはファイル変更しないためbreaker check/incrementをskip(apply.sh)。分類器lock正規表現のblocked誤マッチ修正。回帰テストtest-scheduler-shadow.sh。
+
+## PLAN-UPDATE-506: 資料作成 表現規約ルールの追加 (2026-06-29)
+
+### 変更内容
+- 追加: .claude/rules/presentation-material-standards.md（社内/クライアント向け pptx/md の表現規約）
+- 追加: T-OS-506
+- 変更: CLAUDE.md 守るべきこと表に資料作成行を追加 + 必須参照コールアウトを追加
+
+### 理由
+- Owner 依頼。顧客向け投影資料を端的・客観的・論理的に保つため、表現規約を OS ルール化し、資料作成時に必ず参照させる。
+
+### 影響
+- pptx/md の資料作成・編集時に本ルールの適用が必須になる。内部運用ファイル（台帳/設計Doc/コードコメント）は対象外。
+
+### トリガー
+新規要件（Owner 依頼）
+
+## PLAN-UPDATE-507: docs/ の役割を Owner 直接参照資料に限定 + kernel-v2 を機械ゾーンへ退避 (2026-06-29)
+
+### 変更内容
+- 移動: docs/kernel-v2/{dogfood.md,dogfood-checklist.md} → .ai/_machine/kernel-v2/ (git mv, 履歴保持)
+- 修正: 能動参照3箇所 (kernel-write-path.md L97/L134, scripts/org/README.md L24)
+- 更新: REPO_LAYOUT_V1.md の docs/ 判定 (kernel-v2 を残す→退避)
+- 不変: tests フィクスチャ文字列, TASKS/DECISIONS の履歴記録
+
+### 理由
+- Owner 方針: docs/ は「Owner が直接開く人間向け資料」に限定。kernel 運用ログのような機械/開発者向け記録は対象外。
+- kernel 自体は enforce 稼働中で放置ではないが、フォルダ位置が放置感を生んでいた。機械ゾーン (.ai/_machine) が正しいホーム。
+
+### 影響
+- docs/ は archive/requirements.md のみに。docs/ の役割が「Owner 直接参照資料専用」に明確化。
+- 関連: T-OS-508 (参考ファイル auto-triage) で「どこに置いても .ai/RESOURCES へ振り分け」を実装予定。
+
+### トリガー
+Owner 依頼 (2026-06-29)
+
+## PLAN-UPDATE-508: 参考ファイル auto-triage ルール新設（どこに置いても .ai/RESOURCES へ取り込む） (2026-06-29)
+
+### 変更内容
+- 新設: .claude/rules/resource-intake-triage.md (Iron Law)
+- 更新: output-management.md から triage ルールへの参照を追加
+- 定義: docs/ = Owner 直接参照資料 / .ai/RESOURCES = input素材 / .ai/_machine = 機械向け の役割境界
+
+### 理由
+- Owner 要望: 参照ファイルをどこに置いても Manager が .ai/RESOURCES の適切な場所へ自動振り分け+台帳登録してほしい。
+- 「Owner が正しい場所に置く」前提を捨て、「どこに置かれても Manager が拾う」運用へ。
+
+### 影響
+- 毎 Tick で triage 走査を実施（手動）。全自動スキャン script は T-OS-508 残作業。
+- CLAUDE.md のルール索引への追記は owner_approval 対象のため別途（authority-layer）。
+
+### トリガー
+Owner 依頼 (2026-06-29)

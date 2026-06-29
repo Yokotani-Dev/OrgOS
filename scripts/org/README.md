@@ -21,4 +21,4 @@
 
 - 正規書込パスの全体: `.claude/rules/kernel-write-path.md`
 - 検出実体: `.claude/hooks/policy_core.py` / モード: `.claude/state/kernel-mode.json`
-- 実運用ログ: `docs/kernel-v2/dogfood.md`
+- 実運用ログ: `.ai/_machine/kernel-v2/dogfood.md`

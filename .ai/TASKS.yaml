@@ -2664,3 +2664,33 @@ tasks:
       bootstrap.sh surfaces recent integrated reflections (## Reflections section);
       reflections mirror to activity journal as thoughts. Tests: test-reflection-loop.sh
       5/5 pass; kernel suite SUITE_EXIT=0.'
+  - id: T-OS-506
+    title: 資料作成（pptx/md）の表現規約ルールを追加
+    status: done
+    priority: P1
+    notes: 'Owner依頼: 社内/クライアント向け投影資料の表現規約を .claude/rules/ に新設し、資料作成時に必ず参照させる。CLAUDE.md
+      に登録。
+
+      2026-06-29 完了: rules/presentation-material-standards.md 新設 + CLAUDE.md 登録（表行
+      + 必須参照コールアウト）。allow_os_mutation=true 下の execute_with_report として実施。'
+  - id: T-OS-507
+    title: docs/kernel-v2 を .ai/_machine/kernel-v2 へ退避 + 参照修正
+    status: done
+    priority: P2
+    notes: 'Owner: docs はユーザーが直接参照するもの限定。kernel 運用ログは機械ゾーンへ退避。能動参照3箇所(kernel-write-path.md
+      L97/L134, scripts/org/README.md L24)を修正。REPO_LAYOUT_V1.md の判定を更新。フィクスチャ(tests)と履歴台帳(TASKS/DECISIONS過去記録)は不変。
+
+      2026-06-29 完了: git mv で .ai/_machine/kernel-v2 へ退避。能動参照3箇所修正、REPO_LAYOUT_V1
+      更新。grep で残存能動参照ゼロ確認。未commit(Owner判断待ち)。'
+  - id: T-OS-508
+    title: '参考ファイル auto-triage: docs/ルート等に置かれた参照ファイルを Tick で .ai/RESOURCES へ自動振り分け'
+    status: done
+    priority: P2
+    notes: 'Owner要望: どこに置いても自動で .ai/RESOURCES の適切な場所へ移動+台帳登録。新ルール .claude/rules +
+      output-management.md 更新 + Tick step 配線。実装は設計後に進める。
+
+      2026-06-29 ポリシー確定: resource-intake-triage.md 新設 + output-management.md 参照追加。Manager
+      は本ルールに従い毎 Tick 手動 triage 可能。残作業: 走査+提案の自動化 script 配線 + /org-tick への組込。
+
+      2026-06-29 完了: scripts/resources/triage-scan.sh 実装(shellcheck PASS, apply/proposal/json
+      動作確認)。/org-tick に 6B 配線。bash 3.2 互換修正済み。'

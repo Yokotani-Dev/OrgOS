@@ -19,6 +19,8 @@
 
 ## インプットリソース受領時のフロー (Iron Law)
 
+> Owner が **どこに置いても** Manager が拾い上げて取り込む運用は [resource-intake-triage.md](resource-intake-triage.md) を参照（毎 Tick の triage 走査を含む）。本セクションは受領時の 3 ステップ手順の SSOT。
+
 Owner からファイルを受け取ったら、以下の 3 ステップを即座に実行:
 
 ### Step 1: 台帳登録

@@ -69,8 +69,11 @@
 | **評価** | `.claude/rules/eval-loop.md` | Verification Loops |
 | **エージェント** | `.claude/rules/agent-coordination.md` | 並列実行、モデル選択、Codex CLI |
 | **出力管理** | `.claude/rules/output-management.md` | 生成物の配置ルール |
+| **資料作成** | `.claude/rules/presentation-material-standards.md` | 社内/クライアント向け資料（pptx/md）の表現規約。資料作成時は必ず参照 |
 | **パフォーマンス** | `.claude/rules/performance.md` | コンテキスト最適化、コスト最適化 |
 | **合理化防止** | `.claude/rules/rationalization-prevention.md` | Iron Law、言い訳テーブル、Red Flags |
+
+> **資料作成の必須参照**: 社内・クライアント向けの資料（`.pptx` / 見せる `.md`）を作成・編集するときは、着手前に必ず `.claude/rules/presentation-material-standards.md` を読み、表現規約を適用する。例外なし。
 
 - **実装とレビューは別の人（エージェント）が担当**
   - 同じ人が書いて同じ人がOKを出さないようにします
